@@ -1,40 +1,59 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --clay: #c4622d;
-  --clay-light: #e8845a;
-  --clay-dark: #8f3d14;
-  --forest: #2d4a3e;
-  --forest-light: #3d6357;
-  --cream: #f7f0e6;
-  --warm-white: #fdfaf6;
-  --gold: #d4a853;
-  --charcoal: #1c1c1a;
-  --mid: #6b6660;
+  /* Slate & Citrus — light theme */
+  --slate:        #2b3245;
+  --slate-light:  #3a4460;
+  --slate-faint:  #eef0f8;
+  --citrus:       #f5c842;
+  --citrus-dark:  #c49a00;
+  --citrus-light: #fff8d6;
+  --ink:          #1a1f30;
+  --ink-muted:    #4a5270;
+  --ink-faint:    #8a90a8;
+  --snow:         #f2f3f6;
+  --surface:      #ffffff;
 }
 
 body {
-  background: var(--warm-white);
-  color: var(--charcoal);
-  font-family: "DM Sans", sans-serif;
+  background: var(--snow);
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Headings use Syne */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Syne", sans-serif;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(196, 98, 45, 0.2);
+  background: rgba(43, 50, 69, 0.2);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(196, 98, 45, 0.4);
+  background: rgba(43, 50, 69, 0.4);
+}
+
+/* Dark mode — ready to activate later */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --slate:        #4a5a8a;
+    --slate-light:  #5a6a9a;
+    --slate-faint:  rgba(74, 90, 138, 0.15);
+    --citrus:       #f5c842;
+    --citrus-dark:  #e0b030;
+    --citrus-light: rgba(245, 200, 66, 0.12);
+    --ink:          #e8eaf2;
+    --ink-muted:    #8a90b8;
+    --ink-faint:    #4a5070;
+    --snow:         #0e1018;
+    --surface:      #161922;
+  }
 }

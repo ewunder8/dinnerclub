@@ -7,31 +7,33 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Food Club design tokens — matches the prototype
       colors: {
-        clay: {
-          DEFAULT: "#C4622D",
-          light: "#E8845A",
-          dark: "#8F3D14",
+        // Primary — Slate
+        slate: {
+          DEFAULT: "#2b3245",
+          light:   "#3a4460",
+          faint:   "#eef0f8",
         },
-        forest: {
-          DEFAULT: "#2D4A3E",
-          light: "#3D6357",
+        // Accent — Citrus
+        citrus: {
+          DEFAULT: "#f5c842",
+          dark:    "#c49a00",
+          light:   "#fff8d6",
         },
-        cream: "#F7F0E6",
-        "warm-white": "#FDFAF6",
-        gold: "#D4A853",
-        charcoal: "#1C1C1A",
-        mid: "#6B6660",
+        // Neutrals
+        ink:     "#1a1f30",
+        "ink-muted": "#4a5270",
+        "ink-faint": "#8a90a8",
+        snow:    "#f2f3f6",
+        surface: "#ffffff",
       },
       fontFamily: {
-        // Body font
-        sans: ["DM Sans", "sans-serif"],
-        // Display font for headings
-        serif: ["Playfair Display", "serif"],
+        sans:    ["Syne", "sans-serif"],
+        display: ["Syne", "sans-serif"],
+        body:    ["Plus Jakarta Sans", "sans-serif"],
       },
       borderRadius: {
-        xl: "14px",
+        xl:  "14px",
         "2xl": "18px",
         "3xl": "24px",
       },
