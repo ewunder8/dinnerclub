@@ -43,7 +43,7 @@ export default async function JoinPage({
     <main className="min-h-screen bg-charcoal flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <p className="font-serif text-xl font-black text-cream/40 mb-12">
-        Food<span className="text-clay">Club</span>
+        Dinner<span className="text-clay">Club</span>
       </p>
 
       {/* Club preview card */}
@@ -106,7 +106,7 @@ function ExpiredInvite({ clubName }: { clubName?: string }) {
   return (
     <main className="min-h-screen bg-charcoal flex flex-col items-center justify-center p-6">
       <p className="font-serif text-xl font-black text-cream/40 mb-12">
-        Food<span className="text-clay">Club</span>
+        Dinner<span className="text-clay">Club</span>
       </p>
       <div className="w-full max-w-sm bg-warm-white rounded-3xl p-10 text-center shadow-2xl">
         <div className="w-16 h-16 bg-clay/10 rounded-full flex items-center justify-center text-3xl mx-auto mb-5">
@@ -123,7 +123,7 @@ function ExpiredInvite({ clubName }: { clubName?: string }) {
           href="/"
           className="block w-full bg-clay text-white text-center font-bold py-3 rounded-xl hover:bg-clay-dark transition-colors"
         >
-          Go to Food Club
+          Go to DinnerClub
         </a>
       </div>
     </main>

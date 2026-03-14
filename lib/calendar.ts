@@ -20,7 +20,7 @@ export function generateICSFile(event: CalendarEvent): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//FoodClub//FoodClub//EN",
+    "PRODID:-//DinnerClub//DinnerClub//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
@@ -71,7 +71,7 @@ export function generateGoogleCalendarURL(event: CalendarEvent): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-// Build a dinner calendar event from Food Club data
+// Build a dinner calendar event from DinnerClub data
 export function buildDinnerCalendarEvent({
   clubName,
   restaurantName,
@@ -93,7 +93,7 @@ export function buildDinnerCalendarEvent({
     `${clubName} dinner at ${restaurantName}`,
     restaurantPhone ? `📞 ${restaurantPhone}` : null,
     confirmationNumber ? `Confirmation: ${confirmationNumber}` : null,
-    appUrl ? `View on Food Club: ${appUrl}` : null,
+    appUrl ? `View on DinnerClub: ${appUrl}` : null,
   ].filter(Boolean);
 
   return {

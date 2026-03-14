@@ -68,7 +68,7 @@ export default async function ClubPage({
           ← Dashboard
         </a>
         <h1 className="font-serif text-xl font-black text-cream">
-          Food<span className="text-clay">Club</span>
+          Dinner<span className="text-clay">Club</span>
         </h1>
         <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
           {getInitials(user.email || "?")}

@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       {/* TODO: Replace with full Nav component */}
       <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
         <h1 className="font-serif text-2xl font-black text-cream">
-          Food<span className="text-clay">Club</span>
+          Dinner<span className="text-clay">Club</span>
         </h1>
         <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
           {user.email?.slice(0, 2).toUpperCase()}

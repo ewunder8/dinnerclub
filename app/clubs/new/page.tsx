@@ -78,7 +78,7 @@ export default function CreateClubPage() {
           ← Back
         </button>
         <h1 className="font-serif text-xl font-black text-cream">
-          Food<span className="text-clay">Club</span>
+          Dinner<span className="text-clay">Club</span>
         </h1>
       </nav>
 

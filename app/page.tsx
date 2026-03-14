@@ -19,7 +19,7 @@ export default async function HomePage() {
       <div className="max-w-lg text-center">
         {/* Logo */}
         <h1 className="font-serif text-5xl font-black text-cream mb-2">
-          Food<span className="text-clay">Club</span>
+          Dinner<span className="text-clay">Club</span>
         </h1>
         <p className="text-cream/50 text-lg mb-12">
           Dinner is better together.

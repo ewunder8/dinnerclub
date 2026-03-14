@@ -25,18 +25,6 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const handleAppleSignIn = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) setError(error.message);
-    setLoading(false);
-  };
-
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -60,7 +48,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="font-serif text-4xl font-black text-charcoal">
-            Food<span className="text-clay">Club</span>
+            Dinner<span className="text-clay">Club</span>
           </h1>
           <p className="text-mid text-sm mt-2">
             {isSignUp ? "Create your account" : "Welcome back"}
@@ -82,18 +70,6 @@ export default function LoginPage() {
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
             Continue with Google
-          </button>
-
-          <button
-            onClick={handleAppleSignIn}
-            disabled={loading}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-charcoal text-cream rounded-xl font-semibold hover:bg-black transition-colors disabled:opacity-50"
-          >
-            {/* Apple SVG */}
-            <svg width="16" height="16" viewBox="0 0 814 1000" fill="white">
-              <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49.1 192.5-49.1zm-149.1-89.7c31.5-38.5 54.3-92.1 54.3-145.7 0-7.4-.6-14.9-1.9-21.1-51.6 2-112.3 34.5-149.1 79.2-28.5 32.8-55.6 86.4-55.6 140.6 0 8.1 1.3 16.2 1.9 18.8 3.2.6 8.4 1.3 13.6 1.3 46.4 0 103.1-30.8 136.8-73.1z"/>
-            </svg>
-            Continue with Apple
           </button>
         </div>
 
