@@ -94,7 +94,7 @@ export default async function DinnerPage({
 
   // ── Confirmed: show countdown view ───────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
-    const [{ data: restaurant }, { data: rawRsvps }, { data: club }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -109,6 +109,9 @@ export default async function DinnerPage({
         .select("name")
         .eq("id", params.id)
         .single(),
+      dinner.reserved_by
+        ? supabase.from("users").select("name, email").eq("id", dinner.reserved_by).single()
+        : Promise.resolve({ data: null }),
     ]);
 
     if (!restaurant) notFound();
@@ -125,6 +128,7 @@ export default async function DinnerPage({
             rsvps={rsvps}
             userId={user.id}
             clubName={club?.name ?? ""}
+            reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
           />
           {isOwner && (
             <div className="flex items-center justify-end gap-4 mt-6">
@@ -247,7 +251,7 @@ export default async function DinnerPage({
           />
 
           {isOwner && (
-            <ConfirmReservationForm dinnerId={params.dinnerId} />
+            <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} />
           )}
           {isOwner && (
             <div className="flex justify-end">

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
 import { getInitials } from "@/lib/utils";
+import SignOutButton from "@/app/profile/SignOutButton";
 
 const DINNER_STATUS_LABEL: Record<string, string> = {
   polling:             "Taking suggestions",
@@ -112,13 +113,16 @@ export default async function DashboardPage() {
         <h1 className="font-sans text-2xl font-extrabold tracking-tight text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <a
-          href="/profile"
-          title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-slate flex items-center justify-center text-white text-sm font-bold hover:bg-slate-light transition-colors"
-        >
-          {getInitials(displayName)}
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="/profile"
+            title="Profile"
+            className="w-9 h-9 rounded-full bg-slate-light flex items-center justify-center text-white text-sm font-bold hover:bg-white/20 transition-colors"
+          >
+            {getInitials(displayName)}
+          </a>
+          <SignOutButton variant="dark" />
+        </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">

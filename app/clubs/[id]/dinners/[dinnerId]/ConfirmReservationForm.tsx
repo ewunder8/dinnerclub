@@ -17,9 +17,10 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 
 type Props = {
   dinnerId: string;
+  userId: string;
 };
 
-export default function ConfirmReservationForm({ dinnerId }: Props) {
+export default function ConfirmReservationForm({ dinnerId, userId }: Props) {
   const router = useRouter();
 
   const [datetime, setDatetime] = useState("");
@@ -54,6 +55,7 @@ export default function ConfirmReservationForm({ dinnerId }: Props) {
         party_size: partySize,
         reservation_platform: platform,
         confirmation_number: confirmationNumber.trim() || null,
+        reserved_by: userId,
       })
       .eq("id", dinnerId);
 

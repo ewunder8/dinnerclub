@@ -32,7 +32,7 @@ export default async function HomePage() {
           Stop debating.<br />Start eating.
         </h2>
         <p className="text-cream/60 text-lg md:text-xl max-w-xl leading-relaxed mb-10">
-          DinnerClub makes it effortless to pick a restaurant, lock a reservation,
+          DinnerClub makes it effortless to pick a restaurant, book a reservation,
           and actually show up — together.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
@@ -64,13 +64,13 @@ export default async function HomePage() {
                 step: "01",
                 emoji: "🗳️",
                 title: "Vote",
-                desc: "Members suggest restaurants and vote on their favourite. The group decides together.",
+                desc: "Members suggest restaurants and vote on their favorite. The group decides together.",
               },
               {
                 step: "02",
                 emoji: "📞",
                 title: "Reserve",
-                desc: "First person to lock a table wins. Resy, OpenTable, Tock — any platform works.",
+                desc: "First person to book a table wins. Resy, OpenTable, Tock — any platform works.",
               },
               {
                 step: "03",
@@ -129,7 +129,7 @@ export default async function HomePage() {
               {
                 emoji: "⚡",
                 title: "First to confirm wins",
-                desc: "Anyone can try to get the reservation. The first one to lock it in gets the credit.",
+                desc: "Anyone can try to get the reservation. The first one to book it gets the credit.",
               },
               {
                 emoji: "📍",

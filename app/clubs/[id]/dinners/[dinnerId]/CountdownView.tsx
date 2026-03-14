@@ -31,6 +31,7 @@ type Props = {
   rsvps: RsvpWithUser[];
   userId: string;
   clubName: string;
+  reservedByName?: string | null;
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }> = {
@@ -40,7 +41,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }
   past:     { banner: "bg-black/5 border-black/10",       countdown: "text-mid" },
 };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
@@ -151,6 +152,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
             </a>
           )}
         </div>
+
+        {/* Booker crown */}
+        {reservedByName && (
+          <div className="mt-4 pt-4 border-t border-black/5 flex items-center gap-2">
+            <span className="text-base">👑</span>
+            <p className="text-sm text-ink-muted">
+              Reserved by <span className="font-semibold text-ink">{reservedByName}</span>
+            </p>
+          </div>
+        )}
 
         {/* Reservation details */}
         {dinner.reservation_platform && (

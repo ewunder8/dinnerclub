@@ -19,24 +19,24 @@ export default async function ProfilePage() {
   if (!profile) redirect("/onboarding");
 
   return (
-    <main className="min-h-screen bg-warm-white">
-      <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
+    <main className="min-h-screen bg-snow">
+      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
         <a
           href="/dashboard"
-          className="text-cream/50 hover:text-cream transition-colors text-sm"
+          className="text-white/60 hover:text-white transition-colors text-sm"
         >
           ← Dashboard
         </a>
-        <h1 className="font-serif text-xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
+        <h1 className="font-sans text-xl font-extrabold tracking-tight text-white">
+          dinner<span className="text-citrus">club</span>
         </h1>
-        <div className="w-9 h-9" />
+        <div className="w-16" />
       </nav>
 
       <div className="max-w-md mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="font-serif text-3xl font-bold">Your profile</h2>
-          <p className="text-mid text-sm mt-2">
+          <h2 className="font-sans text-3xl font-bold text-ink">Your profile</h2>
+          <p className="text-ink-muted text-sm mt-2">
             This is how your name appears to club members.
           </p>
         </div>
@@ -45,7 +45,7 @@ export default async function ProfilePage() {
           <ProfileForm user={profile as User} />
         </div>
 
-        <div className="mt-4">
+        <div className="mt-6 border-t border-black/8 pt-6">
           <SignOutButton />
         </div>
       </div>

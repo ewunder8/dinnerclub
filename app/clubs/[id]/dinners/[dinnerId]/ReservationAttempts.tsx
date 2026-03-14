@@ -22,6 +22,7 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
 
   const myAttempt = attempts.find((a) => a.user_id === userId);
   const activeAttempts = attempts.filter((a) => a.status === "attempting");
+  const succeededAttempt = attempts.find((a) => a.status === "succeeded");
   const isAttempting = myAttempt?.status === "attempting";
   const isSucceeded = myAttempt?.status === "succeeded";
 
@@ -132,13 +133,27 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
         )}
       </div>
 
+      {/* Crown — show who got it */}
+      {succeededAttempt && (
+        <div className="bg-citrus-light border border-citrus/30 rounded-2xl p-4 flex items-center gap-3">
+          <span className="text-2xl">👑</span>
+          <div>
+            <p className="font-semibold text-ink text-sm">
+              {succeededAttempt.users.name || succeededAttempt.users.email.split("@")[0]}
+              {succeededAttempt.user_id === userId && " (you)"}
+            </p>
+            <p className="text-xs text-ink-muted">Booked the table</p>
+          </div>
+        </div>
+      )}
+
       {/* Confirm form — shown to whoever got the reservation */}
       {isSucceeded && (
         <div>
-          <p className="text-sm font-semibold text-forest mb-3">
+          <p className="text-sm font-semibold text-green-600 mb-3">
             Nice work! Fill in the details to confirm for the group.
           </p>
-          <ConfirmReservationForm dinnerId={dinnerId} />
+          <ConfirmReservationForm dinnerId={dinnerId} userId={userId} />
         </div>
       )}
 

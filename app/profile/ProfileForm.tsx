@@ -46,19 +46,19 @@ export default function ProfileForm({ user }: Props) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Avatar initials preview */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-clay flex items-center justify-center text-white text-2xl font-bold">
+        <div className="w-16 h-16 rounded-full bg-slate flex items-center justify-center text-white text-2xl font-bold">
           {(name || user.email).slice(0, 1).toUpperCase()}
         </div>
         <div>
-          <p className="font-semibold text-charcoal">{name || user.email}</p>
-          <p className="text-sm text-mid">{user.email}</p>
+          <p className="font-semibold text-ink">{name || user.email}</p>
+          <p className="text-sm text-ink-muted">{user.email}</p>
         </div>
       </div>
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-1">
-          Name <span className="text-clay">*</span>
+        <label className="block text-sm font-semibold text-ink mb-1">
+          Name <span className="text-citrus-dark">*</span>
         </label>
         <input
           type="text"
@@ -67,14 +67,14 @@ export default function ProfileForm({ user }: Props) {
           placeholder="Your name"
           maxLength={80}
           required
-          className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors"
+          className="w-full border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface transition-colors"
         />
       </div>
 
       {/* City */}
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-1">
-          City <span className="text-mid font-normal">(optional)</span>
+        <label className="block text-sm font-semibold text-ink mb-1">
+          City <span className="text-ink-muted font-normal">(optional)</span>
         </label>
         <input
           type="text"
@@ -82,17 +82,17 @@ export default function ProfileForm({ user }: Props) {
           onChange={(e) => setCity(e.target.value)}
           placeholder="e.g. New York"
           maxLength={60}
-          className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors"
+          className="w-full border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface transition-colors"
         />
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      {saved && <p className="text-forest text-sm font-semibold">Profile saved!</p>}
+      {saved && <p className="text-green-600 text-sm font-semibold">Profile saved!</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-clay text-white font-bold py-4 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {loading ? "Saving…" : "Save changes →"}
       </button>
