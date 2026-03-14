@@ -156,7 +156,7 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 - (nothing)
 
 ### Up Next
-- [ ] Confirm reservation flow — owner sets datetime, party size, platform, confirmation number to flip dinner to `confirmed`
+- (nothing — MVP feature complete)
 
 ### Done
 - [x] Auth (login/signup — Google, Apple, email)
@@ -175,6 +175,7 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 - [x] `lib/sharing.ts` — shareViaNative(), shareViaWhatsApp(), shareViaSMS(), copyToClipboard(), share text helpers
 - [x] Countdown view — shown when dinner status is `confirmed`, with RSVP toggle + share sheet
 - [x] Post-dinner ratings UI — star pickers, tags, would_return, recommend, community summary
+- [x] Confirm reservation flow — owner sets datetime, party size, platform, confirmation number → flips dinner to `confirmed`
 
 ## File Conventions
 

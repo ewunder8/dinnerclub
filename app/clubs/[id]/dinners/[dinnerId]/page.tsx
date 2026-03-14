@@ -17,6 +17,7 @@ import PollOptionCard from "./PollOptionCard";
 import OwnerControls from "./OwnerControls";
 import CountdownView from "./CountdownView";
 import RatingsForm from "./RatingsForm";
+import ConfirmReservationForm from "./ConfirmReservationForm";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -198,12 +199,7 @@ export default async function DinnerPage({
           )}
 
           {isOwner && (
-            <div className="bg-charcoal/5 border border-charcoal/10 rounded-2xl p-5">
-              <p className="text-sm font-semibold text-charcoal mb-1">Got a reservation?</p>
-              <p className="text-xs text-mid">
-                Confirm it in the dinner settings to unlock the countdown view for the group.
-              </p>
-            </div>
+            <ConfirmReservationForm dinnerId={params.dinnerId} />
           )}
         </div>
       </main>
