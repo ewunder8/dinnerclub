@@ -114,7 +114,7 @@ export default async function HomePage() {
               {
                 emoji: "🎯",
                 title: "Theme your poll",
-                desc: "Set a cuisine, price range, vibe, or neighbourhood before the crew starts suggesting.",
+                desc: "Set a cuisine, price range, vibe, or neighborhood before the crew starts suggesting.",
               },
               {
                 emoji: "📅",

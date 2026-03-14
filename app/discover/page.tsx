@@ -101,9 +101,10 @@ export default async function DiscoverPage() {
             const returnPct = summary ? wouldReturnPct(summary) : null;
 
             return (
-              <div
+              <a
                 key={dinner.id}
-                className="bg-white border border-black/8 rounded-2xl p-5"
+                href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                className="bg-white border border-black/8 rounded-2xl p-5 hover:border-black/20 hover:shadow-sm transition-all block"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -222,7 +223,7 @@ export default async function DiscoverPage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>

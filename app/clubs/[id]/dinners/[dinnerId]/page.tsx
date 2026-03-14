@@ -220,7 +220,7 @@ export default async function DinnerPage({
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
-              Winner selected
+              Time to book
             </span>
             <h2 className="font-sans text-3xl font-bold">Seeking reservation</h2>
             <p className="text-ink-muted text-sm mt-2">

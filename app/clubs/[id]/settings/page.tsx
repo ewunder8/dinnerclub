@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { getInitials } from "@/lib/utils";
 import EditClubForm from "./EditClubForm";
+import DeleteClubButton from "./DeleteClubButton";
+import TransferOwnershipButton from "./TransferOwnershipButton";
 
 export default async function ClubSettingsPage({
   params,
@@ -15,18 +17,16 @@ export default async function ClubSettingsPage({
 
   const { data: club } = await supabase
     .from("clubs")
-    .select("id, name, emoji, city, club_members ( user_id, role )")
+    .select("id, name, emoji, city, club_members ( id, user_id, role, users ( name, email ) )")
     .eq("id", params.id)
     .single();
 
   if (!club) notFound();
 
-  const membership = club.club_members.find(
-    (m: { user_id: string; role: string }) => m.user_id === user.id
-  );
+  const membership = (club.club_members as { id: string; user_id: string; role: string; users: { name: string; email: string } }[])
+    .find((m) => m.user_id === user.id);
 
   if (!membership) notFound();
-  // Only owners can access settings
   if (membership.role !== "owner") redirect(`/clubs/${params.id}`);
 
   const { data: profile } = await supabase
@@ -36,6 +36,13 @@ export default async function ClubSettingsPage({
     .single();
 
   const displayName = profile?.name || user.email || "?";
+
+  const members = (club.club_members as { id: string; user_id: string; role: string; users: { name: string; email: string } }[])
+    .map((m) => ({
+      id: m.id,
+      user_id: m.user_id,
+      name: m.users.name || m.users.email.split("@")[0],
+    }));
 
   return (
     <main className="min-h-screen bg-snow">
@@ -58,15 +65,40 @@ export default async function ClubSettingsPage({
         </a>
       </nav>
 
-      <div className="max-w-lg mx-auto px-6 py-12">
-        <h2 className="font-sans text-3xl font-bold mb-2">Club settings</h2>
-        <p className="text-ink-muted text-sm mb-10">Update your club&apos;s name, emoji, and city.</p>
-        <EditClubForm
-          clubId={params.id}
-          initialName={club.name}
-          initialEmoji={club.emoji ?? "🍜"}
-          initialCity={club.city ?? ""}
-        />
+      <div className="max-w-lg mx-auto px-6 py-12 flex flex-col gap-12">
+
+        {/* Edit club */}
+        <div>
+          <h2 className="font-sans text-3xl font-bold mb-2">Club settings</h2>
+          <p className="text-ink-muted text-sm mb-8">Update your club&apos;s name, emoji, and city.</p>
+          <EditClubForm
+            clubId={params.id}
+            initialName={club.name}
+            initialEmoji={club.emoji ?? "🍜"}
+            initialCity={club.city ?? ""}
+          />
+        </div>
+
+        {/* Transfer ownership */}
+        {members.length > 1 && (
+          <div>
+            <h3 className="font-sans text-lg font-bold mb-1">Transfer ownership</h3>
+            <p className="text-ink-muted text-sm mb-4">Hand over the club to another member. You&apos;ll become a regular member.</p>
+            <TransferOwnershipButton
+              clubId={params.id}
+              currentUserId={user.id}
+              members={members}
+            />
+          </div>
+        )}
+
+        {/* Danger zone */}
+        <div className="border-t border-black/8 pt-8">
+          <h3 className="font-sans text-lg font-bold mb-1 text-red-500">Danger zone</h3>
+          <p className="text-ink-muted text-sm mb-4">Permanently delete this club and all its dinners.</p>
+          <DeleteClubButton clubId={params.id} clubName={club.name} />
+        </div>
+
       </div>
     </main>
   );
