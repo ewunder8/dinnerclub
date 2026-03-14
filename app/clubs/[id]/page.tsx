@@ -29,10 +29,12 @@ export default async function ClubPage({
   if (!club) notFound();
 
   // Verify the current user is a member
-  const isMember = club.club_members.some(
-    (m: { users: { id: string } }) => m.users.id === user.id
+  const currentMembership = club.club_members.find(
+    (m: { users: { id: string }; role: string }) => m.users.id === user.id
   );
-  if (!isMember) notFound();
+  if (!currentMembership) notFound();
+
+  const isOwner = currentMembership.role === "owner";
 
   // Fetch active invite link
   const { data: invite } = await supabase
@@ -126,22 +128,35 @@ export default async function ClubPage({
 
         {/* Dinners — empty state */}
         <section>
-          <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
-            Dinners
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-sm text-mid uppercase tracking-wide">
+              Dinners
+            </h3>
+            {isOwner && (
+              <a
+                href={`/clubs/${params.id}/dinners/new`}
+                className="text-sm font-semibold text-clay hover:text-clay-dark transition-colors"
+              >
+                + Start a dinner
+              </a>
+            )}
+          </div>
           <div className="border-2 border-dashed border-clay/20 rounded-2xl p-12 text-center">
             <p className="text-4xl mb-4">🍽️</p>
             <p className="font-semibold text-charcoal mb-2">No dinners yet</p>
             <p className="text-mid text-sm mb-6">
-              Start a poll and let the crew vote on where to eat.
+              {isOwner
+                ? "Start a poll and let the crew vote on where to eat."
+                : "Your club owner will start a dinner soon."}
             </p>
-            <button
-              disabled
-              className="bg-clay text-white font-bold py-3 px-6 rounded-xl opacity-40 cursor-not-allowed"
-              title="Coming soon"
-            >
-              Start a dinner →
-            </button>
+            {isOwner && (
+              <a
+                href={`/clubs/${params.id}/dinners/new`}
+                className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+              >
+                Start a dinner →
+              </a>
+            )}
           </div>
         </section>
 

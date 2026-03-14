@@ -137,7 +137,10 @@ export type Database = {
           ratings_open_until: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["dinners"]["Row"], "id" | "created_at"> & {
+        Insert: Omit<
+          Database["public"]["Tables"]["dinners"]["Row"],
+          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode"
+        > & {
           // Fields with DB defaults — optional on insert
           status?: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
           voting_open?: boolean;
