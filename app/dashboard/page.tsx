@@ -35,7 +35,15 @@ export default async function DashboardPage() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-10">
-        <h2 className="font-serif text-3xl font-bold mb-6">Your Clubs</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-serif text-3xl font-bold">Your Clubs</h2>
+          <a
+            href="/clubs/new"
+            className="text-sm font-semibold text-clay hover:text-clay-dark transition-colors"
+          >
+            + New club
+          </a>
+        </div>
 
         {clubs.length === 0 ? (
           // Empty state
@@ -46,9 +54,12 @@ export default async function DashboardPage() {
               Create a club and invite your friends, or ask someone to share
               their invite link.
             </p>
-            <button className="bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors">
+            <a
+              href="/clubs/new"
+              className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+            >
               Create your first club →
-            </button>
+            </a>
           </div>
         ) : (
           // Club grid
