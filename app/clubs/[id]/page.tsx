@@ -4,6 +4,8 @@ import { getInitials, getInviteTimeRemaining } from "@/lib/utils";
 
 import InviteButton from "./InviteButton";
 import GenerateInviteButton from "./GenerateInviteButton";
+import LeaveClubButton from "./LeaveClubButton";
+import RemoveMemberButton from "./RemoveMemberButton";
 
 export default async function ClubPage({
   params,
@@ -38,7 +40,7 @@ export default async function ClubPage({
 
   // Verify the current user is a member
   const currentMembership = club.club_members.find(
-    (m: { users: { id: string }; role: string }) => m.users.id === user.id
+    (m: { id: string; users: { id: string }; role: string }) => m.users.id === user.id
   );
   if (!currentMembership) notFound();
 
@@ -145,12 +147,27 @@ export default async function ClubPage({
                     <p className="text-xs text-ink-muted">Owner</p>
                   )}
                 </div>
-                {m.users.id === user.id && (
+                {m.users.id === user.id ? (
                   <span className="text-xs text-ink-muted bg-black/5 px-2 py-1 rounded-full">You</span>
-                )}
+                ) : isOwner ? (
+                  <RemoveMemberButton
+                    memberId={m.id}
+                    memberName={m.users.name || m.users.email.split("@")[0]}
+                  />
+                ) : null}
               </div>
             ))}
           </div>
+
+          {/* Leave club — non-owners only */}
+          {!isOwner && (
+            <div className="pt-2 flex justify-end">
+              <LeaveClubButton
+                clubId={params.id}
+                memberId={currentMembership.id}
+              />
+            </div>
+          )}
         </section>
 
         {/* Invite link */}

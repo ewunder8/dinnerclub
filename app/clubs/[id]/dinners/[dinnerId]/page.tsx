@@ -218,7 +218,7 @@ export default async function DinnerPage({
             </span>
             <h2 className="font-sans text-3xl font-bold">Seeking reservation</h2>
             <p className="text-ink-muted text-sm mt-2">
-              Someone needs to lock in a table. First to confirm wins!
+              Someone needs to book a table. First to confirm wins!
             </p>
           </div>
 
