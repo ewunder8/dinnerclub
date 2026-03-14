@@ -35,29 +35,57 @@ export default async function DashboardPage() {
 
   const clubIds = clubs.map((c) => c.id);
 
-  // Fetch active dinners across all clubs (excluding completed/cancelled)
-  const { data: rawDinners } = clubIds.length > 0
-    ? await supabase
-        .from("dinners")
-        .select("id, club_id, status, reservation_datetime, winning_restaurant_place_id, created_at")
-        .in("club_id", clubIds)
-        .in("status", ["confirmed", "polling", "seeking_reservation", "waitlisted"])
-        .order("reservation_datetime", { ascending: true })
-    : { data: [] };
+  const now = new Date().toISOString();
+
+  // Fetch active dinners + pending-rating dinners in parallel
+  const [{ data: rawDinners }, { data: rawCompletedDinners }] = await Promise.all([
+    clubIds.length > 0
+      ? supabase
+          .from("dinners")
+          .select("id, club_id, status, reservation_datetime, winning_restaurant_place_id, created_at")
+          .in("club_id", clubIds)
+          .in("status", ["confirmed", "polling", "seeking_reservation", "waitlisted"])
+          .order("reservation_datetime", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    clubIds.length > 0
+      ? supabase
+          .from("dinners")
+          .select("id, club_id, winning_restaurant_place_id, ratings_open_until")
+          .in("club_id", clubIds)
+          .eq("status", "completed")
+          .not("ratings_open_until", "is", null)
+          .gt("ratings_open_until", now)
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const dinners = rawDinners ?? [];
+  const completedDinners = rawCompletedDinners ?? [];
 
-  // Fetch restaurant names for confirmed dinners
-  const confirmedPlaceIds = dinners
-    .filter((d) => d.winning_restaurant_place_id)
-    .map((d) => d.winning_restaurant_place_id!);
+  // Filter completed dinners to those the user hasn't rated yet
+  let unratedDinners: typeof completedDinners = [];
+  if (completedDinners.length > 0) {
+    const { data: myRatings } = await supabase
+      .from("dinner_ratings")
+      .select("dinner_id")
+      .eq("user_id", user.id)
+      .in("dinner_id", completedDinners.map((d) => d.id));
+
+    const ratedIds = new Set((myRatings ?? []).map((r) => r.dinner_id));
+    unratedDinners = completedDinners.filter((d) => !ratedIds.has(d.id));
+  }
+
+  // Fetch restaurant names for active + unrated dinners
+  const allPlaceIds = [
+    ...dinners.filter((d) => d.winning_restaurant_place_id).map((d) => d.winning_restaurant_place_id!),
+    ...unratedDinners.filter((d) => d.winning_restaurant_place_id).map((d) => d.winning_restaurant_place_id!),
+  ];
 
   const restaurantMap: Record<string, string> = {};
-  if (confirmedPlaceIds.length > 0) {
+  if (allPlaceIds.length > 0) {
     const { data: restaurants } = await supabase
       .from("restaurant_cache")
       .select("place_id, name")
-      .in("place_id", confirmedPlaceIds);
+      .in("place_id", Array.from(new Set(allPlaceIds)));
     for (const r of restaurants ?? []) {
       restaurantMap[r.place_id] = r.name;
     }
@@ -67,14 +95,14 @@ export default async function DashboardPage() {
   const clubMap = Object.fromEntries(clubs.map((c) => [c.id, c]));
 
   // Split into upcoming (confirmed, future) vs active (polling etc.)
-  const now = new Date();
+  const nowDate = new Date();
   const upcoming = dinners.filter(
     (d) =>
       d.status === "confirmed" &&
       d.reservation_datetime &&
-      new Date(d.reservation_datetime) > now
+      new Date(d.reservation_datetime) > nowDate
   );
-  const active = dinners.filter((d) => d.status !== "confirmed" || !d.reservation_datetime || new Date(d.reservation_datetime) <= now);
+  const active = dinners.filter((d) => d.status !== "confirmed" || !d.reservation_datetime || new Date(d.reservation_datetime) <= nowDate);
 
   return (
     <main className="min-h-screen bg-warm-white">
@@ -140,6 +168,41 @@ export default async function DashboardPage() {
                         })}
                       </p>
                     </div>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Rate your dinner ── */}
+        {unratedDinners.length > 0 && (
+          <section>
+            <h2 className="font-serif text-2xl font-bold mb-4">Rate your dinner</h2>
+            <div className="flex flex-col gap-3">
+              {unratedDinners.map((dinner) => {
+                const club = clubMap[dinner.club_id];
+                const restaurantName = dinner.winning_restaurant_place_id
+                  ? restaurantMap[dinner.winning_restaurant_place_id]
+                  : null;
+                return (
+                  <a
+                    key={dinner.id}
+                    href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                    className="bg-white border border-gold/30 rounded-2xl p-5 hover:border-gold/60 hover:shadow-sm transition-all flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl">{club?.emoji ?? "⭐"}</span>
+                      <div>
+                        <p className="font-semibold text-charcoal">
+                          {restaurantName ?? "Dinner"}
+                        </p>
+                        <p className="text-sm text-mid mt-0.5">{club?.name}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-gold bg-gold/10 px-3 py-1 rounded-full shrink-0">
+                      Leave a rating
+                    </span>
                   </a>
                 );
               })}

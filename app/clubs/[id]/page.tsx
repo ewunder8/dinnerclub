@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getInitials, getInviteTimeRemaining } from "@/lib/utils";
 
 import InviteButton from "./InviteButton";
+import GenerateInviteButton from "./GenerateInviteButton";
 
 export default async function ClubPage({
   params,
@@ -155,7 +156,8 @@ export default async function ClubPage({
             </div>
           ) : (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-sm text-mid">No active invite link. Generate one from settings.</p>
+              <p className="text-sm text-mid mb-4">No active invite link.</p>
+              <GenerateInviteButton clubId={params.id} />
             </div>
           )}
         </section>
