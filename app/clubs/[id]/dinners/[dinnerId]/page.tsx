@@ -10,18 +10,50 @@ import {
   canSuggest,
   canRemoveSuggestion,
 } from "@/lib/poll";
-import type { RestaurantCache, Vote } from "@/lib/supabase/database.types";
+import { isRatingWindowOpen } from "@/lib/countdown";
+import type { RestaurantCache, Vote, User, RSVP } from "@/lib/supabase/database.types";
 import SuggestRestaurant from "./SuggestRestaurant";
 import PollOptionCard from "./PollOptionCard";
 import OwnerControls from "./OwnerControls";
+import CountdownView from "./CountdownView";
+import RatingsForm from "./RatingsForm";
 
+// ─── Shared nav ──────────────────────────────────────────────
+function Nav({
+  clubId,
+  userEmail,
+}: {
+  clubId: string;
+  userEmail: string;
+}) {
+  return (
+    <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
+      <a
+        href={`/clubs/${clubId}`}
+        className="text-cream/50 hover:text-cream transition-colors text-sm"
+      >
+        ← Club
+      </a>
+      <h1 className="font-serif text-xl font-black text-cream">
+        Dinner<span className="text-clay">Club</span>
+      </h1>
+      <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
+        {getInitials(userEmail)}
+      </div>
+    </nav>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────
 export default async function DinnerPage({
   params,
 }: {
   params: { id: string; dinnerId: string };
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect("/auth/login");
 
@@ -47,7 +79,138 @@ export default async function DinnerPage({
 
   if (!dinner) notFound();
 
-  // Fetch member count (for vote percentages) and active poll options in parallel
+  // ── Confirmed: show countdown view ───────────────────────────
+  if (dinner.status === "confirmed" && dinner.reservation_datetime) {
+    const [{ data: restaurant }, { data: rawRsvps }] = await Promise.all([
+      supabase
+        .from("restaurant_cache")
+        .select("*")
+        .eq("place_id", dinner.winning_restaurant_place_id ?? "")
+        .single(),
+      supabase
+        .from("rsvps")
+        .select("*, users ( id, name, email, avatar_url )")
+        .eq("dinner_id", params.dinnerId),
+    ]);
+
+    if (!restaurant) notFound();
+
+    const rsvps = (rawRsvps ?? []) as (RSVP & { users: User })[];
+
+    return (
+      <main className="min-h-screen bg-warm-white">
+        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <div className="max-w-2xl mx-auto px-6 py-10">
+          <CountdownView
+            dinner={dinner}
+            restaurant={restaurant as RestaurantCache}
+            rsvps={rsvps}
+            userId={user.id}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // ── Completed: show ratings view ─────────────────────────────
+  if (dinner.status === "completed") {
+    const placeId = dinner.winning_restaurant_place_id ?? "";
+    const [
+      { data: restaurant },
+      { data: existingRating },
+      { data: summary },
+    ] = await Promise.all([
+      supabase
+        .from("restaurant_cache")
+        .select("*")
+        .eq("place_id", placeId)
+        .single(),
+      supabase
+        .from("dinner_ratings")
+        .select("*")
+        .eq("dinner_id", params.dinnerId)
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("dinner_rating_summaries")
+        .select("*")
+        .eq("dinner_id", params.dinnerId)
+        .maybeSingle(),
+    ]);
+
+    const windowOpen = isRatingWindowOpen(dinner.ratings_open_until);
+
+    return (
+      <main className="min-h-screen bg-warm-white">
+        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <div className="max-w-2xl mx-auto px-6 py-10">
+          <div className="mb-6">
+            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+              Dinner completed
+            </span>
+            <h2 className="font-serif text-3xl font-bold">How was it?</h2>
+          </div>
+          <RatingsForm
+            dinner={dinner}
+            restaurant={restaurant as RestaurantCache}
+            userId={user.id}
+            existingRating={existingRating ?? null}
+            summary={summary ?? null}
+            ratingWindowOpen={windowOpen}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // ── Seeking reservation: winner picked, no reservation yet ───
+  if (dinner.status === "seeking_reservation" && dinner.winning_restaurant_place_id) {
+    const { data: restaurant } = await supabase
+      .from("restaurant_cache")
+      .select("*")
+      .eq("place_id", dinner.winning_restaurant_place_id)
+      .single();
+
+    return (
+      <main className="min-h-screen bg-warm-white">
+        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
+          <div>
+            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+              Winner selected
+            </span>
+            <h2 className="font-serif text-3xl font-bold">Seeking reservation</h2>
+            <p className="text-mid text-sm mt-2">
+              Someone needs to lock in a table. First to confirm wins!
+            </p>
+          </div>
+
+          {restaurant && (
+            <div className="bg-white border border-black/8 rounded-2xl p-5">
+              <p className="text-xs text-mid mb-1">You&apos;re going to</p>
+              <p className="font-serif text-xl font-bold text-charcoal">
+                {restaurant.name}
+              </p>
+              {restaurant.address && (
+                <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+              )}
+            </div>
+          )}
+
+          {isOwner && (
+            <div className="bg-charcoal/5 border border-charcoal/10 rounded-2xl p-5">
+              <p className="text-sm font-semibold text-charcoal mb-1">Got a reservation?</p>
+              <p className="text-xs text-mid">
+                Confirm it in the dinner settings to unlock the countdown view for the group.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // ── Default: poll view ───────────────────────────────────────
   const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }] =
     await Promise.all([
       supabase
@@ -88,7 +251,6 @@ export default async function DinnerPage({
     }
   }
 
-  // Merge options with restaurant data and votes
   const mergedOptions = opts
     .filter((o) => restaurantMap[o.place_id])
     .map((o) => ({
@@ -117,21 +279,7 @@ export default async function DinnerPage({
 
   return (
     <main className="min-h-screen bg-warm-white">
-      {/* Nav */}
-      <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
-        <a
-          href={`/clubs/${params.id}`}
-          className="text-cream/50 hover:text-cream transition-colors text-sm"
-        >
-          ← Club
-        </a>
-        <h1 className="font-serif text-xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
-        </h1>
-        <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
-          {getInitials(user.email || "?")}
-        </div>
-      </nav>
+      <Nav clubId={params.id} userEmail={user.email || "?"} />
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 

@@ -153,26 +153,28 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 ## TODO
 
 ### In Progress
-- [ ] Poll UI — suggest restaurants, vote, see results
+- (nothing)
 
 ### Up Next
-- [ ] `lib/countdown.ts` — getCountdown(), formatReservationTime(), urgency levels, rating helpers
-- [ ] Countdown view — shown when dinner is confirmed and in the future
-- [ ] Post-dinner ratings UI — triggered when status = completed and window is open
-- [ ] `lib/sharing.ts` — invite + reservation sharing via Web Share API, WhatsApp, iMessage, etc.
+- [ ] Confirm reservation flow — owner sets datetime, party size, platform, confirmation number to flip dinner to `confirmed`
 
 ### Done
 - [x] Auth (login/signup — Google, Apple, email)
 - [x] Landing page
 - [x] Dashboard (clubs list + empty state)
 - [x] Club creation flow (`/clubs/new`)
-- [x] Club detail page (`/clubs/[id]`) — members, invite link
+- [x] Club detail page (`/clubs/[id]`) — members, invite link, dinners list
 - [x] Invite join flow (`/join/[token]`)
 - [x] `lib/places.ts` — Google Places API with 48hr cache
 - [x] Fix Supabase package compatibility (`@supabase/ssr` 0.3→0.9)
 - [x] Update `database.types.ts` — migrations 002–004 (theme fields, voting_open, suggestion_mode, max_suggestions, removed_by/at/note, dinner_id on votes, rating dimensions, ratings_open_until, beli_url, dinner_rating_summaries view)
 - [x] Write `lib/poll.ts` — state machine, vote counting, tie detection, theme formatting, suggestion mode helpers
 - [x] Dinner creation form (`/clubs/[id]/dinners/new`) — theme, suggestion mode, poll close date, owner-only guard
+- [x] Poll UI (`/clubs/[id]/dinners/[dinnerId]`) — suggest restaurants, vote, owner controls, winner selection
+- [x] `lib/countdown.ts` — getCountdown(), formatReservationTime(), urgency levels, isRatingWindowOpen(), RATING_TAGS, scoreToStars(), validateRating(), wouldReturnPct()
+- [x] `lib/sharing.ts` — shareViaNative(), shareViaWhatsApp(), shareViaSMS(), copyToClipboard(), share text helpers
+- [x] Countdown view — shown when dinner status is `confirmed`, with RSVP toggle + share sheet
+- [x] Post-dinner ratings UI — star pickers, tags, would_return, recommend, community summary
 
 ## File Conventions
 
