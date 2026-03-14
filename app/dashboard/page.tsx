@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
+import { getInitials } from "@/lib/utils";
 
 const DINNER_STATUS_LABEL: Record<string, string> = {
   polling:             "Taking suggestions",
@@ -17,11 +18,16 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth/login");
 
-  // Fetch memberships + basic club info
-  const { data: memberships } = await supabase
+  // Fetch user profile + memberships in parallel
+  const [{ data: profile }, { data: memberships }] = await Promise.all([
+    supabase.from("users").select("name").eq("id", user.id).single(),
+    supabase
     .from("club_members")
-    .select("club_id, role, clubs ( id, name, emoji, city )")
-    .eq("user_id", user.id);
+      .select("club_id, role, clubs ( id, name, emoji, city )")
+      .eq("user_id", user.id),
+  ]);
+
+  const displayName = profile?.name || user.email || "?";
 
   const clubs = (memberships ?? []).map((m) => m.clubs as {
     id: string; name: string; emoji: string | null; city: string | null;
@@ -78,13 +84,24 @@ export default async function DashboardPage() {
         </h1>
         <a
           href="/profile"
+          title="Profile & sign out"
           className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
         >
-          {user.email?.slice(0, 2).toUpperCase()}
+          {getInitials(displayName)}
         </a>
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
+
+        {/* Quick links */}
+        <div className="flex gap-3">
+          <a
+            href="/discover"
+            className="text-sm font-semibold text-charcoal bg-white border border-black/8 px-4 py-2 rounded-xl hover:border-clay/40 transition-colors"
+          >
+            🍽️ Discover
+          </a>
+        </div>
 
         {/* ── Coming up ── */}
         {upcoming.length > 0 && (

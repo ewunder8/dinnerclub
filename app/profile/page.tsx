@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ProfileForm from "./ProfileForm";
+import SignOutButton from "./SignOutButton";
 import type { User } from "@/lib/supabase/database.types";
 
 export default async function ProfilePage() {
@@ -42,6 +43,10 @@ export default async function ProfilePage() {
 
         <div className="bg-white border border-black/8 rounded-2xl p-6">
           <ProfileForm user={profile as User} />
+        </div>
+
+        <div className="mt-4">
+          <SignOutButton />
         </div>
       </div>
     </main>

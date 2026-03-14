@@ -23,10 +23,10 @@ import ReservationAttempts from "./ReservationAttempts";
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
   clubId,
-  userEmail,
+  displayName,
 }: {
   clubId: string;
-  userEmail: string;
+  displayName: string;
 }) {
   return (
     <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
@@ -39,9 +39,13 @@ function Nav({
       <h1 className="font-serif text-xl font-black text-cream">
         Dinner<span className="text-clay">Club</span>
       </h1>
-      <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
-        {getInitials(userEmail)}
-      </div>
+      <a
+        href="/profile"
+        title="Profile & sign out"
+        className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+      >
+        {getInitials(displayName)}
+      </a>
     </nav>
   );
 }
@@ -59,13 +63,18 @@ export default async function DinnerPage({
 
   if (!user) redirect("/auth/login");
 
-  // Verify membership
-  const { data: membership } = await supabase
-    .from("club_members")
-    .select("role")
-    .eq("club_id", params.id)
-    .eq("user_id", user.id)
-    .single();
+  // Fetch membership + user profile in parallel
+  const [{ data: membership }, { data: profile }] = await Promise.all([
+    supabase
+      .from("club_members")
+      .select("role")
+      .eq("club_id", params.id)
+      .eq("user_id", user.id)
+      .single(),
+    supabase.from("users").select("name").eq("id", user.id).single(),
+  ]);
+
+  const displayName = profile?.name || user.email || "?";
 
   if (!membership) notFound();
 
@@ -106,7 +115,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-warm-white">
-        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <CountdownView
             dinner={dinner}
@@ -150,7 +159,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-warm-white">
-        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <div className="mb-6">
             <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -189,7 +198,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-warm-white">
-        <Nav clubId={params.id} userEmail={user.email || "?"} />
+        <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -296,7 +305,7 @@ export default async function DinnerPage({
 
   return (
     <main className="min-h-screen bg-warm-white">
-      <Nav clubId={params.id} userEmail={user.email || "?"} />
+      <Nav clubId={params.id} displayName={displayName} />
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 

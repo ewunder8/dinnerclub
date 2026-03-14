@@ -14,6 +14,12 @@ export default async function ClubPage({
 
   if (!user) redirect("/auth/login");
 
+  // Fetch user profile + club in parallel
+  const [{ data: profile }] = await Promise.all([
+    supabase.from("users").select("name").eq("id", user.id).single(),
+  ]);
+  const displayName = profile?.name || user.email || "?";
+
   // Fetch club + members
   const { data: club } = await supabase
     .from("clubs")
@@ -70,9 +76,13 @@ export default async function ClubPage({
         <h1 className="font-serif text-xl font-black text-cream">
           Dinner<span className="text-clay">Club</span>
         </h1>
-        <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
-          {getInitials(user.email || "?")}
-        </div>
+        <a
+          href="/profile"
+          title="Profile & sign out"
+          className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+        >
+          {getInitials(displayName)}
+        </a>
       </nav>
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
