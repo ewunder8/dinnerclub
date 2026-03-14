@@ -82,7 +82,7 @@ export default async function DinnerPage({
 
   // ── Confirmed: show countdown view ───────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
-    const [{ data: restaurant }, { data: rawRsvps }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawRsvps }, { data: club }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -92,6 +92,11 @@ export default async function DinnerPage({
         .from("rsvps")
         .select("*, users ( id, name, email, avatar_url )")
         .eq("dinner_id", params.dinnerId),
+      supabase
+        .from("clubs")
+        .select("name")
+        .eq("id", params.id)
+        .single(),
     ]);
 
     if (!restaurant) notFound();
@@ -107,6 +112,7 @@ export default async function DinnerPage({
             restaurant={restaurant as RestaurantCache}
             rsvps={rsvps}
             userId={user.id}
+            clubName={club?.name ?? ""}
           />
         </div>
       </main>

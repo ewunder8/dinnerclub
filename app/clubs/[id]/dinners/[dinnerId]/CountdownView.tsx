@@ -16,6 +16,11 @@ import {
   copyToClipboard,
 } from "@/lib/sharing";
 import { getPlatformName, getReservationURL } from "@/lib/reservations";
+import {
+  buildDinnerCalendarEvent,
+  downloadICSFile,
+  generateGoogleCalendarURL,
+} from "@/lib/calendar";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 
 type RsvpWithUser = RSVP & { users: User };
@@ -25,6 +30,7 @@ type Props = {
   restaurant: RestaurantCache;
   rsvps: RsvpWithUser[];
   userId: string;
+  clubName: string;
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }> = {
@@ -34,10 +40,11 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }
   past:     { banner: "bg-black/5 border-black/10",       countdown: "text-mid" },
 };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const countdown = getCountdown(dinner.reservation_datetime!);
@@ -80,6 +87,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId }: Pro
     dinner.reservation_platform && dinner.reservation_platform !== "other"
       ? getReservationURL({ platform: dinner.reservation_platform })
       : null;
+
+  const calendarEvent = buildDinnerCalendarEvent({
+    clubName,
+    restaurantName: restaurant.name,
+    restaurantAddress: restaurant.address ?? undefined,
+    restaurantPhone: restaurant.phone ?? undefined,
+    reservationDatetime: new Date(dinner.reservation_datetime!),
+    confirmationNumber: dinner.confirmation_number ?? undefined,
+    appUrl: typeof window !== "undefined" ? window.location.href : undefined,
+  });
 
   const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
@@ -199,32 +216,61 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId }: Pro
         )}
       </div>
 
-      {/* Share button */}
-      <div>
-        <button
-          onClick={handleShare}
-          className="w-full bg-charcoal text-cream font-bold py-4 rounded-xl hover:bg-charcoal/90 transition-colors text-sm"
-        >
-          Share dinner details
-        </button>
+      {/* Action buttons */}
+      <div className="flex flex-col gap-3">
+        {/* Share */}
+        <div>
+          <button
+            onClick={handleShare}
+            className="w-full bg-charcoal text-cream font-bold py-4 rounded-xl hover:bg-charcoal/90 transition-colors text-sm"
+          >
+            Share dinner details
+          </button>
+          {shareOpen && (
+            <div className="mt-2 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
+              <button
+                onClick={() => { shareViaWhatsApp(shareText); setShareOpen(false); }}
+                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+              >
+                WhatsApp
+              </button>
+              <button
+                onClick={handleCopy}
+                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+              >
+                {copied ? "Copied!" : "Copy to clipboard"}
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* Fallback share sheet */}
-        {shareOpen && (
-          <div className="mt-3 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
-            <button
-              onClick={() => { shareViaWhatsApp(shareText); setShareOpen(false); }}
-              className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
-            >
-              WhatsApp
-            </button>
-            <button
-              onClick={handleCopy}
-              className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
-            >
-              {copied ? "Copied!" : "Copy to clipboard"}
-            </button>
-          </div>
-        )}
+        {/* Add to Calendar */}
+        <div>
+          <button
+            onClick={() => setCalendarOpen((o) => !o)}
+            className="w-full bg-white border border-black/10 text-charcoal font-semibold py-4 rounded-xl hover:border-black/25 transition-colors text-sm"
+          >
+            Add to Calendar
+          </button>
+          {calendarOpen && (
+            <div className="mt-2 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
+              <a
+                href={generateGoogleCalendarURL(calendarEvent)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+              >
+                Google Calendar
+              </a>
+              <button
+                onClick={() => { downloadICSFile(calendarEvent); setCalendarOpen(false); }}
+                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+              >
+                Apple / Outlook (.ics)
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
     </div>

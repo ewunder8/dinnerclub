@@ -123,7 +123,7 @@ function escapeICS(str: string): string {
 }
 
 function generateUID(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@foodclub.app`;
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@dinnerclub.app`;
 }
 
 function sanitizeFilename(name: string): string {
