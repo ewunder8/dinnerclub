@@ -21,7 +21,7 @@ export async function GET(request: Request) {
           .from("users")
           .select("name")
           .eq("id", user.id)
-          .single();
+          .single<{ name: string | null }>();
 
         // New user — send to onboarding
         if (!profile?.name) {
