@@ -21,8 +21,8 @@ export type Database = {
           beli_connected: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "created_at">;
-        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at">;
+        Update: Partial<Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "created_at">>;
         Relationships: [];
       };
 

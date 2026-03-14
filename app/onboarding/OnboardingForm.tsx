@@ -31,6 +31,7 @@ export default function OnboardingForm({
       email,
       name: name.trim(),
       city: city.trim() || null,
+      avatar_url: null,
       beli_connected: false,
     });
 
