@@ -2,7 +2,8 @@
 // DinnerClub — Database Types
 // Kept in sync with all migrations manually.
 // Migrations: 001_initial_schema, 002_poll_themes,
-//             003_vote_uniqueness, 004_ratings_and_countdown
+//             003_vote_uniqueness, 004_ratings_and_countdown,
+//             005_rls_policies
 // ============================================================
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
