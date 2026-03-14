@@ -46,9 +46,25 @@ export default async function ClubPage({
   // Fetch dinners for this club
   const { data: dinners } = await supabase
     .from("dinners")
-    .select("id, status, created_at")
+    .select("id, status, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood, reservation_datetime")
     .eq("club_id", params.id)
     .order("created_at", { ascending: false });
+
+  // Fetch restaurant names for dinners that have a winner
+  const placeIds = (dinners ?? [])
+    .map((d) => d.winning_restaurant_place_id)
+    .filter(Boolean) as string[];
+
+  const restaurantNameMap: Record<string, string> = {};
+  if (placeIds.length > 0) {
+    const { data: restaurants } = await supabase
+      .from("restaurant_cache")
+      .select("place_id, name")
+      .in("place_id", placeIds);
+    for (const r of restaurants ?? []) {
+      restaurantNameMap[r.place_id] = r.name;
+    }
+  }
 
   // Fetch active invite link
   const { data: invite } = await supabase
@@ -180,29 +196,35 @@ export default async function ClubPage({
             </div>
           ) : (
             <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
-              {dinners.map((dinner) => (
-                <a
-                  key={dinner.id}
-                  href={`/clubs/${params.id}/dinners/${dinner.id}`}
-                  className="flex items-center justify-between px-5 py-4 hover:bg-warm-white transition-colors"
-                >
-                  <div>
-                    <p className="font-semibold text-charcoal text-sm">
-                      Dinner{" "}
-                      <span className="text-mid font-normal">
-                        {new Date(dinner.created_at).toLocaleDateString("en-US", {
+              {dinners.map((dinner) => {
+                const restaurantName = dinner.winning_restaurant_place_id
+                  ? restaurantNameMap[dinner.winning_restaurant_place_id]
+                  : null;
+                const theme = [dinner.theme_cuisine, dinner.theme_neighborhood]
+                  .filter(Boolean)
+                  .join(" · ");
+                const label = restaurantName ?? theme ?? "Dinner poll";
+                const dateStr = (dinner.reservation_datetime ?? dinner.created_at);
+                return (
+                  <a
+                    key={dinner.id}
+                    href={`/clubs/${params.id}/dinners/${dinner.id}`}
+                    className="flex items-center justify-between px-5 py-4 hover:bg-warm-white transition-colors"
+                  >
+                    <div>
+                      <p className="font-semibold text-charcoal text-sm">{label}</p>
+                      <p className="text-xs text-mid mt-0.5 capitalize">
+                        {dinner.status.replace(/_/g, " ")} ·{" "}
+                        {new Date(dateStr).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         })}
-                      </span>
-                    </p>
-                    <p className="text-xs text-mid mt-0.5 capitalize">
-                      {dinner.status.replace(/_/g, " ")}
-                    </p>
-                  </div>
-                  <span className="text-mid text-sm">→</span>
-                </a>
-              ))}
+                      </p>
+                    </div>
+                    <span className="text-mid text-sm">→</span>
+                  </a>
+                );
+              })}
             </div>
           )}
         </section>
