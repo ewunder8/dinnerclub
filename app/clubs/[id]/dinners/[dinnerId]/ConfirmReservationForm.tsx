@@ -32,11 +32,6 @@ export default function ConfirmReservationForm({ dinnerId, userId, topOptions }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Min datetime: at least 30 minutes from now
-  const minDatetime = new Date(Date.now() + 30 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
-
   const stepPartySize = (delta: number) => {
     setPartySize((v) => Math.max(1, Math.min(50, v + delta)));
   };
@@ -120,7 +115,6 @@ export default function ConfirmReservationForm({ dinnerId, userId, topOptions }:
           type="datetime-local"
           value={datetime}
           onChange={(e) => setDatetime(e.target.value)}
-          min={minDatetime}
           required
           className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors"
         />

@@ -45,12 +45,10 @@ export default function ReservationAttempts({ dinnerId, userId, attempts, topOpt
         .eq("id", myAttempt.id);
       if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     } else {
-      const { error: e } = await supabase.from("reservation_attempts").insert({
-        dinner_id: dinnerId,
-        user_id: userId,
-        status: "attempting",
-        notes: null,
-      });
+      const { error: e } = await supabase.from("reservation_attempts").upsert(
+        { dinner_id: dinnerId, user_id: userId, status: "attempting", notes: null },
+        { onConflict: "dinner_id,user_id" }
+      );
       if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     }
 

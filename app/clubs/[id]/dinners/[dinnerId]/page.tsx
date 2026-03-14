@@ -336,7 +336,7 @@ export default async function DinnerPage({
 
   // ── Waitlisted ───────────────────────────────────────────────
   if (dinner.status === "waitlisted" && dinner.winning_restaurant_place_id) {
-    const [{ data: restaurant }, { data: rawAttempts }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawAttempts }, { data: rawOptions }, { data: rawVotes }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -348,7 +348,45 @@ export default async function DinnerPage({
         .eq("dinner_id", params.dinnerId)
         .in("status", ["attempting", "waitlisted", "succeeded"])
         .order("created_at", { ascending: true }),
+      supabase
+        .from("poll_options")
+        .select("id, place_id")
+        .eq("dinner_id", params.dinnerId)
+        .is("removed_at", null),
+      supabase
+        .from("votes")
+        .select("option_id")
+        .eq("dinner_id", params.dinnerId),
     ]);
+
+    // Compute top 3 alternatives (by vote count, excluding #1 winner)
+    const waitlistVoteCounts: Record<string, number> = {};
+    for (const v of rawVotes ?? []) {
+      waitlistVoteCounts[v.option_id] = (waitlistVoteCounts[v.option_id] ?? 0) + 1;
+    }
+    const waitlistSortedOptions = (rawOptions ?? [])
+      .filter((o) => o.place_id !== dinner.winning_restaurant_place_id)
+      .sort((a, b) => (waitlistVoteCounts[b.id] ?? 0) - (waitlistVoteCounts[a.id] ?? 0))
+      .slice(0, 2);
+
+    let waitlistFallbacks: { place_id: string; name: string }[] = [];
+    if (waitlistSortedOptions.length > 0) {
+      const { data: fallbackData } = await supabase
+        .from("restaurant_cache")
+        .select("place_id, name")
+        .in("place_id", waitlistSortedOptions.map((o) => o.place_id));
+      waitlistFallbacks = (fallbackData ?? []).map((r) => ({ place_id: r.place_id, name: r.name }));
+      waitlistFallbacks.sort(
+        (a, b) =>
+          waitlistSortedOptions.findIndex((o) => o.place_id === a.place_id) -
+          waitlistSortedOptions.findIndex((o) => o.place_id === b.place_id)
+      );
+    }
+
+    const waitlistTopOptions = [
+      ...(restaurant ? [{ place_id: restaurant.place_id, name: restaurant.name }] : []),
+      ...waitlistFallbacks,
+    ];
 
     return (
       <main className="min-h-screen bg-snow">
@@ -388,9 +426,10 @@ export default async function DinnerPage({
             dinnerId={params.dinnerId}
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
+            topOptions={waitlistTopOptions}
           />
 
-          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={[]} />}
+          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={waitlistTopOptions} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
