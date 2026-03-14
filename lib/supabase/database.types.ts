@@ -90,7 +90,7 @@ export type Database = {
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at" | "used_count">;
-        Update: Partial<Database["public"]["Tables"]["invite_links"]["Insert"]>;
+        Update: Partial<Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at">>;
         Relationships: [
           {
             foreignKeyName: "invite_links_club_id_fkey";
