@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,9 +10,11 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showEmail, setShowEmail] = useState(false);
 
   const supabase = createClient();
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -30,15 +33,20 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = isSignUp
-      ? await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-        })
-      : await supabase.auth.signInWithPassword({ email, password });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) setError(error.message);
+      else setSuccessMessage("Check your email to confirm your account.");
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+      else router.push("/dashboard");
+    }
 
-    if (error) setError(error.message);
     setLoading(false);
   };
 
@@ -116,9 +124,12 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* Error */}
+        {/* Feedback */}
         {error && (
           <p className="text-red-500 text-sm text-center mt-4">{error}</p>
+        )}
+        {successMessage && (
+          <p className="text-green-600 text-sm text-center mt-4">{successMessage}</p>
         )}
 
         {/* Switch mode */}
