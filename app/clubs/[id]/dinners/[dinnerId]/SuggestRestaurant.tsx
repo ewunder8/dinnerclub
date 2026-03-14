@@ -16,6 +16,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<PlaceSearchResult | null>(null);
   const [note, setNote] = useState("");
+  const [beliUrl, setBeliUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,13 +63,31 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
     setQuery("");
     setResults([]);
     setNote("");
+    setBeliUrl("");
     setError(null);
+  };
+
+  const cleanBeliUrl = (raw: string): string | null => {
+    try {
+      const url = new URL(raw.trim());
+      if (url.hostname !== "beliapp.co") return null;
+      return `${url.origin}${url.pathname}`;
+    } catch {
+      return null;
+    }
   };
 
   const handleSubmit = async () => {
     if (!selected) return;
     setSubmitting(true);
     setError(null);
+
+    const parsedBeliUrl = beliUrl.trim() ? cleanBeliUrl(beliUrl) : null;
+    if (beliUrl.trim() && !parsedBeliUrl) {
+      setError("Beli link doesn't look right — paste the full beliapp.co URL.");
+      setSubmitting(false);
+      return;
+    }
 
     const supabase = createClient();
 
@@ -89,7 +108,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
         reservation_platform: null,
         photo_urls: null,
         hours: null,
-        beli_url: null,
+        beli_url: parsedBeliUrl,
         cached_at: new Date().toISOString(),
       });
 
@@ -211,6 +230,17 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={200}
+          className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
+        />
+      )}
+
+      {/* Beli link */}
+      {selected && (
+        <input
+          type="url"
+          placeholder="Beli link — paste from the app (optional)"
+          value={beliUrl}
+          onChange={(e) => setBeliUrl(e.target.value)}
           className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
         />
       )}

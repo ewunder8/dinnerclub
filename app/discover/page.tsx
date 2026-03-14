@@ -190,6 +190,18 @@ export default async function DiscoverPage() {
                   </div>
                 )}
 
+                {/* Beli link */}
+                {restaurant.beli_url && (
+                  <a
+                    href={restaurant.beli_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-clay hover:underline mb-4"
+                  >
+                    View on Beli →
+                  </a>
+                )}
+
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-3 border-t border-black/5">
                   <div className="flex items-center gap-2">

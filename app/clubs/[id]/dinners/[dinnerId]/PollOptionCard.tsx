@@ -154,6 +154,17 @@ export default function PollOptionCard({
             <p className="text-sm text-mid italic mt-1.5">"{option.note}"</p>
           )}
 
+          {r.beli_url && (
+            <a
+              href={r.beli_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-1.5 hover:underline"
+            >
+              View on Beli →
+            </a>
+          )}
+
           {(pollState === "voting_open" || pollState === "voting_closed" || pollState === "winner_selected") &&
             option.vote_pct > 0 && (
               <div className="mt-3">

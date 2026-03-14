@@ -124,19 +124,33 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-3">
           Restaurant
         </h3>
-        <p className="font-serif text-xl font-bold text-charcoal">{restaurant.name}</p>
-        {restaurant.address && (
-          <p className="text-sm text-mid mt-1">{restaurant.address}</p>
-        )}
-        <p className="text-sm text-mid mt-0.5">
-          {[
-            restaurant.price_level ? PRICE_LABELS[restaurant.price_level] : null,
-            restaurant.rating ? `★ ${restaurant.rating}` : null,
-            dinner.party_size ? `Party of ${dinner.party_size}` : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-serif text-xl font-bold text-charcoal">{restaurant.name}</p>
+            {restaurant.address && (
+              <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+            )}
+            <p className="text-sm text-mid mt-0.5">
+              {[
+                restaurant.price_level ? PRICE_LABELS[restaurant.price_level] : null,
+                restaurant.rating ? `★ ${restaurant.rating}` : null,
+                dinner.party_size ? `Party of ${dinner.party_size}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+          {restaurant.beli_url && (
+            <a
+              href={restaurant.beli_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-xs font-semibold text-clay border border-clay/30 px-3 py-1.5 rounded-xl hover:bg-clay/5 transition-colors"
+            >
+              View on Beli →
+            </a>
+          )}
+        </div>
 
         {/* Reservation details */}
         {dinner.reservation_platform && (
