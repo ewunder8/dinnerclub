@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { getInitials, getInviteTimeRemaining } from "@/lib/utils";
+
 import InviteButton from "./InviteButton";
 
 export default async function ClubPage({
@@ -35,6 +36,13 @@ export default async function ClubPage({
   if (!currentMembership) notFound();
 
   const isOwner = currentMembership.role === "owner";
+
+  // Fetch dinners for this club
+  const { data: dinners } = await supabase
+    .from("dinners")
+    .select("id, status, created_at")
+    .eq("club_id", params.id)
+    .order("created_at", { ascending: false });
 
   // Fetch active invite link
   const { data: invite } = await supabase
@@ -126,11 +134,11 @@ export default async function ClubPage({
           )}
         </section>
 
-        {/* Dinners — empty state */}
+        {/* Dinners */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-sm text-mid uppercase tracking-wide">
-              Dinners
+              Dinners · {dinners?.length ?? 0}
             </h3>
             {isOwner && (
               <a
@@ -141,23 +149,52 @@ export default async function ClubPage({
               </a>
             )}
           </div>
-          <div className="border-2 border-dashed border-clay/20 rounded-2xl p-12 text-center">
-            <p className="text-4xl mb-4">🍽️</p>
-            <p className="font-semibold text-charcoal mb-2">No dinners yet</p>
-            <p className="text-mid text-sm mb-6">
-              {isOwner
-                ? "Start a poll and let the crew vote on where to eat."
-                : "Your club owner will start a dinner soon."}
-            </p>
-            {isOwner && (
-              <a
-                href={`/clubs/${params.id}/dinners/new`}
-                className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
-              >
-                Start a dinner →
-              </a>
-            )}
-          </div>
+
+          {!dinners || dinners.length === 0 ? (
+            <div className="border-2 border-dashed border-clay/20 rounded-2xl p-12 text-center">
+              <p className="text-4xl mb-4">🍽️</p>
+              <p className="font-semibold text-charcoal mb-2">No dinners yet</p>
+              <p className="text-mid text-sm mb-6">
+                {isOwner
+                  ? "Start a poll and let the crew vote on where to eat."
+                  : "Your club owner will start a dinner soon."}
+              </p>
+              {isOwner && (
+                <a
+                  href={`/clubs/${params.id}/dinners/new`}
+                  className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+                >
+                  Start a dinner →
+                </a>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
+              {dinners.map((dinner) => (
+                <a
+                  key={dinner.id}
+                  href={`/clubs/${params.id}/dinners/${dinner.id}`}
+                  className="flex items-center justify-between px-5 py-4 hover:bg-warm-white transition-colors"
+                >
+                  <div>
+                    <p className="font-semibold text-charcoal text-sm">
+                      Dinner{" "}
+                      <span className="text-mid font-normal">
+                        {new Date(dinner.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </p>
+                    <p className="text-xs text-mid mt-0.5 capitalize">
+                      {dinner.status.replace(/_/g, " ")}
+                    </p>
+                  </div>
+                  <span className="text-mid text-sm">→</span>
+                </a>
+              ))}
+            </div>
+          )}
         </section>
 
       </div>
