@@ -47,8 +47,8 @@ export default function OnboardingForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-1">
-          Your name <span className="text-clay">*</span>
+        <label className="block text-sm font-semibold text-ink mb-1">
+          Your name <span className="text-citrus-dark">*</span>
         </label>
         <input
           type="text"
@@ -56,20 +56,20 @@ export default function OnboardingForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full py-3 px-4 border border-clay/20 rounded-xl text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay"
+          className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-1">
-          City <span className="text-mid font-normal">(optional)</span>
+        <label className="block text-sm font-semibold text-ink mb-1">
+          City <span className="text-ink-muted font-normal">(optional)</span>
         </label>
         <input
           type="text"
           placeholder="e.g. New York"
           value={city}
           onChange={(e) => setCity(e.target.value)}
-          className="w-full py-3 px-4 border border-clay/20 rounded-xl text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay"
+          className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
         />
       </div>
 
@@ -78,7 +78,7 @@ export default function OnboardingForm({
       <button
         type="submit"
         disabled={loading || !name.trim()}
-        className="w-full py-3 bg-charcoal text-cream font-bold rounded-xl hover:bg-black transition-colors disabled:opacity-50 mt-2"
+        className="w-full py-3 bg-slate text-white font-bold rounded-xl hover:bg-slate-light transition-colors disabled:opacity-50 mt-2"
       >
         {loading ? "Saving..." : "Let's eat →"}
       </button>

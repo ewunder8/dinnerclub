@@ -62,14 +62,14 @@ function LoginForm() {
   };
 
   return (
-    <main className="min-h-screen bg-warm-white flex items-center justify-center p-6">
+    <main className="min-h-screen bg-snow flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="font-serif text-4xl font-black text-charcoal">
-            Dinner<span className="text-clay">Club</span>
+          <h1 className="font-sans text-4xl font-black tracking-tight text-ink">
+            dinner<span className="text-citrus-dark">club</span>
           </h1>
-          <p className="text-mid text-sm mt-2">
+          <p className="text-ink-muted text-sm mt-2">
             {isSignUp ? "Create your account" : "Welcome back"}
           </p>
         </div>
@@ -79,7 +79,7 @@ function LoginForm() {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-white border border-black/10 rounded-xl font-semibold text-charcoal hover:border-black/25 hover:shadow-sm transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-white border border-black/10 rounded-xl font-semibold text-ink hover:border-black/25 hover:shadow-sm transition-all disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
@@ -94,7 +94,7 @@ function LoginForm() {
         {/* Divider */}
         <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 h-px bg-black/10" />
-          <span className="text-mid text-xs uppercase tracking-widest">or</span>
+          <span className="text-ink-faint text-xs uppercase tracking-widest">or</span>
           <div className="flex-1 h-px bg-black/10" />
         </div>
 
@@ -102,7 +102,7 @@ function LoginForm() {
         {!showEmail ? (
           <button
             onClick={() => setShowEmail(true)}
-            className="w-full py-3 px-4 border border-clay/20 rounded-xl font-semibold text-charcoal hover:border-clay transition-colors"
+            className="w-full py-3 px-4 border border-slate/20 rounded-xl font-semibold text-ink hover:border-slate transition-colors"
           >
             Continue with Email
           </button>
@@ -114,7 +114,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full py-3 px-4 border border-clay/20 rounded-xl text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay"
+              className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
             />
             <input
               type="password"
@@ -122,12 +122,12 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full py-3 px-4 border border-clay/20 rounded-xl text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay"
+              className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
             />
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-charcoal text-cream font-bold rounded-xl hover:bg-black transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-slate text-white font-bold rounded-xl hover:bg-slate-light transition-colors disabled:opacity-50"
             >
               {loading ? "..." : isSignUp ? "Create Account →" : "Log In →"}
             </button>
@@ -143,18 +143,18 @@ function LoginForm() {
         )}
 
         {/* Switch mode */}
-        <p className="text-center text-mid text-sm mt-6">
+        <p className="text-center text-ink-muted text-sm mt-6">
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-clay font-semibold"
+            className="text-citrus-dark font-semibold"
           >
             {isSignUp ? "Log in" : "Sign up free"}
           </button>
         </p>
 
         {/* Terms */}
-        <p className="text-center text-mid/60 text-xs mt-4 leading-relaxed">
+        <p className="text-center text-ink-faint text-xs mt-4 leading-relaxed">
           By continuing you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
