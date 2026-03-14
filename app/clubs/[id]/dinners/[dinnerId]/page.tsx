@@ -19,6 +19,7 @@ import CountdownView from "./CountdownView";
 import RatingsForm from "./RatingsForm";
 import ConfirmReservationForm from "./ConfirmReservationForm";
 import ReservationAttempts from "./ReservationAttempts";
+import CancelDinnerButton from "./CancelDinnerButton";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -124,6 +125,11 @@ export default async function DinnerPage({
             userId={user.id}
             clubName={club?.name ?? ""}
           />
+          {isOwner && (
+            <div className="flex justify-end mt-6">
+              <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
+            </div>
+          )}
         </div>
       </main>
     );
@@ -231,6 +237,11 @@ export default async function DinnerPage({
           {isOwner && (
             <ConfirmReservationForm dinnerId={params.dinnerId} />
           )}
+          {isOwner && (
+            <div className="flex justify-end">
+              <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
+            </div>
+          )}
         </div>
       </main>
     );
@@ -325,7 +336,7 @@ export default async function DinnerPage({
 
         {/* Owner controls */}
         {isOwner && (
-          <OwnerControls dinnerId={params.dinnerId} pollState={pollState} />
+          <OwnerControls dinnerId={params.dinnerId} clubId={params.id} pollState={pollState} />
         )}
 
         {/* Options list */}
