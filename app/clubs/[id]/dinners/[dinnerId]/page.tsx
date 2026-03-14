@@ -339,7 +339,7 @@ export default async function DinnerPage({
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
           />
 
-          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} />}
+          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
