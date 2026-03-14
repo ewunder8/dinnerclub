@@ -236,13 +236,23 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
 
       {/* Beli link */}
       {selected && (
-        <input
-          type="url"
-          placeholder="Beli link — paste from the app (optional)"
-          value={beliUrl}
-          onChange={(e) => setBeliUrl(e.target.value)}
-          className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
-        />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-charcoal">
+              Beli link <span className="text-mid font-normal">(optional)</span>
+            </label>
+          </div>
+          <input
+            type="url"
+            placeholder="https://beliapp.co/…"
+            value={beliUrl}
+            onChange={(e) => setBeliUrl(e.target.value)}
+            className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
+          />
+          <p className="text-xs text-mid leading-relaxed">
+            In Beli, find this restaurant → tap <span className="font-semibold">Share</span> → copy the link → paste it here. Anyone in the group can then tap straight into the Beli app.
+          </p>
+        </div>
       )}
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
