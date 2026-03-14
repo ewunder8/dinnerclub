@@ -43,6 +43,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }
 export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -56,11 +57,13 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
   const handleRsvp = async (status: RSVP["status"]) => {
     if (rsvpLoading) return;
     setRsvpLoading(true);
+    setRsvpError(null);
     const supabase = createClient();
-    await supabase.from("rsvps").upsert(
+    const { error } = await supabase.from("rsvps").upsert(
       { dinner_id: dinner.id, user_id: userId, status },
       { onConflict: "dinner_id,user_id" }
     );
+    if (error) { setRsvpError("Failed to save RSVP. Try again."); setRsvpLoading(false); return; }
     router.refresh();
     setRsvpLoading(false);
   };
@@ -191,6 +194,8 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
             ))}
           </div>
         </div>
+
+        {rsvpError && <p className="text-red-500 text-xs mb-2">{rsvpError}</p>}
 
         {goingRsvps.length === 0 ? (
           <p className="text-sm text-mid">No RSVPs yet — be the first!</p>

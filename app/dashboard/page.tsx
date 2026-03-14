@@ -76,9 +76,12 @@ export default async function DashboardPage() {
         <h1 className="font-serif text-2xl font-black text-cream">
           Dinner<span className="text-clay">Club</span>
         </h1>
-        <div className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold">
+        <a
+          href="/profile"
+          className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+        >
           {user.email?.slice(0, 2).toUpperCase()}
-        </div>
+        </a>
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">

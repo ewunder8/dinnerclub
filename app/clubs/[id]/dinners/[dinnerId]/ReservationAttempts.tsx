@@ -18,6 +18,7 @@ type Props = {
 export default function ReservationAttempts({ dinnerId, userId, attempts }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const myAttempt = attempts.find((a) => a.user_id === userId);
   const activeAttempts = attempts.filter((a) => a.status === "attempting");
@@ -26,28 +27,29 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
 
   const handleToggleAttempt = async () => {
     setLoading(true);
+    setError(null);
     const supabase = createClient();
 
     if (isAttempting) {
-      // Back out
-      await supabase
+      const { error: e } = await supabase
         .from("reservation_attempts")
         .update({ status: "abandoned" })
         .eq("id", myAttempt!.id);
+      if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     } else if (myAttempt) {
-      // Re-join
-      await supabase
+      const { error: e } = await supabase
         .from("reservation_attempts")
         .update({ status: "attempting" })
         .eq("id", myAttempt.id);
+      if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     } else {
-      // First time
-      await supabase.from("reservation_attempts").insert({
+      const { error: e } = await supabase.from("reservation_attempts").insert({
         dinner_id: dinnerId,
         user_id: userId,
         status: "attempting",
         notes: null,
       });
+      if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     }
 
     router.refresh();
@@ -57,11 +59,13 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
   const handleGotIt = async () => {
     if (!myAttempt) return;
     setLoading(true);
+    setError(null);
     const supabase = createClient();
-    await supabase
+    const { error: e } = await supabase
       .from("reservation_attempts")
       .update({ status: "succeeded" })
       .eq("id", myAttempt.id);
+    if (e) { setError("Something went wrong. Try again."); setLoading(false); return; }
     router.refresh();
     setLoading(false);
   };
@@ -96,6 +100,8 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
             ))}
           </div>
         )}
+
+        {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
 
         {/* Toggle button */}
         {!isSucceeded && (

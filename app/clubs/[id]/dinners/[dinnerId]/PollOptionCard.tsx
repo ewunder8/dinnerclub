@@ -30,10 +30,10 @@ export default function PollOptionCard({
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const r = option.restaurant_cache;
   const isMyVote = myVoteOptionId === option.id;
-  const isWinner = pollState === "winner_selected" && option.place_id === option.restaurant_cache.place_id;
   const canVote = pollState === "voting_open";
   const canPickWinner =
     isOwner &&
@@ -42,23 +42,23 @@ export default function PollOptionCard({
   const handleVote = async () => {
     if (!canVote || loading) return;
     setLoading(true);
+    setError(null);
 
     const supabase = createClient();
 
-    // Delete any existing vote for this dinner
     await supabase
       .from("votes")
       .delete()
       .eq("dinner_id", dinnerId)
       .eq("user_id", userId);
 
-    // Insert new vote (skip if clicking own vote to deselect)
     if (!isMyVote) {
-      await supabase.from("votes").insert({
+      const { error: insertError } = await supabase.from("votes").insert({
         option_id: option.id,
         user_id: userId,
         dinner_id: dinnerId,
       });
+      if (insertError) { setError("Failed to vote. Try again."); setLoading(false); return; }
     }
 
     router.refresh();
@@ -68,13 +68,15 @@ export default function PollOptionCard({
   const handleRemove = async () => {
     if (!showRemove || loading) return;
     setLoading(true);
+    setError(null);
 
     const supabase = createClient();
-    await supabase
+    const { error: removeError } = await supabase
       .from("poll_options")
       .update({ removed_by: userId, removed_at: new Date().toISOString() })
       .eq("id", option.id);
 
+    if (removeError) { setError("Failed to remove. Try again."); setLoading(false); return; }
     router.refresh();
     setLoading(false);
   };
@@ -82,9 +84,10 @@ export default function PollOptionCard({
   const handlePickWinner = async () => {
     if (!canPickWinner || loading) return;
     setLoading(true);
+    setError(null);
 
     const supabase = createClient();
-    await supabase
+    const { error: updateError } = await supabase
       .from("dinners")
       .update({
         winning_restaurant_place_id: option.place_id,
@@ -93,6 +96,7 @@ export default function PollOptionCard({
       })
       .eq("id", dinnerId);
 
+    if (updateError) { setError("Failed to pick winner. Try again."); setLoading(false); return; }
     router.refresh();
     setLoading(false);
   };
@@ -134,7 +138,6 @@ export default function PollOptionCard({
             )}
           </div>
 
-          {/* Address + meta */}
           {r.address && (
             <p className="text-xs text-mid mt-0.5 truncate">{r.address}</p>
           )}
@@ -147,12 +150,10 @@ export default function PollOptionCard({
               .join(" · ")}
           </p>
 
-          {/* Suggestion note */}
           {option.note && (
             <p className="text-sm text-mid italic mt-1.5">"{option.note}"</p>
           )}
 
-          {/* Vote bar */}
           {(pollState === "voting_open" || pollState === "voting_closed" || pollState === "winner_selected") &&
             option.vote_pct > 0 && (
               <div className="mt-3">
@@ -168,11 +169,12 @@ export default function PollOptionCard({
                 <p className="text-xs text-mid mt-1">{option.vote_pct}% of votes</p>
               </div>
             )}
+
+          {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
         </div>
 
         {/* Action column */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          {/* Vote button */}
           {canVote && (
             <button
               onClick={handleVote}
@@ -188,7 +190,6 @@ export default function PollOptionCard({
             </button>
           )}
 
-          {/* Pick winner (owner) */}
           {canPickWinner && (
             <button
               onClick={handlePickWinner}
@@ -199,7 +200,6 @@ export default function PollOptionCard({
             </button>
           )}
 
-          {/* Remove (owner, pre-voting) */}
           {showRemove && (
             <button
               onClick={handleRemove}
