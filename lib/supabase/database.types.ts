@@ -1,6 +1,8 @@
 // ============================================================
-// Food Club — Database Types
-// These match the Supabase schema exactly.
+// DinnerClub — Database Types
+// Kept in sync with all migrations manually.
+// Migrations: 001_initial_schema, 002_poll_themes,
+//             003_vote_uniqueness, 004_ratings_and_countdown
 // ============================================================
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
@@ -106,6 +108,9 @@ export type Database = {
         ];
       };
 
+      // Migration 002: added theme_*, voting_open, poll_min_options
+      // Migration 003: added suggestion_mode, max_suggestions
+      // Migration 004: added ratings_open_until
       dinners: {
         Row: {
           id: string;
@@ -118,9 +123,27 @@ export type Database = {
           confirmation_number: string | null;
           reservation_platform: "resy" | "opentable" | "tock" | "other" | null;
           reserved_by: string | null;
+          // 002
+          theme_cuisine: string | null;
+          theme_price: number | null;
+          theme_vibe: string | null;
+          theme_neighborhood: string | null;
+          voting_open: boolean;
+          poll_min_options: number;
+          // 003
+          suggestion_mode: "owner_only" | "members" | "hybrid";
+          max_suggestions: number | null;
+          // 004
+          ratings_open_until: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["dinners"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["dinners"]["Row"], "id" | "created_at"> & {
+          // Fields with DB defaults — optional on insert
+          status?: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
+          voting_open?: boolean;
+          poll_min_options?: number;
+          suggestion_mode?: "owner_only" | "members" | "hybrid";
+        };
         Update: Partial<Database["public"]["Tables"]["dinners"]["Insert"]>;
         Relationships: [
           {
@@ -163,12 +186,17 @@ export type Database = {
         ];
       };
 
+      // Migration 002: added removed_by, removed_at, note
       poll_options: {
         Row: {
           id: string;
           dinner_id: string;
           place_id: string;
           suggested_by: string;
+          // 002
+          removed_by: string | null;
+          removed_at: string | null;
+          note: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["poll_options"]["Row"], "id" | "created_at">;
@@ -180,15 +208,32 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "dinners";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "poll_options_suggested_by_fkey";
+            columns: ["suggested_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "poll_options_removed_by_fkey";
+            columns: ["removed_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           }
         ];
       };
 
+      // Migration 003: added dinner_id, changed unique constraint to (dinner_id, user_id)
       votes: {
         Row: {
           id: string;
           option_id: string;
           user_id: string;
+          // 003
+          dinner_id: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["votes"]["Row"], "id" | "created_at">;
@@ -206,6 +251,13 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "votes_dinner_id_fkey";
+            columns: ["dinner_id"];
+            isOneToOne: false;
+            referencedRelation: "dinners";
             referencedColumns: ["id"];
           }
         ];
@@ -240,6 +292,7 @@ export type Database = {
         ];
       };
 
+      // Added beli_url for Beli app deep links
       restaurant_cache: {
         Row: {
           place_id: string;
@@ -255,6 +308,7 @@ export type Database = {
           reservation_platform: string | null;
           photo_urls: string[] | null;
           hours: Json | null;
+          beli_url: string | null;
           cached_at: string;
         };
         Insert: Database["public"]["Tables"]["restaurant_cache"]["Row"];
@@ -262,6 +316,8 @@ export type Database = {
         Relationships: [];
       };
 
+      // Migration 004: added food_score, vibe_score, value_score,
+      //               would_return, recommend, overall_score
       dinner_ratings: {
         Row: {
           id: string;
@@ -271,6 +327,13 @@ export type Database = {
           stars: number;
           tags: string[] | null;
           note: string | null;
+          // 004
+          overall_score: number | null;
+          food_score: number | null;
+          vibe_score: number | null;
+          value_score: number | null;
+          would_return: boolean | null;
+          recommend: boolean | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["dinner_ratings"]["Row"], "id" | "created_at">;
@@ -293,7 +356,26 @@ export type Database = {
         ];
       };
     };
-    Views: {};
+
+    // Migration 004: dinner_rating_summaries view
+    Views: {
+      dinner_rating_summaries: {
+        Row: {
+          dinner_id: string;
+          place_id: string;
+          rating_count: number;
+          avg_overall: number | null;
+          avg_food: number | null;
+          avg_vibe: number | null;
+          avg_value: number | null;
+          would_return_count: number;
+          recommend_count: number;
+          notes: string[] | null;
+        };
+        Relationships: [];
+      };
+    };
+
     Functions: {};
     Enums: {};
     CompositeTypes: {};
@@ -315,6 +397,15 @@ export type Vote = Database["public"]["Tables"]["votes"]["Row"];
 export type RSVP = Database["public"]["Tables"]["rsvps"]["Row"];
 export type RestaurantCache = Database["public"]["Tables"]["restaurant_cache"]["Row"];
 export type DinnerRating = Database["public"]["Tables"]["dinner_ratings"]["Row"];
+export type DinnerRatingSummary = Database["public"]["Views"]["dinner_rating_summaries"]["Row"];
+
+// Poll state derived from dinner fields — used in lib/poll.ts
+export type PollState =
+  | "needs_suggestions"
+  | "ready_to_open"
+  | "voting_open"
+  | "voting_closed"
+  | "winner_selected";
 
 // Enriched types with joins — used in UI components
 export type ClubWithMembers = Club & {

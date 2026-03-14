@@ -156,6 +156,7 @@ function normalizePlaceData(place: Record<string, unknown>): Omit<RestaurantCach
     reservation_platform: null,
     photo_urls: null, // Google photo refs need separate handling
     hours: (place.currentOpeningHours as Json) ?? null,
+    beli_url: null,
   };
 }
 
