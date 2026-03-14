@@ -28,15 +28,16 @@ A web app for friend groups to organize dinner outings together. Core loop:
 - Google Maps JavaScript API (client-side)
 - Hosted on Vercel
 
-## Design Tokens (Tailwind)
+## Design Tokens (Tailwind) — Slate & Citrus palette
 
-- `clay` / `clay-light` / `clay-dark` — primary orange-red brand color
-- `forest` / `forest-light` — secondary green
-- `cream` — warm off-white
-- `warm-white` — page background
-- `charcoal` — dark backgrounds, nav
-- `gold` — ratings, stars
-- `mid` — secondary text
+- `slate` / `slate-light` / `slate-faint` — primary dark navy (navs, buttons, borders)
+- `citrus` / `citrus-dark` / `citrus-light` — accent yellow-gold (wordmark span, highlights, stars)
+- `ink` — primary text (#1a1f30)
+- `ink-muted` — secondary text (#4a5270)
+- `ink-faint` — placeholder / disabled text (#8a90a8)
+- `snow` — page background (#f2f3f6)
+- `surface` — card / input background (#ffffff)
+- Font: `font-sans` = Syne (headings, wordmark, nav); body = Plus Jakarta Sans
 
 ## Database Tables
 
@@ -101,11 +102,11 @@ Shown when a dinner has status `confirmed` and `reservation_datetime` is in the 
 - `imminent` — today or tomorrow, show prominently
 - `past` — dinner has passed, trigger rating flow
 
-**Auto-complete:** `complete_past_dinners()` Postgres function flips `confirmed → completed` and sets `ratings_open_until = now() + 48 hours`. Run via Supabase Edge Function on a schedule.
+**Auto-complete:** Owner manually marks dinner completed via `MarkCompletedButton`, which sets `status = completed` and `ratings_open_until = now() + 7 days`.
 
 ## Post-Dinner Ratings
 
-Triggered when `status = 'completed'` and `ratings_open_until` is in the future (48hr window). One rating per member per dinner.
+Triggered when `status = 'completed'` and `ratings_open_until` is in the future (7-day window). One rating per member per dinner.
 
 **Rating dimensions:**
 - `overall_score` — 1–5, required
@@ -152,30 +153,38 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 
 ## TODO
 
-### In Progress
-- (nothing)
+### Post User-Testing (Bigger Lifts)
 
-### Up Next
-- (nothing — MVP feature complete)
+- [ ] **Email notifications** — notify members when poll closes, someone books, or dinner is confirmed. Needs Supabase Edge Functions + email provider (Resend recommended).
+- [ ] **Push notifications** — real-time alerts via web push or a service like OneSignal. Pairs with the booking / poll-close events above.
+- [ ] **Avatar upload** — profile page shows initials only; allow photo upload via Supabase Storage.
+- [ ] **Seat claiming** — see "Seat Claiming" section below. Deferred until real users request it.
+- [ ] **RLS policy audit** — verify leave club, non-owner creating dinners, and delete club all work correctly under production RLS rules.
 
-### Done
-- [x] Auth (login/signup — Google, Apple, email)
-- [x] Landing page
-- [x] Dashboard (clubs list + empty state)
-- [x] Club creation flow (`/clubs/new`)
-- [x] Club detail page (`/clubs/[id]`) — members, invite link, dinners list
-- [x] Invite join flow (`/join/[token]`)
-- [x] `lib/places.ts` — Google Places API with 48hr cache
-- [x] Fix Supabase package compatibility (`@supabase/ssr` 0.3→0.9)
-- [x] Update `database.types.ts` — migrations 002–004 (theme fields, voting_open, suggestion_mode, max_suggestions, removed_by/at/note, dinner_id on votes, rating dimensions, ratings_open_until, beli_url, dinner_rating_summaries view)
-- [x] Write `lib/poll.ts` — state machine, vote counting, tie detection, theme formatting, suggestion mode helpers
-- [x] Dinner creation form (`/clubs/[id]/dinners/new`) — theme, suggestion mode, poll close date, owner-only guard
-- [x] Poll UI (`/clubs/[id]/dinners/[dinnerId]`) — suggest restaurants, vote, owner controls, winner selection
-- [x] `lib/countdown.ts` — getCountdown(), formatReservationTime(), urgency levels, isRatingWindowOpen(), RATING_TAGS, scoreToStars(), validateRating(), wouldReturnPct()
-- [x] `lib/sharing.ts` — shareViaNative(), shareViaWhatsApp(), shareViaSMS(), copyToClipboard(), share text helpers
-- [x] Countdown view — shown when dinner status is `confirmed`, with RSVP toggle + share sheet
-- [x] Post-dinner ratings UI — star pickers, tags, would_return, recommend, community summary
-- [x] Confirm reservation flow — owner sets datetime, party size, platform, confirmation number → flips dinner to `confirmed`
+### Known Minor Gaps
+
+- No in-app notification when someone books the reservation — members must check the app manually.
+- No way to re-open a cancelled dinner (must create a new one).
+- Suggestion removal by non-owners: members can remove their own suggestion before voting opens, but not after.
+
+### Done (Selected highlights)
+- [x] Auth — Google OAuth + email/password, onboarding flow, middleware session refresh
+- [x] Full Slate & Citrus palette migration across all pages and components
+- [x] Dashboard — upcoming dinners, "Rate your dinner" nudge, sign out
+- [x] Club management — create, edit, delete, transfer ownership, leave, remove members
+- [x] Invite links — generate, share, expire in 7 days, join flow with `?next=` threading
+- [x] Dinner poll — suggest (Google Places), vote, auto-close on deadline, owner controls, winner selection
+- [x] Any member can start a dinner (not just owners)
+- [x] Members can remove their own suggestions before voting opens
+- [x] Seeking reservation — attempts list, "I got it" → crown badge, ConfirmReservationForm
+- [x] `reserved_by` stored on dinner; "Reserved by [name] 👑" shown on confirmed view
+- [x] Countdown view — RSVP, share sheet, add to calendar (Google + .ics)
+- [x] Post-dinner ratings — overall + food/vibe/value, would_return, recommend, tags, notes, 7-day window
+- [x] Discover page — past dinners with group scores, clickable to dinner detail
+- [x] Beli deep links — store `beli_url` on restaurant_cache, "View on Beli →" throughout
+- [x] Profile page — edit name/city, sign out
+- [x] 404 and error boundary pages
+- [x] Landing page — Slate & Citrus, correct copy (book not lock, American spelling)
 
 ## File Conventions
 
