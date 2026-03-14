@@ -475,7 +475,7 @@ export default async function DinnerPage({
                   userId={user.id}
                   isOwner={isOwner}
                   dinnerId={params.dinnerId}
-                  showRemove={showRemove}
+                  showRemove={showRemove || (!dinner.voting_open && !dinner.winning_restaurant_place_id && opt.suggested_by === user.id)}
                 />
               ))}
             </div>
