@@ -195,7 +195,7 @@ export default function RatingsForm({
         <div className="border-2 border-dashed border-black/10 rounded-2xl p-10 text-center">
           <p className="text-3xl mb-3">⏰</p>
           <p className="font-semibold text-ink mb-1">Rating window closed</p>
-          <p className="text-ink-muted text-sm">Ratings were open for 48 hours after the dinner.</p>
+          <p className="text-ink-muted text-sm">Ratings were open for 7 days after the dinner.</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">

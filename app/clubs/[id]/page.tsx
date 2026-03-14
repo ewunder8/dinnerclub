@@ -196,14 +196,12 @@ export default async function ClubPage({
             <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
               Dinners · {dinners?.length ?? 0}
             </h3>
-            {isOwner && (
-              <a
-                href={`/clubs/${params.id}/dinners/new`}
-                className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"
-              >
-                + Start a dinner
-              </a>
-            )}
+            <a
+              href={`/clubs/${params.id}/dinners/new`}
+              className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"
+            >
+              + Start a dinner
+            </a>
           </div>
 
           {!dinners || dinners.length === 0 ? (
@@ -211,18 +209,14 @@ export default async function ClubPage({
               <p className="text-4xl mb-4">🍽️</p>
               <p className="font-semibold text-ink mb-2">No dinners yet</p>
               <p className="text-ink-muted text-sm mb-6">
-                {isOwner
-                  ? "Start a poll and let the crew vote on where to eat."
-                  : "Your club owner will start a dinner soon."}
+                Start a poll and let the crew vote on where to eat.
               </p>
-              {isOwner && (
-                <a
-                  href={`/clubs/${params.id}/dinners/new`}
-                  className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
-                >
-                  Start a dinner →
-                </a>
-              )}
+              <a
+                href={`/clubs/${params.id}/dinners/new`}
+                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
+              >
+                Start a dinner →
+              </a>
             </div>
           ) : (
             <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">

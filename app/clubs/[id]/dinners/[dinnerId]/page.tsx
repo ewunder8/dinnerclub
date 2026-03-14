@@ -92,6 +92,12 @@ export default async function DinnerPage({
 
   if (!dinner) notFound();
 
+  // Auto-close poll if deadline passed and voting is still open
+  if (dinner.voting_open && dinner.poll_closes_at && new Date(dinner.poll_closes_at) <= new Date()) {
+    await supabase.from("dinners").update({ voting_open: false }).eq("id", dinner.id);
+    dinner.voting_open = false;
+  }
+
   // ── Confirmed: show countdown view ───────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
     const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }] = await Promise.all([
