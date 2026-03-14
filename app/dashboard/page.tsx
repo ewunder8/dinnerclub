@@ -54,7 +54,7 @@ export default async function DashboardPage() {
           // Club grid
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* TODO: Replace with ClubCard component */}
-            {clubs.map((club: { id: string; name: string; emoji: string }) => (
+            {(clubs as { id: string; name: string; emoji: string }[]).map((club) => (
               <a
                 key={club.id}
                 href={`/clubs/${club.id}`}

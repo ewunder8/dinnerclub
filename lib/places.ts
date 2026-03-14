@@ -5,7 +5,7 @@
 // ============================================================
 
 import { createClient } from "@/lib/supabase/server";
-import type { RestaurantCache } from "@/lib/supabase/database.types";
+import type { Json, RestaurantCache } from "@/lib/supabase/database.types";
 
 const PLACES_API_BASE = "https://places.googleapis.com/v1";
 const CACHE_TTL_HOURS = 48;
@@ -127,13 +127,14 @@ export async function getPlaceDetails(placeId: string): Promise<RestaurantCache 
 
   const place = await response.json();
   const normalized = normalizePlaceData(place);
+  const withCachedAt: RestaurantCache = { ...normalized, cached_at: new Date().toISOString() };
 
   // Upsert into cache
   await supabase
     .from("restaurant_cache")
-    .upsert({ ...normalized, cached_at: new Date().toISOString() });
+    .upsert(withCachedAt);
 
-  return normalized;
+  return withCachedAt;
 }
 
 // Normalize Google Places API response to our schema
@@ -154,7 +155,7 @@ function normalizePlaceData(place: Record<string, unknown>): Omit<RestaurantCach
     reservation_url: null, // populated separately from Place Details reservable field
     reservation_platform: null,
     photo_urls: null, // Google photo refs need separate handling
-    hours: place.currentOpeningHours || null,
+    hours: (place.currentOpeningHours as Json) ?? null,
   };
 }
 

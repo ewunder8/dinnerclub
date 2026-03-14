@@ -20,6 +20,7 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Relationships: [];
       };
 
       clubs: {
@@ -35,6 +36,15 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["clubs"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["clubs"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "clubs_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       club_members: {
@@ -47,6 +57,22 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["club_members"]["Row"], "id" | "joined_at">;
         Update: Partial<Database["public"]["Tables"]["club_members"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey";
+            columns: ["club_id"];
+            isOneToOne: false;
+            referencedRelation: "clubs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "club_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       invite_links: {
@@ -62,6 +88,22 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at" | "used_count">;
         Update: Partial<Database["public"]["Tables"]["invite_links"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "invite_links_club_id_fkey";
+            columns: ["club_id"];
+            isOneToOne: false;
+            referencedRelation: "clubs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invite_links_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       dinners: {
@@ -80,6 +122,15 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["dinners"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["dinners"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "dinners_club_id_fkey";
+            columns: ["club_id"];
+            isOneToOne: false;
+            referencedRelation: "clubs";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       reservation_attempts: {
@@ -94,6 +145,22 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["reservation_attempts"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["reservation_attempts"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "reservation_attempts_dinner_id_fkey";
+            columns: ["dinner_id"];
+            isOneToOne: false;
+            referencedRelation: "dinners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reservation_attempts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       poll_options: {
@@ -106,6 +173,15 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["poll_options"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["poll_options"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_dinner_id_fkey";
+            columns: ["dinner_id"];
+            isOneToOne: false;
+            referencedRelation: "dinners";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       votes: {
@@ -117,6 +193,22 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["votes"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["votes"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "votes_option_id_fkey";
+            columns: ["option_id"];
+            isOneToOne: false;
+            referencedRelation: "poll_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "votes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       rsvps: {
@@ -130,6 +222,22 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["rsvps"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["rsvps"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "rsvps_dinner_id_fkey";
+            columns: ["dinner_id"];
+            isOneToOne: false;
+            referencedRelation: "dinners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rsvps_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       restaurant_cache: {
@@ -149,8 +257,9 @@ export type Database = {
           hours: Json | null;
           cached_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["restaurant_cache"]["Row"], "cached_at">;
-        Update: Partial<Database["public"]["Tables"]["restaurant_cache"]["Insert"]>;
+        Insert: Database["public"]["Tables"]["restaurant_cache"]["Row"];
+        Update: Partial<Database["public"]["Tables"]["restaurant_cache"]["Row"]>;
+        Relationships: [];
       };
 
       dinner_ratings: {
@@ -166,8 +275,28 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["dinner_ratings"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["dinner_ratings"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "dinner_ratings_dinner_id_fkey";
+            columns: ["dinner_id"];
+            isOneToOne: false;
+            referencedRelation: "dinners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dinner_ratings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
+    Views: {};
+    Functions: {};
+    Enums: {};
+    CompositeTypes: {};
   };
 };
 
