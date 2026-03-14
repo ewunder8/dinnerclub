@@ -13,9 +13,10 @@ type Props = {
   dinnerId: string;
   userId: string;
   attempts: AttemptWithUser[];
+  topOptions?: { place_id: string; name: string }[];
 };
 
-export default function ReservationAttempts({ dinnerId, userId, attempts }: Props) {
+export default function ReservationAttempts({ dinnerId, userId, attempts, topOptions }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +154,7 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
           <p className="text-sm font-semibold text-green-600 mb-3">
             Nice work! Fill in the details to confirm for the group.
           </p>
-          <ConfirmReservationForm dinnerId={dinnerId} userId={userId} />
+          <ConfirmReservationForm dinnerId={dinnerId} userId={userId} topOptions={topOptions} />
         </div>
       )}
 

@@ -18,11 +18,13 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 type Props = {
   dinnerId: string;
   userId: string;
+  topOptions?: { place_id: string; name: string }[];
 };
 
-export default function ConfirmReservationForm({ dinnerId, userId }: Props) {
+export default function ConfirmReservationForm({ dinnerId, userId, topOptions }: Props) {
   const router = useRouter();
 
+  const [selectedPlaceId, setSelectedPlaceId] = useState(topOptions?.[0]?.place_id ?? "");
   const [datetime, setDatetime] = useState("");
   const [partySize, setPartySize] = useState(4);
   const [platform, setPlatform] = useState<Platform | null>(null);
@@ -56,6 +58,7 @@ export default function ConfirmReservationForm({ dinnerId, userId }: Props) {
         reservation_platform: platform,
         confirmation_number: confirmationNumber.trim() || null,
         reserved_by: userId,
+        ...(selectedPlaceId ? { winning_restaurant_place_id: selectedPlaceId } : {}),
       })
       .eq("id", dinnerId);
 
@@ -76,6 +79,37 @@ export default function ConfirmReservationForm({ dinnerId, userId }: Props) {
       <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
         Confirm reservation
       </h3>
+
+      {/* Restaurant — shown when alternatives exist */}
+      {topOptions && topOptions.length > 1 && (
+        <div>
+          <label className="block text-sm font-semibold text-ink mb-2">
+            Which restaurant did you book?
+          </label>
+          <div className="flex flex-col gap-2">
+            {topOptions.map((opt, i) => (
+              <button
+                key={opt.place_id}
+                type="button"
+                onClick={() => setSelectedPlaceId(opt.place_id)}
+                className={cn(
+                  "flex items-center gap-3 w-full px-4 py-3 rounded-xl border text-left transition-all",
+                  selectedPlaceId === opt.place_id
+                    ? "bg-citrus/10 border-citrus-dark"
+                    : "bg-white border-slate/20 hover:border-slate/40"
+                )}
+              >
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? "bg-citrus text-ink" : "bg-black/5 text-ink-muted"}`}>
+                  {i + 1}
+                </span>
+                <span className={`text-sm font-semibold ${selectedPlaceId === opt.place_id ? "text-citrus-dark" : "text-ink"}`}>
+                  {opt.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Date & time */}
       <div>

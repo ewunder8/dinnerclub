@@ -200,7 +200,7 @@ export default async function DinnerPage({
 
   // ── Seeking reservation: winner picked, no reservation yet ───
   if (dinner.status === "seeking_reservation" && dinner.winning_restaurant_place_id) {
-    const [{ data: restaurant }, { data: rawAttempts }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawAttempts }, { data: rawOptions }, { data: rawVotes }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -212,7 +212,46 @@ export default async function DinnerPage({
         .eq("dinner_id", params.dinnerId)
         .in("status", ["attempting", "succeeded"])
         .order("created_at", { ascending: true }),
+      supabase
+        .from("poll_options")
+        .select("id, place_id")
+        .eq("dinner_id", params.dinnerId)
+        .is("removed_at", null),
+      supabase
+        .from("votes")
+        .select("option_id")
+        .eq("dinner_id", params.dinnerId),
     ]);
+
+    // Compute top 3 alternatives (by vote count, excluding #1 winner)
+    const voteCounts: Record<string, number> = {};
+    for (const v of rawVotes ?? []) {
+      voteCounts[v.option_id] = (voteCounts[v.option_id] ?? 0) + 1;
+    }
+    const sortedOptions = (rawOptions ?? [])
+      .filter((o) => o.place_id !== dinner.winning_restaurant_place_id)
+      .sort((a, b) => (voteCounts[b.id] ?? 0) - (voteCounts[a.id] ?? 0))
+      .slice(0, 2); // top 2 fallbacks (#2 and #3)
+
+    let fallbackRestaurants: { place_id: string; name: string }[] = [];
+    if (sortedOptions.length > 0) {
+      const { data: fallbackData } = await supabase
+        .from("restaurant_cache")
+        .select("place_id, name")
+        .in("place_id", sortedOptions.map((o) => o.place_id));
+      fallbackRestaurants = (fallbackData ?? []).map((r) => ({ place_id: r.place_id, name: r.name }));
+      // preserve vote-order
+      fallbackRestaurants.sort(
+        (a, b) =>
+          sortedOptions.findIndex((o) => o.place_id === a.place_id) -
+          sortedOptions.findIndex((o) => o.place_id === b.place_id)
+      );
+    }
+
+    const topOptions = [
+      ...(restaurant ? [{ place_id: restaurant.place_id, name: restaurant.name }] : []),
+      ...fallbackRestaurants,
+    ];
 
     return (
       <main className="min-h-screen bg-snow">
@@ -228,36 +267,42 @@ export default async function DinnerPage({
             </p>
           </div>
 
-          {restaurant && (
-            <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-xs text-ink-muted mb-1">You&apos;re going to</p>
-              <p className="font-sans text-xl font-bold text-ink">
-                {restaurant.name}
-              </p>
-              {restaurant.address && (
-                <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
-              )}
-              {restaurant.beli_url && (
-                <a
-                  href={restaurant.beli_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark mt-2 hover:underline"
-                >
-                  View on Beli →
-                </a>
-              )}
-            </div>
-          )}
+          {/* Top picks */}
+          <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
+            {topOptions.map((opt, i) => (
+              <div key={opt.place_id} className="flex items-center gap-4 p-5">
+                <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-citrus text-ink" : "bg-black/5 text-ink-muted"}`}>
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-semibold truncate ${i === 0 ? "text-ink" : "text-ink-muted"}`}>
+                    {opt.name}
+                  </p>
+                  {i === 0 && <p className="text-xs text-ink-muted mt-0.5">Top pick</p>}
+                </div>
+                {i === 0 && restaurant?.beli_url && (
+                  <a
+                    href={restaurant.beli_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs font-semibold text-citrus-dark hover:underline"
+                  >
+                    Beli →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
 
           <ReservationAttempts
             dinnerId={params.dinnerId}
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
+            topOptions={topOptions}
           />
 
           {isOwner && (
-            <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} />
+            <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={topOptions} />
           )}
           {isOwner && (
             <div className="flex justify-end">
@@ -345,7 +390,7 @@ export default async function DinnerPage({
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
           />
 
-          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} />}
+          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={[]} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
