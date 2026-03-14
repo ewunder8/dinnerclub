@@ -1,50 +1,180 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-// This is the entry point.
-// Logged-in users see their dashboard.
-// Logged-out users see the marketing/login page.
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Redirect logged-in users to their dashboard
-  if (user) {
-    redirect("/dashboard");
-  }
+  if (user) redirect("/dashboard");
 
-  // Logged-out: show landing page
   return (
-    <main className="min-h-screen bg-charcoal flex flex-col items-center justify-center p-8">
-      <div className="max-w-lg text-center">
-        {/* Logo */}
-        <h1 className="font-serif text-5xl font-black text-cream mb-2">
+    <main className="min-h-screen bg-charcoal text-cream flex flex-col">
+
+      {/* Nav */}
+      <nav className="px-8 py-6 flex items-center justify-between max-w-5xl mx-auto w-full">
+        <h1 className="font-serif text-2xl font-black">
           Dinner<span className="text-clay">Club</span>
         </h1>
-        <p className="text-cream/50 text-lg mb-12">
-          Dinner is better together.
-        </p>
+        <a
+          href="/auth/login"
+          className="text-sm font-semibold text-cream/70 hover:text-cream transition-colors"
+        >
+          Log in
+        </a>
+      </nav>
 
-        {/* CTA */}
-        <div className="flex flex-col gap-3">
+      {/* Hero */}
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-3xl mx-auto w-full">
+        <p className="text-clay text-sm font-semibold uppercase tracking-widest mb-6">
+          For friend groups who eat well
+        </p>
+        <h2 className="font-serif text-5xl md:text-7xl font-black leading-tight mb-6">
+          Stop debating.<br />Start eating.
+        </h2>
+        <p className="text-cream/60 text-lg md:text-xl max-w-xl leading-relaxed mb-10">
+          DinnerClub makes it effortless to pick a restaurant, lock a reservation,
+          and actually show up — together.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
           <a
             href="/auth/login"
-            className="bg-clay text-white font-semibold py-4 px-8 rounded-xl hover:bg-clay-dark transition-colors text-center"
+            className="flex-1 bg-clay text-white font-bold py-4 px-8 rounded-xl hover:bg-clay-dark transition-colors text-center"
           >
-            Get Started
+            Start your club →
           </a>
           <a
             href="/auth/login"
-            className="border border-white/20 text-cream/70 font-medium py-4 px-8 rounded-xl hover:border-white/40 hover:text-cream transition-colors text-center"
+            className="flex-1 border border-white/20 text-cream/70 font-semibold py-4 px-8 rounded-xl hover:border-white/40 hover:text-cream transition-colors text-center"
           >
-            Log In
+            Log in
           </a>
         </div>
+        <p className="text-cream/30 text-sm mt-5">Invite-only clubs. Free to use.</p>
+      </section>
 
-        <p className="text-cream/30 text-sm mt-8">
-          Invite-only clubs. Start yours free.
+      {/* How it works */}
+      <section className="border-t border-white/8 py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-center text-cream/40 text-xs uppercase tracking-widest font-semibold mb-12">
+            How it works
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              {
+                step: "01",
+                emoji: "🗳️",
+                title: "Vote",
+                desc: "Members suggest restaurants and vote on their favourite. The group decides together.",
+              },
+              {
+                step: "02",
+                emoji: "📞",
+                title: "Reserve",
+                desc: "First person to lock a table wins. Resy, OpenTable, Tock — any platform works.",
+              },
+              {
+                step: "03",
+                emoji: "🍽️",
+                title: "Show up",
+                desc: "RSVP, add it to your calendar, and get the group there on time.",
+              },
+              {
+                step: "04",
+                emoji: "⭐",
+                title: "Rate",
+                desc: "After dinner, everyone rates the meal. Your group builds a real taste profile over time.",
+              },
+            ].map(({ step, emoji, title, desc }) => (
+              <div key={step} className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{emoji}</span>
+                  <span className="text-cream/20 text-xs font-mono">{step}</span>
+                </div>
+                <h3 className="font-serif text-xl font-bold">{title}</h3>
+                <p className="text-cream/50 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-t border-white/8 py-20 px-6 bg-white/3">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-center text-cream/40 text-xs uppercase tracking-widest font-semibold mb-12">
+            Built for friend groups
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                emoji: "🔒",
+                title: "Invite-only clubs",
+                desc: "Private by default. Share a link to let friends in — it expires in 7 days.",
+              },
+              {
+                emoji: "🎯",
+                title: "Theme your poll",
+                desc: "Set a cuisine, price range, vibe, or neighbourhood before the crew starts suggesting.",
+              },
+              {
+                emoji: "📅",
+                title: "Sync to calendar",
+                desc: "One tap to add confirmed dinners to Google Calendar, Apple Calendar, or Outlook.",
+              },
+              {
+                emoji: "🏆",
+                title: "Track your taste",
+                desc: "Post-dinner ratings build a history of where your group has eaten and loved.",
+              },
+              {
+                emoji: "⚡",
+                title: "First to confirm wins",
+                desc: "Anyone can try to get the reservation. The first one to lock it in gets the credit.",
+              },
+              {
+                emoji: "📍",
+                title: "Powered by Google Places",
+                desc: "Restaurant data is pulled live — ratings, prices, and addresses always up to date.",
+              },
+            ].map(({ emoji, title, desc }) => (
+              <div
+                key={title}
+                className="bg-white/5 border border-white/8 rounded-2xl p-5"
+              >
+                <p className="text-2xl mb-3">{emoji}</p>
+                <h3 className="font-semibold text-cream mb-1.5">{title}</h3>
+                <p className="text-cream/50 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="border-t border-white/8 py-20 px-6 text-center">
+        <div className="max-w-lg mx-auto">
+          <h2 className="font-serif text-4xl font-black mb-4">
+            Ready to eat?
+          </h2>
+          <p className="text-cream/50 mb-8">
+            Create a club, invite your crew, and never argue about where to eat again.
+          </p>
+          <a
+            href="/auth/login"
+            className="inline-block bg-clay text-white font-bold py-4 px-10 rounded-xl hover:bg-clay-dark transition-colors"
+          >
+            Start your club →
+          </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/8 py-8 px-6 text-center">
+        <p className="text-cream/20 text-xs">
+          © {new Date().getFullYear()} DinnerClub. Dinner is better together.
         </p>
-      </div>
+      </footer>
+
     </main>
   );
 }

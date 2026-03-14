@@ -18,6 +18,7 @@ import OwnerControls from "./OwnerControls";
 import CountdownView from "./CountdownView";
 import RatingsForm from "./RatingsForm";
 import ConfirmReservationForm from "./ConfirmReservationForm";
+import ReservationAttempts from "./ReservationAttempts";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -172,11 +173,19 @@ export default async function DinnerPage({
 
   // ── Seeking reservation: winner picked, no reservation yet ───
   if (dinner.status === "seeking_reservation" && dinner.winning_restaurant_place_id) {
-    const { data: restaurant } = await supabase
-      .from("restaurant_cache")
-      .select("*")
-      .eq("place_id", dinner.winning_restaurant_place_id)
-      .single();
+    const [{ data: restaurant }, { data: rawAttempts }] = await Promise.all([
+      supabase
+        .from("restaurant_cache")
+        .select("*")
+        .eq("place_id", dinner.winning_restaurant_place_id)
+        .single(),
+      supabase
+        .from("reservation_attempts")
+        .select("*, users ( id, name, email, avatar_url )")
+        .eq("dinner_id", params.dinnerId)
+        .in("status", ["attempting", "succeeded"])
+        .order("created_at", { ascending: true }),
+    ]);
 
     return (
       <main className="min-h-screen bg-warm-white">
@@ -203,6 +212,12 @@ export default async function DinnerPage({
               )}
             </div>
           )}
+
+          <ReservationAttempts
+            dinnerId={params.dinnerId}
+            userId={user.id}
+            attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
+          />
 
           {isOwner && (
             <ConfirmReservationForm dinnerId={params.dinnerId} />
