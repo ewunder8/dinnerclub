@@ -23,9 +23,11 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single<{ name: string | null }>();
 
-        // New user — send to onboarding
+        // New user — send to onboarding, preserving next destination
         if (!profile?.name) {
-          return NextResponse.redirect(`${origin}/onboarding`);
+          const onboardingUrl = new URL(`${origin}/onboarding`);
+          if (next !== "/dashboard") onboardingUrl.searchParams.set("next", next);
+          return NextResponse.redirect(onboardingUrl.toString());
         }
       }
 

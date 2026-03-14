@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 export default function OnboardingForm({
   userId,
   email,
+  next = "/dashboard",
 }: {
   userId: string;
   email: string;
+  next?: string;
 }) {
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
@@ -38,7 +40,7 @@ export default function OnboardingForm({
       return;
     }
 
-    router.push("/dashboard");
+    router.push(next);
   };
 
   return (
