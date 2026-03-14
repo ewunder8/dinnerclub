@@ -20,6 +20,7 @@ import RatingsForm from "./RatingsForm";
 import ConfirmReservationForm from "./ConfirmReservationForm";
 import ReservationAttempts from "./ReservationAttempts";
 import CancelDinnerButton from "./CancelDinnerButton";
+import MarkCompletedButton from "./MarkCompletedButton";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -126,7 +127,8 @@ export default async function DinnerPage({
             clubName={club?.name ?? ""}
           />
           {isOwner && (
-            <div className="flex justify-end mt-6">
+            <div className="flex items-center justify-end gap-4 mt-6">
+              <MarkCompletedButton dinnerId={params.dinnerId} />
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
             </div>
           )}
@@ -237,6 +239,93 @@ export default async function DinnerPage({
           {isOwner && (
             <ConfirmReservationForm dinnerId={params.dinnerId} />
           )}
+          {isOwner && (
+            <div className="flex justify-end">
+              <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // ── Cancelled ────────────────────────────────────────────────
+  if (dinner.status === "cancelled") {
+    return (
+      <main className="min-h-screen bg-warm-white">
+        <Nav clubId={params.id} displayName={displayName} />
+        <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+          <p className="text-4xl mb-4">🚫</p>
+          <h2 className="font-serif text-2xl font-bold text-charcoal mb-2">Dinner cancelled</h2>
+          <p className="text-mid text-sm">This dinner was cancelled. Start a new one whenever you&apos;re ready.</p>
+          <a
+            href={`/clubs/${params.id}`}
+            className="inline-block mt-8 bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+          >
+            Back to club
+          </a>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Waitlisted ───────────────────────────────────────────────
+  if (dinner.status === "waitlisted" && dinner.winning_restaurant_place_id) {
+    const [{ data: restaurant }, { data: rawAttempts }] = await Promise.all([
+      supabase
+        .from("restaurant_cache")
+        .select("*")
+        .eq("place_id", dinner.winning_restaurant_place_id)
+        .single(),
+      supabase
+        .from("reservation_attempts")
+        .select("*, users ( id, name, email, avatar_url )")
+        .eq("dinner_id", params.dinnerId)
+        .in("status", ["attempting", "waitlisted", "succeeded"])
+        .order("created_at", { ascending: true }),
+    ]);
+
+    return (
+      <main className="min-h-screen bg-warm-white">
+        <Nav clubId={params.id} displayName={displayName} />
+        <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
+          <div>
+            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+              On the waitlist
+            </span>
+            <h2 className="font-serif text-3xl font-bold">Fingers crossed 🤞</h2>
+            <p className="text-mid text-sm mt-2">
+              You&apos;re on the waitlist. Someone will confirm as soon as a table opens up.
+            </p>
+          </div>
+
+          {restaurant && (
+            <div className="bg-white border border-black/8 rounded-2xl p-5">
+              <p className="text-xs text-mid mb-1">Waiting on a table at</p>
+              <p className="font-serif text-xl font-bold text-charcoal">{restaurant.name}</p>
+              {restaurant.address && (
+                <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+              )}
+              {restaurant.beli_url && (
+                <a
+                  href={restaurant.beli_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-2 hover:underline"
+                >
+                  View on Beli →
+                </a>
+              )}
+            </div>
+          )}
+
+          <ReservationAttempts
+            dinnerId={params.dinnerId}
+            userId={user.id}
+            attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
+          />
+
+          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
