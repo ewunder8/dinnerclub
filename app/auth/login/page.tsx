@@ -9,14 +9,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showEmail, setShowEmail] = useState(false);
 
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
+
+  const urlError = searchParams.get("error");
+  const ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Authentication failed. Please try again.",
+    invite_expired: "That invite link has expired. Ask for a new one.",
+  };
+
+  const [error, setError] = useState<string | null>(
+    urlError ? (ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again.") : null
+  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);

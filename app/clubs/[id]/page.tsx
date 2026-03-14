@@ -105,14 +105,25 @@ export default async function ClubPage({
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 
         {/* Club header */}
-        <div className="flex items-center gap-4">
-          <span className="text-5xl">{club.emoji}</span>
-          <div>
-            <h2 className="font-serif text-3xl font-bold">{club.name}</h2>
-            {club.city && (
-              <p className="text-mid text-sm mt-1">{club.city}</p>
-            )}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-5xl">{club.emoji}</span>
+            <div>
+              <h2 className="font-serif text-3xl font-bold">{club.name}</h2>
+              {club.city && (
+                <p className="text-mid text-sm mt-1">{club.city}</p>
+              )}
+            </div>
           </div>
+          {isOwner && (
+            <a
+              href={`/clubs/${params.id}/settings`}
+              className="text-sm text-mid hover:text-charcoal transition-colors"
+              title="Club settings"
+            >
+              ⚙️
+            </a>
+          )}
         </div>
 
         {/* Members */}
