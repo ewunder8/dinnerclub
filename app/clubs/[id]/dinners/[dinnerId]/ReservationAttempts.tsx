@@ -76,26 +76,26 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
 
       {/* Who's trying */}
       <div className="bg-white border border-black/8 rounded-2xl p-5">
-        <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
+        <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
           Trying to get a table · {activeAttempts.length}
         </h3>
 
         {activeAttempts.length === 0 ? (
-          <p className="text-sm text-mid">
+          <p className="text-sm text-ink-muted">
             No one&apos;s on it yet — be the first!
           </p>
         ) : (
           <div className="flex flex-col gap-2 mb-4">
             {activeAttempts.map((a) => (
               <div key={a.id} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-clay/15 flex items-center justify-center text-clay text-xs font-bold shrink-0">
+                <div className="w-7 h-7 rounded-full bg-citrus/15 flex items-center justify-center text-citrus-dark text-xs font-bold shrink-0">
                   {(a.users.name || a.users.email).slice(0, 1).toUpperCase()}
                 </div>
-                <span className="text-sm text-charcoal">
+                <span className="text-sm text-ink">
                   {a.users.name || a.users.email.split("@")[0]}
                 </span>
                 {a.user_id === userId && (
-                  <span className="text-xs text-mid">(you)</span>
+                  <span className="text-xs text-ink-muted">(you)</span>
                 )}
               </div>
             ))}
@@ -113,8 +113,8 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
               className={cn(
                 "flex-1 py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-40",
                 isAttempting
-                  ? "bg-black/5 text-charcoal hover:bg-black/10"
-                  : "bg-clay text-white hover:bg-clay-dark"
+                  ? "bg-black/5 text-ink hover:bg-black/10"
+                  : "bg-slate text-white hover:bg-slate-light"
               )}
             >
               {loading ? "…" : isAttempting ? "Never mind" : "I'll try to get a table"}
@@ -124,7 +124,7 @@ export default function ReservationAttempts({ dinnerId, userId, attempts }: Prop
               <button
                 onClick={handleGotIt}
                 disabled={loading}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-forest/15 text-forest border border-forest/30 hover:bg-forest/25 transition-all disabled:opacity-40"
+                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-green-100 text-green-600 border border-green-300 hover:bg-green-200 transition-all disabled:opacity-40"
               >
                 {loading ? "…" : "I got it! →"}
               </button>

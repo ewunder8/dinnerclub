@@ -38,29 +38,29 @@ export default async function ClubSettingsPage({
   const displayName = profile?.name || user.email || "?";
 
   return (
-    <main className="min-h-screen bg-warm-white">
-      <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
+    <main className="min-h-screen bg-snow">
+      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
         <a
           href={`/clubs/${params.id}`}
-          className="text-cream/50 hover:text-cream transition-colors text-sm"
+          className="text-white/60 hover:text-white transition-colors text-sm"
         >
           ← Club
         </a>
-        <h1 className="font-serif text-xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
+        <h1 className="font-sans text-xl font-extrabold text-white">
+          dinner<span className="text-citrus">club</span>
         </h1>
         <a
           href="/profile"
           title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+          className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
         >
           {getInitials(displayName)}
         </a>
       </nav>
 
       <div className="max-w-lg mx-auto px-6 py-12">
-        <h2 className="font-serif text-3xl font-bold mb-2">Club settings</h2>
-        <p className="text-mid text-sm mb-10">Update your club&apos;s name, emoji, and city.</p>
+        <h2 className="font-sans text-3xl font-bold mb-2">Club settings</h2>
+        <p className="text-ink-muted text-sm mb-10">Update your club&apos;s name, emoji, and city.</p>
         <EditClubForm
           clubId={params.id}
           initialName={club.name}

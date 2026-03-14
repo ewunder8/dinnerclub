@@ -58,7 +58,7 @@ export default function EditClubForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
       {/* Emoji picker */}
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-3">
+        <label className="block text-sm font-semibold text-ink mb-3">
           Emoji
         </label>
         <div className="grid grid-cols-8 gap-2">
@@ -69,8 +69,8 @@ export default function EditClubForm({
               onClick={() => setEmoji(e)}
               className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
                 emoji === e
-                  ? "bg-clay/15 ring-2 ring-clay scale-110"
-                  : "bg-white border border-black/8 hover:border-clay/30"
+                  ? "bg-citrus/15 ring-2 ring-citrus-dark scale-110"
+                  : "bg-white border border-black/8 hover:border-slate/30"
               }`}
             >
               {e}
@@ -81,10 +81,10 @@ export default function EditClubForm({
 
       {/* Club name */}
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-2">
-          Club name <span className="text-clay">*</span>
+        <label className="block text-sm font-semibold text-ink mb-2">
+          Club name <span className="text-citrus-dark">*</span>
         </label>
-        <div className="flex items-center gap-3 bg-white border border-black/10 rounded-xl px-4 py-3 focus-within:border-clay transition-colors">
+        <div className="flex items-center gap-3 bg-white border border-black/10 rounded-xl px-4 py-3 focus-within:border-slate transition-colors">
           <span className="text-2xl">{emoji}</span>
           <input
             type="text"
@@ -92,15 +92,15 @@ export default function EditClubForm({
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={40}
-            className="flex-1 text-charcoal placeholder-mid/50 focus:outline-none bg-transparent"
+            className="flex-1 text-ink placeholder-ink-faint focus:outline-none bg-transparent"
           />
         </div>
       </div>
 
       {/* City */}
       <div>
-        <label className="block text-sm font-semibold text-charcoal mb-2">
-          City <span className="text-mid font-normal">(optional)</span>
+        <label className="block text-sm font-semibold text-ink mb-2">
+          City <span className="text-ink-muted font-normal">(optional)</span>
         </label>
         <input
           type="text"
@@ -108,7 +108,7 @@ export default function EditClubForm({
           value={city}
           onChange={(e) => setCity(e.target.value)}
           maxLength={50}
-          className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors"
+          className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
         />
       </div>
 
@@ -119,13 +119,13 @@ export default function EditClubForm({
         <button
           type="submit"
           disabled={loading || !name.trim()}
-          className="flex-1 bg-clay text-white font-bold py-3 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40"
+          className="flex-1 bg-slate text-white font-bold py-3 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40"
         >
           {loading ? "Saving…" : "Save changes"}
         </button>
         <a
           href={`/clubs/${clubId}`}
-          className="px-6 py-3 border border-black/10 rounded-xl text-charcoal font-semibold hover:border-black/25 transition-colors text-center"
+          className="px-6 py-3 border border-black/10 rounded-xl text-ink font-semibold hover:border-black/25 transition-colors text-center"
         >
           Cancel
         </a>

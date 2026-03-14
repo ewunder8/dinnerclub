@@ -84,19 +84,19 @@ export default async function ClubPage({
   }[];
 
   return (
-    <main className="min-h-screen bg-warm-white">
+    <main className="min-h-screen bg-snow">
       {/* Nav */}
-      <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
-        <a href="/dashboard" className="text-cream/50 hover:text-cream transition-colors text-sm">
+      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
+        <a href="/dashboard" className="text-white/60 hover:text-white transition-colors text-sm">
           ← Dashboard
         </a>
-        <h1 className="font-serif text-xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
+        <h1 className="font-sans text-xl font-extrabold text-white">
+          dinner<span className="text-citrus">club</span>
         </h1>
         <a
           href="/profile"
           title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+          className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
         >
           {getInitials(displayName)}
         </a>
@@ -109,16 +109,16 @@ export default async function ClubPage({
           <div className="flex items-center gap-4">
             <span className="text-5xl">{club.emoji}</span>
             <div>
-              <h2 className="font-serif text-3xl font-bold">{club.name}</h2>
+              <h2 className="font-sans text-3xl font-bold">{club.name}</h2>
               {club.city && (
-                <p className="text-mid text-sm mt-1">{club.city}</p>
+                <p className="text-ink-muted text-sm mt-1">{club.city}</p>
               )}
             </div>
           </div>
           {isOwner && (
             <a
               href={`/clubs/${params.id}/settings`}
-              className="text-sm text-mid hover:text-charcoal transition-colors"
+              className="text-sm text-ink-muted hover:text-ink transition-colors"
               title="Club settings"
             >
               ⚙️
@@ -128,25 +128,25 @@ export default async function ClubPage({
 
         {/* Members */}
         <section>
-          <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
+          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
             Members · {members.length}
           </h3>
           <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-full bg-clay/15 flex items-center justify-center text-clay font-bold text-sm shrink-0">
+                <div className="w-9 h-9 rounded-full bg-citrus/15 flex items-center justify-center text-citrus-dark font-bold text-sm shrink-0">
                   {getInitials(m.users.name || m.users.email)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-charcoal truncate">
+                  <p className="font-semibold text-ink truncate">
                     {m.users.name || m.users.email}
                   </p>
                   {m.role === "owner" && (
-                    <p className="text-xs text-mid">Owner</p>
+                    <p className="text-xs text-ink-muted">Owner</p>
                   )}
                 </div>
                 {m.users.id === user.id && (
-                  <span className="text-xs text-mid bg-black/5 px-2 py-1 rounded-full">You</span>
+                  <span className="text-xs text-ink-muted bg-black/5 px-2 py-1 rounded-full">You</span>
                 )}
               </div>
             ))}
@@ -155,19 +155,19 @@ export default async function ClubPage({
 
         {/* Invite link */}
         <section>
-          <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
+          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
             Invite friends
           </h3>
           {invite ? (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-sm text-mid mb-3">
+              <p className="text-sm text-ink-muted mb-3">
                 Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
               </p>
               <InviteButton token={invite.token} />
             </div>
           ) : (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-sm text-mid mb-4">No active invite link.</p>
+              <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
               <GenerateInviteButton clubId={params.id} />
             </div>
           )}
@@ -176,13 +176,13 @@ export default async function ClubPage({
         {/* Dinners */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-sm text-mid uppercase tracking-wide">
+            <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
               Dinners · {dinners?.length ?? 0}
             </h3>
             {isOwner && (
               <a
                 href={`/clubs/${params.id}/dinners/new`}
-                className="text-sm font-semibold text-clay hover:text-clay-dark transition-colors"
+                className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"
               >
                 + Start a dinner
               </a>
@@ -190,10 +190,10 @@ export default async function ClubPage({
           </div>
 
           {!dinners || dinners.length === 0 ? (
-            <div className="border-2 border-dashed border-clay/20 rounded-2xl p-12 text-center">
+            <div className="border-2 border-dashed border-slate/20 rounded-2xl p-12 text-center">
               <p className="text-4xl mb-4">🍽️</p>
-              <p className="font-semibold text-charcoal mb-2">No dinners yet</p>
-              <p className="text-mid text-sm mb-6">
+              <p className="font-semibold text-ink mb-2">No dinners yet</p>
+              <p className="text-ink-muted text-sm mb-6">
                 {isOwner
                   ? "Start a poll and let the crew vote on where to eat."
                   : "Your club owner will start a dinner soon."}
@@ -201,7 +201,7 @@ export default async function ClubPage({
               {isOwner && (
                 <a
                   href={`/clubs/${params.id}/dinners/new`}
-                  className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+                  className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
                 >
                   Start a dinner →
                 </a>
@@ -222,11 +222,11 @@ export default async function ClubPage({
                   <a
                     key={dinner.id}
                     href={`/clubs/${params.id}/dinners/${dinner.id}`}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-warm-white transition-colors"
+                    className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors"
                   >
                     <div>
-                      <p className="font-semibold text-charcoal text-sm">{label}</p>
-                      <p className="text-xs text-mid mt-0.5 capitalize">
+                      <p className="font-semibold text-ink text-sm">{label}</p>
+                      <p className="text-xs text-ink-muted mt-0.5 capitalize">
                         {dinner.status.replace(/_/g, " ")} ·{" "}
                         {new Date(dateStr).toLocaleDateString("en-US", {
                           month: "short",
@@ -234,7 +234,7 @@ export default async function ClubPage({
                         })}
                       </p>
                     </div>
-                    <span className="text-mid text-sm">→</span>
+                    <span className="text-ink-muted text-sm">→</span>
                   </a>
                 );
               })}

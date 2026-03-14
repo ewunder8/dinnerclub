@@ -129,8 +129,8 @@ export default function PollOptionCard({
       className={cn(
         "bg-white border rounded-2xl p-5 transition-all",
         pollState === "winner_selected" && option.place_id === r.place_id &&
-          "border-forest bg-forest/5",
-        isMyVote && pollState !== "winner_selected" && "border-clay/60",
+          "border-green-500 bg-green-50",
+        isMyVote && pollState !== "winner_selected" && "border-citrus-dark/60",
         !isMyVote && pollState !== "winner_selected" && "border-black/8"
       )}
     >
@@ -139,7 +139,7 @@ export default function PollOptionCard({
         <div
           className={cn(
             "shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm",
-            isMyVote ? "bg-clay text-white" : "bg-black/5 text-charcoal"
+            isMyVote ? "bg-citrus-dark text-white" : "bg-black/5 text-ink"
           )}
         >
           {option.vote_count}
@@ -148,23 +148,23 @@ export default function PollOptionCard({
         {/* Restaurant info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-charcoal">{r.name}</p>
+            <p className="font-semibold text-ink">{r.name}</p>
             {option.is_tied && pollState !== "winner_selected" && (
-              <span className="text-xs bg-gold/20 text-gold font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-citrus/20 text-citrus-dark font-semibold px-2 py-0.5 rounded-full">
                 Tied
               </span>
             )}
             {pollState === "winner_selected" && (
-              <span className="text-xs bg-forest/15 text-forest font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-green-100 text-green-600 font-semibold px-2 py-0.5 rounded-full">
                 Winner
               </span>
             )}
           </div>
 
           {r.address && (
-            <p className="text-xs text-mid mt-0.5 truncate">{r.address}</p>
+            <p className="text-xs text-ink-muted mt-0.5 truncate">{r.address}</p>
           )}
-          <p className="text-xs text-mid mt-0.5">
+          <p className="text-xs text-ink-muted mt-0.5">
             {[
               r.price_level ? PRICE_LABELS[r.price_level] : null,
               r.rating ? `★ ${r.rating}` : null,
@@ -174,7 +174,7 @@ export default function PollOptionCard({
           </p>
 
           {option.note && (
-            <p className="text-sm text-mid italic mt-1.5">"{option.note}"</p>
+            <p className="text-sm text-ink-muted italic mt-1.5">"{option.note}"</p>
           )}
 
           {r.beli_url ? (
@@ -183,14 +183,14 @@ export default function PollOptionCard({
                 href={r.beli_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-clay hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark hover:underline"
               >
                 View on Beli →
               </a>
               {(isOwner || option.suggested_by === userId) && (
                 <button
                   onClick={() => setShowBeliInput((v) => !v)}
-                  className="text-xs text-mid hover:text-charcoal transition-colors"
+                  className="text-xs text-ink-muted hover:text-ink transition-colors"
                 >
                   Edit
                 </button>
@@ -199,7 +199,7 @@ export default function PollOptionCard({
           ) : (isOwner || option.suggested_by === userId) && (
             <button
               onClick={() => setShowBeliInput((v) => !v)}
-              className="text-xs text-mid hover:text-clay transition-colors mt-1.5"
+              className="text-xs text-ink-muted hover:text-citrus-dark transition-colors mt-1.5"
             >
               + Add Beli link
             </button>
@@ -212,12 +212,12 @@ export default function PollOptionCard({
                 placeholder="https://beliapp.co/…"
                 value={beliInput}
                 onChange={(e) => setBeliInput(e.target.value)}
-                className="flex-1 text-xs bg-warm-white border border-black/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-clay"
+                className="flex-1 text-xs bg-surface border border-slate/20 rounded-lg px-3 py-1.5 focus:outline-none focus:border-slate"
               />
               <button
                 onClick={handleSaveBeliUrl}
                 disabled={beliSaving}
-                className="text-xs font-semibold text-white bg-clay px-3 py-1.5 rounded-lg hover:bg-clay-dark transition-colors disabled:opacity-40"
+                className="text-xs font-semibold text-white bg-slate px-3 py-1.5 rounded-lg hover:bg-slate-light transition-colors disabled:opacity-40"
               >
                 {beliSaving ? "…" : "Save"}
               </button>
@@ -231,12 +231,12 @@ export default function PollOptionCard({
                   <div
                     className={cn(
                       "h-full rounded-full transition-all",
-                      isMyVote ? "bg-clay" : "bg-black/20"
+                      isMyVote ? "bg-citrus-dark" : "bg-black/20"
                     )}
                     style={{ width: `${option.vote_pct}%` }}
                   />
                 </div>
-                <p className="text-xs text-mid mt-1">{option.vote_pct}% of votes</p>
+                <p className="text-xs text-ink-muted mt-1">{option.vote_pct}% of votes</p>
               </div>
             )}
 
@@ -252,8 +252,8 @@ export default function PollOptionCard({
               className={cn(
                 "text-sm font-semibold px-4 py-2 rounded-xl transition-all disabled:opacity-40",
                 isMyVote
-                  ? "bg-clay/10 text-clay border border-clay/30 hover:bg-clay/20"
-                  : "bg-clay text-white hover:bg-clay-dark"
+                  ? "bg-citrus/10 text-citrus-dark border border-citrus-dark/30 hover:bg-citrus/20"
+                  : "bg-citrus-dark text-white hover:bg-citrus"
               )}
             >
               {loading ? "…" : isMyVote ? "Voted ✓" : "Vote"}
@@ -264,7 +264,7 @@ export default function PollOptionCard({
             <button
               onClick={handlePickWinner}
               disabled={loading}
-              className="text-xs font-semibold text-forest border border-forest/30 px-3 py-1.5 rounded-xl hover:bg-forest/5 transition-colors disabled:opacity-40"
+              className="text-xs font-semibold text-green-600 border border-green-300 px-3 py-1.5 rounded-xl hover:bg-green-50 transition-colors disabled:opacity-40"
             >
               {loading ? "…" : "Pick winner"}
             </button>
@@ -274,7 +274,7 @@ export default function PollOptionCard({
             <button
               onClick={handleRemove}
               disabled={loading}
-              className="text-xs text-mid hover:text-red-500 transition-colors disabled:opacity-40"
+              className="text-xs text-ink-muted hover:text-red-500 transition-colors disabled:opacity-40"
             >
               {loading ? "…" : "Remove"}
             </button>

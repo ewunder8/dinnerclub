@@ -68,30 +68,30 @@ export default function CreateClubPage() {
   };
 
   return (
-    <main className="min-h-screen bg-warm-white">
+    <main className="min-h-screen bg-snow">
       {/* Nav */}
-      <nav className="bg-charcoal px-8 py-5 flex items-center gap-4">
+      <nav className="bg-slate px-8 py-5 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="text-cream/50 hover:text-cream transition-colors text-sm"
+          className="text-white/60 hover:text-white transition-colors text-sm"
         >
           ← Back
         </button>
-        <h1 className="font-serif text-xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
+        <h1 className="font-sans text-xl font-extrabold text-white">
+          dinner<span className="text-citrus">club</span>
         </h1>
       </nav>
 
       <div className="max-w-lg mx-auto px-6 py-12">
-        <h2 className="font-serif text-3xl font-bold mb-2">Create a club</h2>
-        <p className="text-mid text-sm mb-10">
+        <h2 className="font-sans text-3xl font-bold mb-2">Create a club</h2>
+        <p className="text-ink-muted text-sm mb-10">
           Give your dinner crew a name and a vibe.
         </p>
 
         <form onSubmit={handleCreate} className="flex flex-col gap-8">
           {/* Emoji picker */}
           <div>
-            <label className="block text-sm font-semibold text-charcoal mb-3">
+            <label className="block text-sm font-semibold text-ink mb-3">
               Pick an emoji
             </label>
             <div className="grid grid-cols-8 gap-2">
@@ -102,8 +102,8 @@ export default function CreateClubPage() {
                   onClick={() => setEmoji(e)}
                   className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
                     emoji === e
-                      ? "bg-clay/15 ring-2 ring-clay scale-110"
-                      : "bg-white border border-black/8 hover:border-clay/30"
+                      ? "bg-citrus/15 ring-2 ring-citrus-dark scale-110"
+                      : "bg-white border border-black/8 hover:border-slate/30"
                   }`}
                 >
                   {e}
@@ -116,11 +116,11 @@ export default function CreateClubPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-semibold text-charcoal mb-2"
+              className="block text-sm font-semibold text-ink mb-2"
             >
-              Club name <span className="text-clay">*</span>
+              Club name <span className="text-citrus-dark">*</span>
             </label>
-            <div className="flex items-center gap-3 bg-white border border-black/10 rounded-xl px-4 py-3 focus-within:border-clay transition-colors">
+            <div className="flex items-center gap-3 bg-white border border-black/10 rounded-xl px-4 py-3 focus-within:border-slate transition-colors">
               <span className="text-2xl">{emoji}</span>
               <input
                 id="name"
@@ -130,7 +130,7 @@ export default function CreateClubPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 maxLength={40}
-                className="flex-1 text-charcoal placeholder-mid/50 focus:outline-none bg-transparent"
+                className="flex-1 text-ink placeholder-ink-faint focus:outline-none bg-transparent"
               />
             </div>
           </div>
@@ -139,9 +139,9 @@ export default function CreateClubPage() {
           <div>
             <label
               htmlFor="city"
-              className="block text-sm font-semibold text-charcoal mb-2"
+              className="block text-sm font-semibold text-ink mb-2"
             >
-              City <span className="text-mid font-normal">(optional)</span>
+              City <span className="text-ink-muted font-normal">(optional)</span>
             </label>
             <input
               id="city"
@@ -150,17 +150,17 @@ export default function CreateClubPage() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               maxLength={50}
-              className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors"
+              className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
             />
           </div>
 
           {/* Preview */}
           {name && (
-            <div className="bg-charcoal rounded-2xl p-6 flex items-center gap-4">
+            <div className="bg-slate rounded-2xl p-6 flex items-center gap-4">
               <span className="text-4xl">{emoji}</span>
               <div>
-                <p className="font-serif text-xl font-bold text-cream">{name}</p>
-                {city && <p className="text-cream/50 text-sm">{city}</p>}
+                <p className="font-sans text-xl font-bold text-white">{name}</p>
+                {city && <p className="text-white/60 text-sm">{city}</p>}
               </div>
             </div>
           )}
@@ -172,7 +172,7 @@ export default function CreateClubPage() {
           <button
             type="submit"
             disabled={loading || !name.trim()}
-            className="w-full bg-clay text-white font-bold py-4 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? "Creating…" : "Create club →"}
           </button>

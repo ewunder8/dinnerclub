@@ -31,20 +31,20 @@ function Nav({
   displayName: string;
 }) {
   return (
-    <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
+    <nav className="bg-slate px-8 py-5 flex items-center justify-between">
       <a
         href={`/clubs/${clubId}`}
-        className="text-cream/50 hover:text-cream transition-colors text-sm"
+        className="text-white/60 hover:text-white transition-colors text-sm"
       >
         ← Club
       </a>
-      <h1 className="font-serif text-xl font-black text-cream">
-        Dinner<span className="text-clay">Club</span>
+      <h1 className="font-sans text-xl font-extrabold text-white">
+        dinner<span className="text-citrus">club</span>
       </h1>
       <a
         href="/profile"
         title="Profile & sign out"
-        className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+        className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
       >
         {getInitials(displayName)}
       </a>
@@ -119,7 +119,7 @@ export default async function DinnerPage({
     const rsvps = (rawRsvps ?? []) as (RSVP & { users: User })[];
 
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <CountdownView
@@ -170,14 +170,14 @@ export default async function DinnerPage({
     const windowOpen = isRatingWindowOpen(dinner.ratings_open_until);
 
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <div className="mb-6">
-            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+            <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               Dinner completed
             </span>
-            <h2 className="font-serif text-3xl font-bold">How was it?</h2>
+            <h2 className="font-sans text-3xl font-bold">How was it?</h2>
           </div>
           <RatingsForm
             dinner={dinner}
@@ -209,34 +209,34 @@ export default async function DinnerPage({
     ]);
 
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
-            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+            <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               Winner selected
             </span>
-            <h2 className="font-serif text-3xl font-bold">Seeking reservation</h2>
-            <p className="text-mid text-sm mt-2">
+            <h2 className="font-sans text-3xl font-bold">Seeking reservation</h2>
+            <p className="text-ink-muted text-sm mt-2">
               Someone needs to lock in a table. First to confirm wins!
             </p>
           </div>
 
           {restaurant && (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-xs text-mid mb-1">You&apos;re going to</p>
-              <p className="font-serif text-xl font-bold text-charcoal">
+              <p className="text-xs text-ink-muted mb-1">You&apos;re going to</p>
+              <p className="font-sans text-xl font-bold text-ink">
                 {restaurant.name}
               </p>
               {restaurant.address && (
-                <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+                <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
               )}
               {restaurant.beli_url && (
                 <a
                   href={restaurant.beli_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-2 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark mt-2 hover:underline"
                 >
                   View on Beli →
                 </a>
@@ -266,15 +266,15 @@ export default async function DinnerPage({
   // ── Cancelled ────────────────────────────────────────────────
   if (dinner.status === "cancelled") {
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-4xl mb-4">🚫</p>
-          <h2 className="font-serif text-2xl font-bold text-charcoal mb-2">Dinner cancelled</h2>
-          <p className="text-mid text-sm">This dinner was cancelled. Start a new one whenever you&apos;re ready.</p>
+          <h2 className="font-sans text-2xl font-bold text-ink mb-2">Dinner cancelled</h2>
+          <p className="text-ink-muted text-sm">This dinner was cancelled. Start a new one whenever you&apos;re ready.</p>
           <a
             href={`/clubs/${params.id}`}
-            className="inline-block mt-8 bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+            className="inline-block mt-8 bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
           >
             Back to club
           </a>
@@ -300,32 +300,32 @@ export default async function DinnerPage({
     ]);
 
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
-            <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+            <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               On the waitlist
             </span>
-            <h2 className="font-serif text-3xl font-bold">Fingers crossed 🤞</h2>
-            <p className="text-mid text-sm mt-2">
+            <h2 className="font-sans text-3xl font-bold">Fingers crossed 🤞</h2>
+            <p className="text-ink-muted text-sm mt-2">
               You&apos;re on the waitlist. Someone will confirm as soon as a table opens up.
             </p>
           </div>
 
           {restaurant && (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-xs text-mid mb-1">Waiting on a table at</p>
-              <p className="font-serif text-xl font-bold text-charcoal">{restaurant.name}</p>
+              <p className="text-xs text-ink-muted mb-1">Waiting on a table at</p>
+              <p className="font-sans text-xl font-bold text-ink">{restaurant.name}</p>
               {restaurant.address && (
-                <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+                <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
               )}
               {restaurant.beli_url && (
                 <a
                   href={restaurant.beli_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-2 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark mt-2 hover:underline"
                 >
                   View on Beli →
                 </a>
@@ -418,22 +418,22 @@ export default async function DinnerPage({
       : null;
 
   return (
-    <main className="min-h-screen bg-warm-white">
+    <main className="min-h-screen bg-snow">
       <Nav clubId={params.id} displayName={displayName} />
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 
         {/* Header */}
         <div>
-          <span className="inline-block text-xs font-semibold text-mid uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
+          <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
             {getPollStateLabel(pollState)}
           </span>
-          <h2 className="font-serif text-3xl font-bold">Dinner poll</h2>
+          <h2 className="font-sans text-3xl font-bold">Dinner poll</h2>
           {themeSummary && (
-            <p className="text-mid text-sm mt-2">{themeSummary}</p>
+            <p className="text-ink-muted text-sm mt-2">{themeSummary}</p>
           )}
           {pollCloseLabel && (
-            <p className="text-xs text-mid mt-1">Closes {pollCloseLabel}</p>
+            <p className="text-xs text-ink-muted mt-1">Closes {pollCloseLabel}</p>
           )}
         </div>
 
@@ -444,15 +444,15 @@ export default async function DinnerPage({
 
         {/* Options list */}
         <section>
-          <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
+          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
             Options · {activeOptionCount}
           </h3>
 
           {ranked.length === 0 ? (
-            <div className="border-2 border-dashed border-clay/20 rounded-2xl p-10 text-center">
+            <div className="border-2 border-dashed border-slate/20 rounded-2xl p-10 text-center">
               <p className="text-3xl mb-3">🍽️</p>
-              <p className="font-semibold text-charcoal mb-1">No suggestions yet</p>
-              <p className="text-mid text-sm">
+              <p className="font-semibold text-ink mb-1">No suggestions yet</p>
+              <p className="text-ink-muted text-sm">
                 {showSuggest
                   ? "Search below to add the first restaurant."
                   : "Waiting for suggestions from the group."}
@@ -479,7 +479,7 @@ export default async function DinnerPage({
         {/* Suggest a restaurant */}
         {showSuggest && (
           <section>
-            <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-4">
+            <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
               Suggest a restaurant
             </h3>
             <SuggestRestaurant dinnerId={params.dinnerId} />

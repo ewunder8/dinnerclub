@@ -165,18 +165,18 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
             if (selected) handleClear();
             setQuery(e.target.value);
           }}
-          className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors"
+          className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
         />
         {selected && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-mid hover:text-charcoal text-lg leading-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg leading-none"
           >
             ×
           </button>
         )}
         {searching && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-mid">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">
             …
           </span>
         )}
@@ -188,10 +188,10 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
               <button
                 key={place.place_id}
                 onClick={() => handleSelect(place)}
-                className="w-full text-left px-4 py-3 hover:bg-warm-white transition-colors border-b border-black/5 last:border-0"
+                className="w-full text-left px-4 py-3 hover:bg-surface transition-colors border-b border-black/5 last:border-0"
               >
-                <p className="font-semibold text-charcoal text-sm">{place.name}</p>
-                <p className="text-xs text-mid truncate mt-0.5">
+                <p className="font-semibold text-ink text-sm">{place.name}</p>
+                <p className="text-xs text-ink-muted truncate mt-0.5">
                   {[
                     place.address,
                     place.price_level ? PRICE_LABELS[place.price_level] : null,
@@ -208,9 +208,9 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
 
       {/* Selected restaurant details */}
       {selected && (
-        <div className="bg-forest/5 border border-forest/20 rounded-xl px-4 py-3">
-          <p className="font-semibold text-charcoal text-sm">{selected.name}</p>
-          <p className="text-xs text-mid mt-0.5">
+        <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3">
+          <p className="font-semibold text-ink text-sm">{selected.name}</p>
+          <p className="text-xs text-ink-muted mt-0.5">
             {[
               selected.address,
               selected.price_level ? PRICE_LABELS[selected.price_level] : null,
@@ -230,7 +230,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={200}
-          className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
+          className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
         />
       )}
 
@@ -238,8 +238,8 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
       {selected && (
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-charcoal">
-              Beli link <span className="text-mid font-normal">(optional)</span>
+            <label className="text-xs font-semibold text-ink">
+              Beli link <span className="text-ink-muted font-normal">(optional)</span>
             </label>
           </div>
           <input
@@ -247,9 +247,9 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
             placeholder="https://beliapp.co/…"
             value={beliUrl}
             onChange={(e) => setBeliUrl(e.target.value)}
-            className="w-full bg-warm-white border border-black/10 rounded-xl px-4 py-3 text-charcoal placeholder-mid/50 focus:outline-none focus:border-clay transition-colors text-sm"
+            className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
           />
-          <p className="text-xs text-mid leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">
             In Beli, find this restaurant → tap <span className="font-semibold">Share</span> → copy the link → paste it here. Anyone in the group can then tap straight into the Beli app.
           </p>
         </div>
@@ -262,7 +262,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full bg-clay text-white font-bold py-3 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          className="w-full bg-slate text-white font-bold py-3 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
         >
           {submitting ? "Adding…" : "Add to poll →"}
         </button>

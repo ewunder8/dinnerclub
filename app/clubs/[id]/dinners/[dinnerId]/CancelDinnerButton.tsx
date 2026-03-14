@@ -20,7 +20,7 @@ export default function CancelDinnerButton({ dinnerId, clubId }: { dinnerId: str
     <button
       onClick={handleCancel}
       disabled={loading}
-      className="text-xs text-mid hover:text-red-500 transition-colors disabled:opacity-40"
+      className="text-xs text-ink-muted hover:text-red-500 transition-colors disabled:opacity-40"
     >
       {loading ? "Cancelling…" : "Cancel dinner"}
     </button>

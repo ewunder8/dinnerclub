@@ -41,12 +41,12 @@ export default async function DiscoverPage() {
 
   if (pastDinners.length === 0) {
     return (
-      <main className="min-h-screen bg-warm-white">
+      <main className="min-h-screen bg-snow">
         <Nav displayName={displayName} />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-4xl mb-4">🍽️</p>
-          <p className="font-semibold text-charcoal mb-2">No past dinners yet</p>
-          <p className="text-mid text-sm">
+          <p className="font-semibold text-ink mb-2">No past dinners yet</p>
+          <p className="text-ink-muted text-sm">
             Once your club completes a dinner and rates it, you&apos;ll see it here.
           </p>
         </div>
@@ -77,16 +77,16 @@ export default async function DiscoverPage() {
   );
 
   return (
-    <main className="min-h-screen bg-warm-white">
+    <main className="min-h-screen bg-snow">
       <Nav displayName={displayName} />
 
       <div className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-serif text-3xl font-bold">Discover</h2>
-            <p className="text-mid text-sm mt-1">Where your groups have eaten</p>
+            <h2 className="font-sans text-3xl font-bold">Discover</h2>
+            <p className="text-ink-muted text-sm mt-1">Where your groups have eaten</p>
           </div>
-          <span className="text-xs font-semibold text-mid bg-black/5 px-3 py-1 rounded-full">
+          <span className="text-xs font-semibold text-ink-muted bg-black/5 px-3 py-1 rounded-full">
             {pastDinners.length} {pastDinners.length === 1 ? "dinner" : "dinners"}
           </span>
         </div>
@@ -108,15 +108,15 @@ export default async function DiscoverPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-serif text-xl font-bold text-charcoal">
+                    <p className="font-sans text-xl font-bold text-ink">
                       {restaurant.name}
                     </p>
                     {restaurant.address && (
-                      <p className="text-sm text-mid mt-0.5 truncate">
+                      <p className="text-sm text-ink-muted mt-0.5 truncate">
                         {restaurant.address}
                       </p>
                     )}
-                    <p className="text-xs text-mid mt-0.5">
+                    <p className="text-xs text-ink-muted mt-0.5">
                       {[
                         restaurant.price_level
                           ? PRICE_LABELS[restaurant.price_level]
@@ -131,10 +131,10 @@ export default async function DiscoverPage() {
                   {/* Group overall score */}
                   {summary?.avg_overall && (
                     <div className="text-right shrink-0">
-                      <p className="text-gold font-bold text-lg leading-none">
+                      <p className="text-citrus-dark font-bold text-lg leading-none">
                         {scoreToStars(summary.avg_overall)}
                       </p>
-                      <p className="text-xs text-mid mt-1">
+                      <p className="text-xs text-ink-muted mt-1">
                         {summary.avg_overall.toFixed(1)} group avg
                       </p>
                     </div>
@@ -146,32 +146,32 @@ export default async function DiscoverPage() {
                   <div className="flex gap-4 mb-4">
                     {summary.avg_food && (
                       <div>
-                        <p className="text-xs text-mid">Food</p>
-                        <p className="text-sm font-semibold text-charcoal">
+                        <p className="text-xs text-ink-muted">Food</p>
+                        <p className="text-sm font-semibold text-ink">
                           {summary.avg_food.toFixed(1)}
                         </p>
                       </div>
                     )}
                     {summary.avg_vibe && (
                       <div>
-                        <p className="text-xs text-mid">Vibe</p>
-                        <p className="text-sm font-semibold text-charcoal">
+                        <p className="text-xs text-ink-muted">Vibe</p>
+                        <p className="text-sm font-semibold text-ink">
                           {summary.avg_vibe.toFixed(1)}
                         </p>
                       </div>
                     )}
                     {summary.avg_value && (
                       <div>
-                        <p className="text-xs text-mid">Value</p>
-                        <p className="text-sm font-semibold text-charcoal">
+                        <p className="text-xs text-ink-muted">Value</p>
+                        <p className="text-sm font-semibold text-ink">
                           {summary.avg_value.toFixed(1)}
                         </p>
                       </div>
                     )}
                     {returnPct !== null && summary.rating_count > 0 && (
                       <div>
-                        <p className="text-xs text-mid">Would return</p>
-                        <p className="text-sm font-semibold text-charcoal">
+                        <p className="text-xs text-ink-muted">Would return</p>
+                        <p className="text-sm font-semibold text-ink">
                           {returnPct}%
                         </p>
                       </div>
@@ -183,7 +183,7 @@ export default async function DiscoverPage() {
                 {summary?.notes && summary.notes.length > 0 && (
                   <div className="flex flex-col gap-1.5 mb-4">
                     {summary.notes.slice(0, 2).map((note, i) => (
-                      <p key={i} className="text-sm text-mid italic">
+                      <p key={i} className="text-sm text-ink-muted italic">
                         &ldquo;{note}&rdquo;
                       </p>
                     ))}
@@ -196,7 +196,7 @@ export default async function DiscoverPage() {
                     href={restaurant.beli_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-clay hover:underline mb-4"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark hover:underline mb-4"
                   >
                     View on Beli →
                   </a>
@@ -206,15 +206,15 @@ export default async function DiscoverPage() {
                 <div className="flex items-center justify-between pt-3 border-t border-black/5">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{club?.emoji ?? "🍽️"}</span>
-                    <span className="text-sm text-mid">{club?.name}</span>
+                    <span className="text-sm text-ink-muted">{club?.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     {summary?.rating_count > 0 && (
-                      <span className="text-xs text-mid">
+                      <span className="text-xs text-ink-muted">
                         {summary.rating_count} {summary.rating_count === 1 ? "rating" : "ratings"}
                       </span>
                     )}
-                    <span className="text-xs text-mid">
+                    <span className="text-xs text-ink-muted">
                       {new Date(dinner.created_at).toLocaleDateString("en-US", {
                         month: "short",
                         year: "numeric",
@@ -233,20 +233,20 @@ export default async function DiscoverPage() {
 
 function Nav({ displayName }: { displayName: string }) {
   return (
-    <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
+    <nav className="bg-slate px-8 py-5 flex items-center justify-between">
       <a
         href="/dashboard"
-        className="text-cream/50 hover:text-cream transition-colors text-sm"
+        className="text-white/60 hover:text-white transition-colors text-sm"
       >
         ← Dashboard
       </a>
-      <h1 className="font-serif text-xl font-black text-cream">
-        Dinner<span className="text-clay">Club</span>
+      <h1 className="font-sans text-xl font-extrabold text-white">
+        dinner<span className="text-citrus">club</span>
       </h1>
       <a
         href="/profile"
         title="Profile & sign out"
-        className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+        className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
       >
         {getInitials(displayName)}
       </a>

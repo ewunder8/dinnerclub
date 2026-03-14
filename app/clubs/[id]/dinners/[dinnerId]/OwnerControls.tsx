@@ -51,15 +51,15 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
   };
 
   return (
-    <div className="bg-charcoal/5 border border-charcoal/10 rounded-2xl px-5 py-4 flex flex-col gap-2">
+    <div className="bg-slate/5 border border-slate/10 rounded-2xl px-5 py-4 flex flex-col gap-2">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-charcoal font-semibold">Owner controls</p>
+        <p className="text-sm text-ink font-semibold">Owner controls</p>
         <div className="flex items-center gap-3">
           {pollState === "ready_to_open" && (
             <button
               onClick={handleOpenVoting}
               disabled={loading}
-              className="bg-clay text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40"
+              className="bg-slate text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40"
             >
               {loading ? "Opening…" : "Open voting →"}
             </button>
@@ -68,7 +68,7 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
             <button
               onClick={handleCloseVoting}
               disabled={loading}
-              className="bg-black/10 text-charcoal text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-black/20 transition-colors disabled:opacity-40"
+              className="bg-black/10 text-ink text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-black/20 transition-colors disabled:opacity-40"
             >
               {loading ? "Closing…" : "Close voting"}
             </button>
@@ -76,7 +76,7 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
           <button
             onClick={handleCancel}
             disabled={loading}
-            className="text-xs text-mid hover:text-red-500 transition-colors disabled:opacity-40"
+            className="text-xs text-ink-muted hover:text-red-500 transition-colors disabled:opacity-40"
           >
             Cancel dinner
           </button>

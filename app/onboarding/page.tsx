@@ -24,13 +24,13 @@ export default async function OnboardingPage({
   if (profile?.name) redirect(next);
 
   return (
-    <main className="min-h-screen bg-warm-white flex items-center justify-center p-6">
+    <main className="min-h-screen bg-snow flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <h1 className="font-serif text-4xl font-black text-charcoal">
-            Dinner<span className="text-clay">Club</span>
+          <h1 className="font-sans text-4xl font-extrabold text-ink">
+            dinner<span className="text-citrus">club</span>
           </h1>
-          <p className="text-mid text-sm mt-2">Let&apos;s set up your profile</p>
+          <p className="text-ink-muted text-sm mt-2">Let&apos;s set up your profile</p>
         </div>
         <OnboardingForm userId={user.id} email={user.email ?? ""} next={next} />
       </div>

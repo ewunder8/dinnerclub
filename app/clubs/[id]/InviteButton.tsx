@@ -18,12 +18,12 @@ export default function InviteButton({ token }: { token: string }) {
 
   return (
     <div className="flex items-center gap-2 bg-white border border-black/10 rounded-xl p-3">
-      <p className="flex-1 text-sm text-mid truncate font-mono">
+      <p className="flex-1 text-sm text-ink-muted truncate font-mono">
         /join/{token}
       </p>
       <button
         onClick={handleCopy}
-        className="shrink-0 bg-clay text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-clay-dark transition-colors"
+        className="shrink-0 bg-slate text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-light transition-colors"
       >
         {copied ? "Copied!" : "Copy link"}
       </button>

@@ -40,26 +40,26 @@ export default async function JoinPage({
   const timeRemaining = getInviteTimeRemaining(invite.expires_at);
 
   return (
-    <main className="min-h-screen bg-charcoal flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-slate flex flex-col items-center justify-center p-6">
       {/* Logo */}
-      <p className="font-serif text-xl font-black text-cream/40 mb-12">
-        Dinner<span className="text-clay">Club</span>
+      <p className="font-sans text-xl font-extrabold text-white/40 mb-12">
+        dinner<span className="text-citrus">club</span>
       </p>
 
       {/* Club preview card */}
-      <div className="w-full max-w-md bg-warm-white rounded-3xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-md bg-snow rounded-3xl overflow-hidden shadow-2xl">
         {/* Card header */}
         <div
           className="p-8 relative overflow-hidden"
           style={{ background: "linear-gradient(135deg, #2D4A3E, #1C1C1A)" }}
         >
-          <p className="text-cream/60 text-sm mb-4">
+          <p className="text-white/60 text-sm mb-4">
             You&apos;ve been invited to join
           </p>
-          <h1 className="font-serif text-3xl font-bold text-cream mb-2">
+          <h1 className="font-sans text-3xl font-bold text-white mb-2">
             {club?.emoji} {club?.name}
           </h1>
-          <p className="text-cream/50 text-sm mb-6">
+          <p className="text-white/50 text-sm mb-6">
             {members.length} members · {club?.city}
           </p>
 
@@ -68,13 +68,13 @@ export default async function JoinPage({
             {members.slice(0, 5).map((member: { name: string }, i: number) => (
               <div
                 key={i}
-                className="w-8 h-8 rounded-full bg-clay border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold -ml-1 first:ml-0"
+                className="w-8 h-8 rounded-full bg-citrus-dark border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold -ml-1 first:ml-0"
               >
                 {member.name.slice(0, 2).toUpperCase()}
               </div>
             ))}
             {members.length > 5 && (
-              <span className="text-cream/40 text-sm ml-2">
+              <span className="text-white/40 text-sm ml-2">
                 +{members.length - 5} more
               </span>
             )}
@@ -85,18 +85,18 @@ export default async function JoinPage({
         <div className="p-8">
           <a
             href={`/auth/login?next=/join/${params.token}/complete`}
-            className="block w-full bg-clay text-white text-center font-bold py-4 rounded-xl hover:bg-clay-dark transition-colors mb-3"
+            className="block w-full bg-slate text-white text-center font-bold py-4 rounded-xl hover:bg-slate-light transition-colors mb-3"
           >
             Join {club?.name} →
           </a>
-          <p className="text-mid text-xs text-center">
+          <p className="text-ink-muted text-xs text-center">
             You&apos;ll create a free account or log in. Takes 30 seconds.
           </p>
         </div>
       </div>
 
       {/* Expiry */}
-      <p className="text-cream/25 text-xs mt-6">⏱ {timeRemaining}</p>
+      <p className="text-white/25 text-xs mt-6">⏱ {timeRemaining}</p>
     </main>
   );
 }
@@ -104,24 +104,24 @@ export default async function JoinPage({
 // Shown when the invite link has expired
 function ExpiredInvite({ clubName }: { clubName?: string }) {
   return (
-    <main className="min-h-screen bg-charcoal flex flex-col items-center justify-center p-6">
-      <p className="font-serif text-xl font-black text-cream/40 mb-12">
-        Dinner<span className="text-clay">Club</span>
+    <main className="min-h-screen bg-slate flex flex-col items-center justify-center p-6">
+      <p className="font-sans text-xl font-extrabold text-white/40 mb-12">
+        dinner<span className="text-citrus">club</span>
       </p>
-      <div className="w-full max-w-sm bg-warm-white rounded-3xl p-10 text-center shadow-2xl">
-        <div className="w-16 h-16 bg-clay/10 rounded-full flex items-center justify-center text-3xl mx-auto mb-5">
+      <div className="w-full max-w-sm bg-snow rounded-3xl p-10 text-center shadow-2xl">
+        <div className="w-16 h-16 bg-citrus/10 rounded-full flex items-center justify-center text-3xl mx-auto mb-5">
           ⏰
         </div>
-        <h2 className="font-serif text-2xl font-bold mb-3">
+        <h2 className="font-sans text-2xl font-bold mb-3">
           This link has expired
         </h2>
-        <p className="text-mid text-sm leading-relaxed mb-6">
+        <p className="text-ink-muted text-sm leading-relaxed mb-6">
           Invite links are valid for 7 days.
           {clubName && ` Ask a member of ${clubName} to send you a fresh one.`}
         </p>
         <a
           href="/"
-          className="block w-full bg-clay text-white text-center font-bold py-3 rounded-xl hover:bg-clay-dark transition-colors"
+          className="block w-full bg-slate text-white text-center font-bold py-3 rounded-xl hover:bg-slate-light transition-colors"
         >
           Go to DinnerClub
         </a>

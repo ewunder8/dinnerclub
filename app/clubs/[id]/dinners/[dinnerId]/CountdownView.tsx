@@ -35,10 +35,10 @@ type Props = {
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }> = {
-  far:      { banner: "bg-charcoal/5 border-charcoal/10", countdown: "text-charcoal" },
-  soon:     { banner: "bg-clay/8 border-clay/20",         countdown: "text-clay" },
-  imminent: { banner: "bg-clay/15 border-clay/40",        countdown: "text-clay" },
-  past:     { banner: "bg-black/5 border-black/10",       countdown: "text-mid" },
+  far:      { banner: "bg-slate/5 border-slate/10",       countdown: "text-ink" },
+  soon:     { banner: "bg-citrus/10 border-citrus/20",    countdown: "text-citrus-dark" },
+  imminent: { banner: "bg-citrus/15 border-citrus/40",    countdown: "text-citrus-dark" },
+  past:     { banner: "bg-black/5 border-black/10",       countdown: "text-ink-muted" },
 };
 
 export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName }: Props) {
@@ -109,29 +109,29 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
       {/* Countdown banner */}
       <div className={cn("border rounded-2xl p-6 text-center", styles.banner)}>
-        <p className="text-xs font-semibold text-mid uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">
           {countdown.urgency === "past" ? "Dinner was" : "Dinner in"}
         </p>
-        <p className={cn("font-serif text-5xl font-bold", styles.countdown)}>
+        <p className={cn("font-sans text-5xl font-bold", styles.countdown)}>
           {countdown.label}
         </p>
-        <p className="text-sm text-mid mt-3">
+        <p className="text-sm text-ink-muted mt-3">
           {formatReservationTime(dinner.reservation_datetime!)}
         </p>
       </div>
 
       {/* Restaurant info */}
       <div className="bg-white border border-black/8 rounded-2xl p-5">
-        <h3 className="font-semibold text-sm text-mid uppercase tracking-wide mb-3">
+        <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">
           Restaurant
         </h3>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-serif text-xl font-bold text-charcoal">{restaurant.name}</p>
+            <p className="font-sans text-xl font-bold text-ink">{restaurant.name}</p>
             {restaurant.address && (
-              <p className="text-sm text-mid mt-1">{restaurant.address}</p>
+              <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
             )}
-            <p className="text-sm text-mid mt-0.5">
+            <p className="text-sm text-ink-muted mt-0.5">
               {[
                 restaurant.price_level ? PRICE_LABELS[restaurant.price_level] : null,
                 restaurant.rating ? `★ ${restaurant.rating}` : null,
@@ -146,7 +146,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               href={restaurant.beli_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-xs font-semibold text-clay border border-clay/30 px-3 py-1.5 rounded-xl hover:bg-clay/5 transition-colors"
+              className="shrink-0 text-xs font-semibold text-citrus-dark border border-slate/30 px-3 py-1.5 rounded-xl hover:bg-citrus/10 transition-colors"
             >
               View on Beli →
             </a>
@@ -167,11 +167,11 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         {dinner.reservation_platform && (
           <div className="mt-4 pt-4 border-t border-black/5 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-mid">Reserved via</p>
-              <p className="font-semibold text-charcoal text-sm">
+              <p className="text-xs text-ink-muted">Reserved via</p>
+              <p className="font-semibold text-ink text-sm">
                 {getPlatformName(dinner.reservation_platform)}
                 {dinner.confirmation_number && (
-                  <span className="text-mid font-normal ml-2">
+                  <span className="text-ink-muted font-normal ml-2">
                     #{dinner.confirmation_number}
                   </span>
                 )}
@@ -182,7 +182,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 href={reservationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold text-clay border border-clay/30 px-4 py-2 rounded-xl hover:bg-clay/5 transition-colors"
+                className="text-sm font-semibold text-citrus-dark border border-slate/30 px-4 py-2 rounded-xl hover:bg-citrus/10 transition-colors"
               >
                 Manage →
               </a>
@@ -194,7 +194,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
       {/* RSVP */}
       <div className="bg-white border border-black/8 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm text-mid uppercase tracking-wide">
+          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
             Who&apos;s coming · {goingRsvps.length}
           </h3>
 
@@ -209,9 +209,9 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   "text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-40",
                   myRsvp?.status === s
                     ? s === "going"
-                      ? "bg-forest/15 text-forest border border-forest/30"
-                      : "bg-black/10 text-charcoal border border-black/20"
-                    : "bg-black/5 text-mid hover:bg-black/10"
+                      ? "bg-green-100 text-green-600 border border-green-300"
+                      : "bg-black/10 text-ink border border-black/20"
+                    : "bg-black/5 text-ink-muted hover:bg-black/10"
                 )}
               >
                 {s === "going" ? "Going ✓" : "Can't make it"}
@@ -223,22 +223,22 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         {rsvpError && <p className="text-red-500 text-xs mb-2">{rsvpError}</p>}
 
         {goingRsvps.length === 0 ? (
-          <p className="text-sm text-mid">No RSVPs yet — be the first!</p>
+          <p className="text-sm text-ink-muted">No RSVPs yet — be the first!</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {goingRsvps.map((r) => (
               <div
                 key={r.id}
-                className="flex items-center gap-2 bg-warm-white border border-black/5 rounded-full px-3 py-1.5"
+                className="flex items-center gap-2 bg-surface border border-black/5 rounded-full px-3 py-1.5"
               >
-                <div className="w-5 h-5 rounded-full bg-clay/20 flex items-center justify-center text-clay text-xs font-bold">
+                <div className="w-5 h-5 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-xs font-bold">
                   {(r.users.name || r.users.email).slice(0, 1).toUpperCase()}
                 </div>
-                <span className="text-sm text-charcoal">
+                <span className="text-sm text-ink">
                   {r.users.name || r.users.email.split("@")[0]}
                 </span>
                 {r.user_id === userId && (
-                  <span className="text-xs text-mid">(you)</span>
+                  <span className="text-xs text-ink-muted">(you)</span>
                 )}
               </div>
             ))}
@@ -252,7 +252,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         <div>
           <button
             onClick={handleShare}
-            className="w-full bg-charcoal text-cream font-bold py-4 rounded-xl hover:bg-charcoal/90 transition-colors text-sm"
+            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors text-sm"
           >
             Share dinner details
           </button>
@@ -260,13 +260,13 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
             <div className="mt-2 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
               <button
                 onClick={() => { shareViaWhatsApp(shareText); setShareOpen(false); }}
-                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
               >
                 WhatsApp
               </button>
               <button
                 onClick={handleCopy}
-                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
               >
                 {copied ? "Copied!" : "Copy to clipboard"}
               </button>
@@ -278,7 +278,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         <div>
           <button
             onClick={() => setCalendarOpen((o) => !o)}
-            className="w-full bg-white border border-black/10 text-charcoal font-semibold py-4 rounded-xl hover:border-black/25 transition-colors text-sm"
+            className="w-full bg-white border border-black/10 text-ink font-semibold py-4 rounded-xl hover:border-black/25 transition-colors text-sm"
           >
             Add to Calendar
           </button>
@@ -288,13 +288,13 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 href={generateGoogleCalendarURL(calendarEvent)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
               >
                 Google Calendar
               </a>
               <button
                 onClick={() => { downloadICSFile(calendarEvent); setCalendarOpen(false); }}
-                className="text-left text-sm font-semibold text-charcoal hover:text-clay transition-colors px-2 py-1.5"
+                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
               >
                 Apple / Outlook (.ics)
               </button>

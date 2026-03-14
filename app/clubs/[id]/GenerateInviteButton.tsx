@@ -37,7 +37,7 @@ export default function GenerateInviteButton({ clubId }: { clubId: string }) {
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="w-full py-3 bg-clay text-white font-bold rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-50"
+        className="w-full py-3 bg-slate text-white font-bold rounded-xl hover:bg-slate-light transition-colors disabled:opacity-50"
       >
         {loading ? "Generating…" : "Generate invite link"}
       </button>
