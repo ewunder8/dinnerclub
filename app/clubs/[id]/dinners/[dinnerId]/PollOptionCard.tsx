@@ -31,6 +31,9 @@ export default function PollOptionCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [beliInput, setBeliInput] = useState("");
+  const [showBeliInput, setShowBeliInput] = useState(false);
+  const [beliSaving, setBeliSaving] = useState(false);
 
   const r = option.restaurant_cache;
   const isMyVote = myVoteOptionId === option.id;
@@ -79,6 +82,26 @@ export default function PollOptionCard({
     if (removeError) { setError("Failed to remove. Try again."); setLoading(false); return; }
     router.refresh();
     setLoading(false);
+  };
+
+  const handleSaveBeliUrl = async () => {
+    const raw = beliInput.trim();
+    if (!raw) return;
+    try {
+      const url = new URL(raw);
+      if (url.hostname !== "beliapp.co") { setError("Paste a beliapp.co link."); return; }
+      const clean = `${url.origin}${url.pathname}`;
+      setBeliSaving(true);
+      const supabase = createClient();
+      await supabase.from("restaurant_cache").update({ beli_url: clean }).eq("place_id", r.place_id);
+      setShowBeliInput(false);
+      setBeliInput("");
+      router.refresh();
+    } catch {
+      setError("Invalid URL.");
+    } finally {
+      setBeliSaving(false);
+    }
   };
 
   const handlePickWinner = async () => {
@@ -154,15 +177,51 @@ export default function PollOptionCard({
             <p className="text-sm text-mid italic mt-1.5">"{option.note}"</p>
           )}
 
-          {r.beli_url && (
-            <a
-              href={r.beli_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-1.5 hover:underline"
+          {r.beli_url ? (
+            <div className="flex items-center gap-2 mt-1.5">
+              <a
+                href={r.beli_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-clay hover:underline"
+              >
+                View on Beli →
+              </a>
+              {(isOwner || option.suggested_by === userId) && (
+                <button
+                  onClick={() => setShowBeliInput((v) => !v)}
+                  className="text-xs text-mid hover:text-charcoal transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          ) : (isOwner || option.suggested_by === userId) && (
+            <button
+              onClick={() => setShowBeliInput((v) => !v)}
+              className="text-xs text-mid hover:text-clay transition-colors mt-1.5"
             >
-              View on Beli →
-            </a>
+              + Add Beli link
+            </button>
+          )}
+
+          {showBeliInput && (
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="url"
+                placeholder="https://beliapp.co/…"
+                value={beliInput}
+                onChange={(e) => setBeliInput(e.target.value)}
+                className="flex-1 text-xs bg-warm-white border border-black/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-clay"
+              />
+              <button
+                onClick={handleSaveBeliUrl}
+                disabled={beliSaving}
+                className="text-xs font-semibold text-white bg-clay px-3 py-1.5 rounded-lg hover:bg-clay-dark transition-colors disabled:opacity-40"
+              >
+                {beliSaving ? "…" : "Save"}
+              </button>
+            </div>
           )}
 
           {(pollState === "voting_open" || pollState === "voting_closed" || pollState === "winner_selected") &&

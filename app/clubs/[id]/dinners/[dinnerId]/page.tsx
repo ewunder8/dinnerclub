@@ -227,6 +227,16 @@ export default async function DinnerPage({
               {restaurant.address && (
                 <p className="text-sm text-mid mt-1">{restaurant.address}</p>
               )}
+              {restaurant.beli_url && (
+                <a
+                  href={restaurant.beli_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-clay mt-2 hover:underline"
+                >
+                  View on Beli →
+                </a>
+              )}
             </div>
           )}
 
