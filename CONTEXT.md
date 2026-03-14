@@ -153,10 +153,6 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 ## TODO
 
 ### In Progress
-- [ ] Update `database.types.ts` — add columns from migrations 002–004 (theme fields, voting_open, suggestion_mode, max_suggestions, removed_by/at/note, dinner_id on votes, rating dimensions, ratings_open_until, beli_url)
-- [ ] Write `lib/poll.ts` — state machine, vote counting, tie detection, theme formatting
-
-### Up Next
 - [ ] Dinner creation form (`/clubs/[id]/dinners/new`) — theme, suggestion mode, poll close date
 - [ ] Poll UI — suggest restaurants, vote, see results
 - [ ] `lib/countdown.ts` — getCountdown(), formatReservationTime(), urgency levels, rating helpers
@@ -173,6 +169,8 @@ Deferred because: adds meaningful complexity on top of MVP reservation flow. Bui
 - [x] Invite join flow (`/join/[token]`)
 - [x] `lib/places.ts` — Google Places API with 48hr cache
 - [x] Fix Supabase package compatibility (`@supabase/ssr` 0.3→0.9)
+- [x] Update `database.types.ts` — migrations 002–004 (theme fields, voting_open, suggestion_mode, max_suggestions, removed_by/at/note, dinner_id on votes, rating dimensions, ratings_open_until, beli_url, dinner_rating_summaries view)
+- [x] Write `lib/poll.ts` — state machine, vote counting, tie detection, theme formatting, suggestion mode helpers
 
 ## File Conventions
 
