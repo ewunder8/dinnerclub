@@ -16,7 +16,7 @@ export default async function ProfilePage() {
     .eq("id", authUser.id)
     .single();
 
-  if (!profile) redirect("/dashboard");
+  if (!profile) redirect("/onboarding");
 
   return (
     <main className="min-h-screen bg-warm-white">

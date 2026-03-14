@@ -20,14 +20,16 @@ export default async function DashboardPage() {
 
   // Fetch user profile + memberships in parallel
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from("users").select("name").eq("id", user.id).single(),
+    supabase.from("users").select("name").eq("id", user.id).maybeSingle(),
     supabase
     .from("club_members")
       .select("club_id, role, clubs ( id, name, emoji, city )")
       .eq("user_id", user.id),
   ]);
 
-  const displayName = profile?.name || user.email || "?";
+  if (!profile) redirect("/onboarding");
+
+  const displayName = profile.name || user.email || "?";
 
   const clubs = (memberships ?? []).map((m) => m.clubs as {
     id: string; name: string; emoji: string | null; city: string | null;
