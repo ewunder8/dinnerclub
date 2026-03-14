@@ -105,15 +105,15 @@ export default async function DashboardPage() {
   const active = dinners.filter((d) => d.status !== "confirmed" || !d.reservation_datetime || new Date(d.reservation_datetime) <= nowDate);
 
   return (
-    <main className="min-h-screen bg-warm-white">
-      <nav className="bg-charcoal px-8 py-5 flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-black text-cream">
-          Dinner<span className="text-clay">Club</span>
+    <main className="min-h-screen bg-snow">
+      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
+        <h1 className="font-sans text-2xl font-extrabold tracking-tight text-white">
+          dinner<span className="text-citrus">club</span>
         </h1>
         <a
           href="/profile"
           title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-clay flex items-center justify-center text-white text-sm font-bold hover:bg-clay-dark transition-colors"
+          className="w-9 h-9 rounded-full bg-slate flex items-center justify-center text-white text-sm font-bold hover:bg-slate-light transition-colors"
         >
           {getInitials(displayName)}
         </a>
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
         <div className="flex gap-3">
           <a
             href="/discover"
-            className="text-sm font-semibold text-charcoal bg-white border border-black/8 px-4 py-2 rounded-xl hover:border-clay/40 transition-colors"
+            className="text-sm font-semibold text-ink bg-white border border-black/8 px-4 py-2 rounded-xl hover:border-slate/30 transition-colors"
           >
             🍽️ Discover
           </a>
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
         {/* ── Coming up ── */}
         {upcoming.length > 0 && (
           <section>
-            <h2 className="font-serif text-2xl font-bold mb-4">Coming up</h2>
+            <h2 className="font-sans text-2xl font-bold mb-4">Coming up</h2>
             <div className="flex flex-col gap-3">
               {upcoming.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -146,20 +146,20 @@ export default async function DashboardPage() {
                   <a
                     key={dinner.id}
                     href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
-                    className="bg-white border border-clay/20 rounded-2xl p-5 hover:border-clay/50 hover:shadow-sm transition-all flex items-center justify-between gap-4"
+                    className="bg-white border border-slate/20 rounded-2xl p-5 hover:border-slate/40 hover:shadow-sm transition-all flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">{club?.emoji ?? "🍽️"}</span>
                       <div>
-                        <p className="font-semibold text-charcoal">
+                        <p className="font-semibold text-ink">
                           {restaurantName ?? "Dinner"}
                         </p>
-                        <p className="text-sm text-mid mt-0.5">{club?.name}</p>
+                        <p className="text-sm text-ink-muted mt-0.5">{club?.name}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-clay text-sm">{countdown.label}</p>
-                      <p className="text-xs text-mid mt-0.5">
+                      <p className="font-sans font-bold text-citrus-dark text-sm">{countdown.label}</p>
+                      <p className="text-xs text-ink-muted mt-0.5">
                         {new Date(dinner.reservation_datetime!).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
         {/* ── Rate your dinner ── */}
         {unratedDinners.length > 0 && (
           <section>
-            <h2 className="font-serif text-2xl font-bold mb-4">Rate your dinner</h2>
+            <h2 className="font-sans text-2xl font-bold mb-4">Rate your dinner</h2>
             <div className="flex flex-col gap-3">
               {unratedDinners.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -189,18 +189,18 @@ export default async function DashboardPage() {
                   <a
                     key={dinner.id}
                     href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
-                    className="bg-white border border-gold/30 rounded-2xl p-5 hover:border-gold/60 hover:shadow-sm transition-all flex items-center justify-between gap-4"
+                    className="bg-white border border-citrus/30 rounded-2xl p-5 hover:border-citrus/60 hover:shadow-sm transition-all flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">{club?.emoji ?? "⭐"}</span>
                       <div>
-                        <p className="font-semibold text-charcoal">
+                        <p className="font-semibold text-ink">
                           {restaurantName ?? "Dinner"}
                         </p>
-                        <p className="text-sm text-mid mt-0.5">{club?.name}</p>
+                        <p className="text-sm text-ink-muted mt-0.5">{club?.name}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-gold bg-gold/10 px-3 py-1 rounded-full shrink-0">
+                    <span className="text-xs font-semibold text-citrus-dark bg-citrus-light px-3 py-1 rounded-full shrink-0">
                       Leave a rating
                     </span>
                   </a>
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
         {/* ── Active polls / reservations ── */}
         {active.length > 0 && (
           <section>
-            <h2 className="font-serif text-2xl font-bold mb-4">Active</h2>
+            <h2 className="font-sans text-2xl font-bold mb-4">Active</h2>
             <div className="flex flex-col gap-3">
               {active.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -229,13 +229,13 @@ export default async function DashboardPage() {
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">{club?.emoji ?? "🍽️"}</span>
                       <div>
-                        <p className="font-semibold text-charcoal">
+                        <p className="font-semibold text-ink">
                           {restaurantName ?? "Dinner poll"}
                         </p>
-                        <p className="text-sm text-mid mt-0.5">{club?.name}</p>
+                        <p className="text-sm text-ink-muted mt-0.5">{club?.name}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-mid bg-black/5 px-3 py-1 rounded-full shrink-0">
+                    <span className="text-xs font-semibold text-ink-muted bg-slate-faint px-3 py-1 rounded-full shrink-0">
                       {DINNER_STATUS_LABEL[dinner.status] ?? dinner.status}
                     </span>
                   </a>
@@ -248,25 +248,25 @@ export default async function DashboardPage() {
         {/* ── Clubs ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif text-2xl font-bold">Your clubs</h2>
+            <h2 className="font-sans text-2xl font-bold">Your clubs</h2>
             <a
               href="/clubs/new"
-              className="text-sm font-semibold text-clay hover:text-clay-dark transition-colors"
+              className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"
             >
               + New club
             </a>
           </div>
 
           {clubs.length === 0 ? (
-            <div className="border-2 border-dashed border-clay/20 rounded-2xl p-16 text-center">
+            <div className="border-2 border-dashed border-slate/20 rounded-2xl p-16 text-center">
               <p className="text-4xl mb-4">🍜</p>
-              <p className="font-semibold text-charcoal mb-2">No clubs yet</p>
-              <p className="text-mid text-sm mb-6">
+              <p className="font-semibold text-ink mb-2">No clubs yet</p>
+              <p className="text-ink-muted text-sm mb-6">
                 Create a club and invite your friends, or ask someone to share their invite link.
               </p>
               <a
                 href="/clubs/new"
-                className="inline-block bg-clay text-white font-bold py-3 px-6 rounded-xl hover:bg-clay-dark transition-colors"
+                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
               >
                 Create your first club →
               </a>
@@ -277,11 +277,11 @@ export default async function DashboardPage() {
                 <a
                   key={club.id}
                   href={`/clubs/${club.id}`}
-                  className="bg-white border border-clay/15 rounded-2xl p-6 hover:border-clay/40 hover:shadow-md transition-all"
+                  className="bg-white border border-slate/15 rounded-2xl p-6 hover:border-slate/30 hover:shadow-md transition-all"
                 >
                   <p className="text-2xl mb-2">{club.emoji}</p>
-                  <h3 className="font-serif text-xl font-bold">{club.name}</h3>
-                  {club.city && <p className="text-sm text-mid mt-1">{club.city}</p>}
+                  <h3 className="font-sans text-xl font-bold">{club.name}</h3>
+                  {club.city && <p className="text-sm text-ink-muted mt-1">{club.city}</p>}
                 </a>
               ))}
             </div>
