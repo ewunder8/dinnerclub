@@ -31,6 +31,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
 
   // Poll deadline
   const [pollClosesAt, setPollClosesAt] = useState("");
+  const [targetDate, setTargetDate] = useState("");
 
   // Theme (all optional)
   const [cuisine, setCuisine] = useState("");
@@ -59,6 +60,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
       .insert({
         club_id: clubId,
         poll_closes_at: pollClosesAt ? new Date(pollClosesAt).toISOString() : null,
+        target_date: targetDate ? new Date(targetDate).toISOString() : null,
         theme_cuisine: cuisine.trim() || null,
         theme_price: price,
         theme_vibe: vibe.trim() || null,
@@ -150,6 +152,28 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
                 value={pollClosesAt}
                 onChange={(e) => setPollClosesAt(e.target.value)}
                 min={minDatetime}
+                className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors"
+              />
+            </div>
+          </section>
+
+          {/* ── Target date ── */}
+          <section className="flex flex-col gap-3">
+            <div>
+              <label
+                htmlFor="target-date"
+                className="block text-sm font-semibold text-ink mb-1"
+              >
+                When are you thinking? <span className="text-ink-muted font-normal">(optional)</span>
+              </label>
+              <p className="text-xs text-ink-muted mb-3">
+                A rough date and time so the group knows when to aim for.
+              </p>
+              <input
+                id="target-date"
+                type="datetime-local"
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
                 className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors"
               />
             </div>

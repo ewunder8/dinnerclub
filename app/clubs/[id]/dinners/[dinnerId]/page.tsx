@@ -509,6 +509,16 @@ export default async function DinnerPage({
         })
       : null;
 
+  const targetDateLabel = dinner.target_date
+    ? new Date(dinner.target_date).toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
+
   return (
     <main className="min-h-screen bg-snow">
       <Nav clubId={params.id} displayName={displayName} />
@@ -524,8 +534,11 @@ export default async function DinnerPage({
           {themeSummary && (
             <p className="text-ink-muted text-sm mt-2">{themeSummary}</p>
           )}
+          {targetDateLabel && (
+            <p className="text-sm text-ink mt-2">🗓️ Aiming for {targetDateLabel}</p>
+          )}
           {pollCloseLabel && (
-            <p className="text-xs text-ink-muted mt-1">Closes {pollCloseLabel}</p>
+            <p className="text-xs text-ink-muted mt-1">Poll closes {pollCloseLabel}</p>
           )}
         </div>
 
