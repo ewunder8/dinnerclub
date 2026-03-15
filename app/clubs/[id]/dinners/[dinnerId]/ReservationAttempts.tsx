@@ -11,12 +11,13 @@ type AttemptWithUser = ReservationAttempt & { users: User };
 
 type Props = {
   dinnerId: string;
+  clubId: string;
   userId: string;
   attempts: AttemptWithUser[];
   topOptions?: { place_id: string; name: string }[];
 };
 
-export default function ReservationAttempts({ dinnerId, userId, attempts, topOptions }: Props) {
+export default function ReservationAttempts({ dinnerId, clubId, userId, attempts, topOptions }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +153,7 @@ export default function ReservationAttempts({ dinnerId, userId, attempts, topOpt
           <p className="text-sm font-semibold text-green-600 mb-3">
             Nice work! Fill in the details to confirm for the group.
           </p>
-          <ConfirmReservationForm dinnerId={dinnerId} userId={userId} topOptions={topOptions} />
+          <ConfirmReservationForm dinnerId={dinnerId} clubId={clubId} userId={userId} topOptions={topOptions} />
         </div>
       )}
 

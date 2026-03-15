@@ -296,13 +296,14 @@ export default async function DinnerPage({
 
           <ReservationAttempts
             dinnerId={params.dinnerId}
+            clubId={params.id}
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
             topOptions={topOptions}
           />
 
           {isOwner && (
-            <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={topOptions} />
+            <ConfirmReservationForm dinnerId={params.dinnerId} clubId={params.id} userId={user.id} topOptions={topOptions} />
           )}
           {isOwner && (
             <div className="flex justify-end">
@@ -424,12 +425,13 @@ export default async function DinnerPage({
 
           <ReservationAttempts
             dinnerId={params.dinnerId}
+            clubId={params.id}
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
             topOptions={waitlistTopOptions}
           />
 
-          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} userId={user.id} topOptions={waitlistTopOptions} />}
+          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} clubId={params.id} userId={user.id} topOptions={waitlistTopOptions} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />

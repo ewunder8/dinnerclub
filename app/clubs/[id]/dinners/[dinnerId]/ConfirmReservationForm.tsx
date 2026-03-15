@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { confirmReservation } from "./actions";
 import type { Dinner } from "@/lib/supabase/database.types";
 
 type Platform = NonNullable<Dinner["reservation_platform"]>;
@@ -17,11 +17,12 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 
 type Props = {
   dinnerId: string;
+  clubId: string;
   userId: string;
   topOptions?: { place_id: string; name: string }[];
 };
 
-export default function ConfirmReservationForm({ dinnerId, userId, topOptions }: Props) {
+export default function ConfirmReservationForm({ dinnerId, clubId, userId, topOptions }: Props) {
   const router = useRouter();
 
   const [selectedPlaceId, setSelectedPlaceId] = useState(topOptions?.[0]?.place_id ?? "");
@@ -43,27 +44,22 @@ export default function ConfirmReservationForm({ dinnerId, userId, topOptions }:
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error: updateError } = await supabase
-      .from("dinners")
-      .update({
-        status: "confirmed",
-        reservation_datetime: new Date(datetime).toISOString(),
-        party_size: partySize,
-        reservation_platform: platform,
-        confirmation_number: confirmationNumber.trim() || null,
-        reserved_by: userId,
-        ...(selectedPlaceId ? { winning_restaurant_place_id: selectedPlaceId } : {}),
-      })
-      .eq("id", dinnerId);
-
-    if (updateError) {
-      setError(updateError.message);
+    try {
+      await confirmReservation({
+        dinnerId,
+        clubId,
+        userId,
+        reservationDatetime: datetime,
+        partySize,
+        platform,
+        confirmationNumber: confirmationNumber.trim() || null,
+        winningPlaceId: selectedPlaceId || null,
+      });
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
       setLoading(false);
-      return;
     }
-
-    router.refresh();
   };
 
   return (
