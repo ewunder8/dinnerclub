@@ -136,6 +136,8 @@ export type Database = {
           max_suggestions: number | null;
           // 004
           ratings_open_until: string | null;
+          // 007
+          target_date: string | null;
           created_at: string;
         };
         Insert: Omit<
