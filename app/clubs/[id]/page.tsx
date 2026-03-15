@@ -4,6 +4,7 @@ import { getInitials, getInviteTimeRemaining } from "@/lib/utils";
 
 import InviteButton from "./InviteButton";
 import GenerateInviteButton from "./GenerateInviteButton";
+import EmailInviteForm from "./EmailInviteForm";
 import LeaveClubButton from "./LeaveClubButton";
 import RemoveMemberButton from "./RemoveMemberButton";
 
@@ -181,6 +182,11 @@ export default async function ClubPage({
                 Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
               </p>
               <InviteButton token={invite.token} />
+              <EmailInviteForm
+                token={invite.token}
+                clubName={club.name}
+                inviterName={displayName}
+              />
             </div>
           ) : (
             <div className="bg-white border border-black/8 rounded-2xl p-5">
