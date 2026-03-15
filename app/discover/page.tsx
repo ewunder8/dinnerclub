@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getInitials } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 import { scoreToStars, wouldReturnPct } from "@/lib/countdown";
 import type { DinnerRatingSummary, RestaurantCache } from "@/lib/supabase/database.types";
 
@@ -13,7 +13,7 @@ export default async function DiscoverPage() {
   if (!user) redirect("/auth/login");
 
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from("users").select("name").eq("id", user.id).single(),
+    supabase.from("users").select("name, avatar_url").eq("id", user.id).single(),
     supabase.from("club_members").select("club_id, clubs(id, name, emoji)").eq("user_id", user.id),
   ]);
 
@@ -42,7 +42,7 @@ export default async function DiscoverPage() {
   if (pastDinners.length === 0) {
     return (
       <main className="min-h-screen bg-snow">
-        <Nav displayName={displayName} />
+        <Nav name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-4xl mb-4">🍽️</p>
           <p className="font-semibold text-ink mb-2">No past dinners yet</p>
@@ -78,7 +78,7 @@ export default async function DiscoverPage() {
 
   return (
     <main className="min-h-screen bg-snow">
-      <Nav displayName={displayName} />
+      <Nav name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
 
       <div className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-6">
@@ -232,7 +232,7 @@ export default async function DiscoverPage() {
   );
 }
 
-function Nav({ displayName }: { displayName: string }) {
+function Nav({ name, email, avatarUrl }: { name?: string | null; email?: string | null; avatarUrl?: string | null }) {
   return (
     <nav className="bg-slate px-8 py-5 flex items-center justify-between">
       <a
@@ -244,12 +244,8 @@ function Nav({ displayName }: { displayName: string }) {
       <h1 className="font-sans text-xl font-extrabold text-white">
         dinner<span className="text-citrus">club</span>
       </h1>
-      <a
-        href="/profile"
-        title="Profile & sign out"
-        className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
-      >
-        {getInitials(displayName)}
+      <a href="/profile" title="Profile & sign out">
+        <UserAvatar name={name} email={email} avatarUrl={avatarUrl} />
       </a>
     </nav>
   );

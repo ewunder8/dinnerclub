@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { getInitials, getInviteTimeRemaining } from "@/lib/utils";
+import { getInviteTimeRemaining } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 
 import InviteButton from "./InviteButton";
 import GenerateInviteButton from "./GenerateInviteButton";
@@ -20,7 +21,7 @@ export default async function ClubPage({
 
   // Fetch user profile + club in parallel
   const [{ data: profile }] = await Promise.all([
-    supabase.from("users").select("name").eq("id", user.id).single(),
+    supabase.from("users").select("name, avatar_url").eq("id", user.id).single(),
   ]);
   const displayName = profile?.name || user.email || "?";
 
@@ -96,12 +97,8 @@ export default async function ClubPage({
         <h1 className="font-sans text-xl font-extrabold text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <a
-          href="/profile"
-          title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
-        >
-          {getInitials(displayName)}
+        <a href="/profile" title="Profile & sign out">
+          <UserAvatar name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         </a>
       </nav>
 
@@ -137,9 +134,7 @@ export default async function ClubPage({
           <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-full bg-citrus/15 flex items-center justify-center text-citrus-dark font-bold text-sm shrink-0">
-                  {getInitials(m.users.name || m.users.email)}
-                </div>
+                <UserAvatar name={m.users.name} email={m.users.email} avatarUrl={m.users.avatar_url} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-ink truncate">
                     {m.users.name || m.users.email}

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { getInitials } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 import {
   getPollState,
   getPollStateLabel,
@@ -25,10 +25,14 @@ import MarkCompletedButton from "./MarkCompletedButton";
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
   clubId,
-  displayName,
+  name,
+  email,
+  avatarUrl,
 }: {
   clubId: string;
-  displayName: string;
+  name?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
 }) {
   return (
     <nav className="bg-slate px-8 py-5 flex items-center justify-between">
@@ -41,12 +45,8 @@ function Nav({
       <h1 className="font-sans text-xl font-extrabold text-white">
         dinner<span className="text-citrus">club</span>
       </h1>
-      <a
-        href="/profile"
-        title="Profile & sign out"
-        className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
-      >
-        {getInitials(displayName)}
+      <a href="/profile" title="Profile & sign out">
+        <UserAvatar name={name} email={email} avatarUrl={avatarUrl} />
       </a>
     </nav>
   );
@@ -73,7 +73,7 @@ export default async function DinnerPage({
       .eq("club_id", params.id)
       .eq("user_id", user.id)
       .single(),
-    supabase.from("users").select("name").eq("id", user.id).single(),
+    supabase.from("users").select("name, avatar_url").eq("id", user.id).single(),
   ]);
 
   const displayName = profile?.name || user.email || "?";
@@ -126,7 +126,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} displayName={displayName} />
+        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <CountdownView
             dinner={dinner}
@@ -177,7 +177,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} displayName={displayName} />
+        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <div className="mb-6">
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -255,7 +255,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} displayName={displayName} />
+        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -319,7 +319,7 @@ export default async function DinnerPage({
   if (dinner.status === "cancelled") {
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} displayName={displayName} />
+        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-4xl mb-4">🚫</p>
           <h2 className="font-sans text-2xl font-bold text-ink mb-2">Dinner cancelled</h2>
@@ -391,7 +391,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} displayName={displayName} />
+        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -521,7 +521,7 @@ export default async function DinnerPage({
 
   return (
     <main className="min-h-screen bg-snow">
-      <Nav clubId={params.id} displayName={displayName} />
+      <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 

@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
-import { getInitials } from "@/lib/utils";
 import SignOutButton from "@/app/profile/SignOutButton";
+import UserAvatar from "@/components/UserAvatar";
 
 const DINNER_STATUS_LABEL: Record<string, string> = {
   polling:             "Taking suggestions",
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
 
   // Fetch user profile + memberships in parallel
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from("users").select("name").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, avatar_url").eq("id", user.id).maybeSingle(),
     supabase
     .from("club_members")
       .select("club_id, role, clubs ( id, name, emoji, city )")
@@ -114,12 +114,8 @@ export default async function DashboardPage() {
           dinner<span className="text-citrus">club</span>
         </h1>
         <div className="flex items-center gap-3">
-          <a
-            href="/profile"
-            title="Profile"
-            className="w-9 h-9 rounded-full bg-slate-light flex items-center justify-center text-white text-sm font-bold hover:bg-white/20 transition-colors"
-          >
-            {getInitials(displayName)}
+          <a href="/profile" title="Profile">
+            <UserAvatar name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
           </a>
           <SignOutButton variant="dark" />
         </div>
