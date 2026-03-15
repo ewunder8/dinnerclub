@@ -138,7 +138,7 @@ export default async function DinnerPage({
           />
           {isOwner && (
             <div className="flex items-center justify-end gap-4 mt-6">
-              <MarkCompletedButton dinnerId={params.dinnerId} />
+              <MarkCompletedButton dinnerId={params.dinnerId} clubId={params.id} />
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
             </div>
           )}

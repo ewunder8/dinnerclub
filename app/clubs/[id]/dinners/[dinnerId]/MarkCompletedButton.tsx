@@ -2,29 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { markCompleted } from "./actions";
 
-export default function MarkCompletedButton({ dinnerId }: { dinnerId: string }) {
+export default function MarkCompletedButton({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleComplete = async () => {
     if (!confirm("Mark this dinner as completed? This will open the ratings window for 7 days.")) return;
     setLoading(true);
-
-    const ratingsOpenUntil = new Date();
-    ratingsOpenUntil.setDate(ratingsOpenUntil.getDate() + 7);
-
-    const supabase = createClient();
-    await supabase
-      .from("dinners")
-      .update({
-        status: "completed",
-        ratings_open_until: ratingsOpenUntil.toISOString(),
-      })
-      .eq("id", dinnerId);
-
-    router.refresh();
+    try {
+      await markCompleted({ dinnerId, clubId });
+      router.refresh();
+    } catch {
+      setLoading(false);
+    }
   };
 
   return (

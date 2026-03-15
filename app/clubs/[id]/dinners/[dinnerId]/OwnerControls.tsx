@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { openVoting } from "./actions";
 import type { PollState } from "@/lib/supabase/database.types";
 
 type Props = {
@@ -19,13 +20,12 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
   const handleOpenVoting = async () => {
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { error: updateError } = await supabase
-      .from("dinners")
-      .update({ voting_open: true })
-      .eq("id", dinnerId);
-    if (updateError) { setError("Failed to open voting. Try again."); setLoading(false); return; }
-    router.refresh();
+    try {
+      await openVoting({ dinnerId, clubId });
+      router.refresh();
+    } catch {
+      setError("Failed to open voting. Try again.");
+    }
     setLoading(false);
   };
 
