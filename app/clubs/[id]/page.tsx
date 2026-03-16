@@ -109,7 +109,7 @@ export default async function ClubPage({
           <div className="flex items-center gap-4">
             <span className="text-5xl">{club.emoji}</span>
             <div>
-              <h2 className="font-sans text-3xl font-bold">{club.name}</h2>
+              <h2 className="font-sans text-3xl font-bold text-ink">{club.name}</h2>
               {club.city && (
                 <p className="text-ink-muted text-sm mt-1">{club.city}</p>
               )}
