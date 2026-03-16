@@ -23,6 +23,11 @@ export default async function OnboardingPage({
 
   if (profile?.name) redirect(next);
 
+  const googleAvatarUrl =
+    (user.user_metadata?.avatar_url as string | undefined) ??
+    (user.user_metadata?.picture as string | undefined) ??
+    null;
+
   return (
     <main className="min-h-screen bg-snow flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
@@ -32,7 +37,7 @@ export default async function OnboardingPage({
           </h1>
           <p className="text-ink-muted text-sm mt-2">Let&apos;s set up your profile</p>
         </div>
-        <OnboardingForm userId={user.id} email={user.email ?? ""} next={next} />
+        <OnboardingForm userId={user.id} email={user.email ?? ""} googleAvatarUrl={googleAvatarUrl} next={next} />
       </div>
     </main>
   );

@@ -6,10 +6,12 @@ import { useState } from "react";
 export default function OnboardingForm({
   userId,
   email,
+  googleAvatarUrl = null,
   next = "/dashboard",
 }: {
   userId: string;
   email: string;
+  googleAvatarUrl?: string | null;
   next?: string;
 }) {
   const [name, setName] = useState("");
@@ -29,7 +31,7 @@ export default function OnboardingForm({
       email,
       name: name.trim(),
       city: city.trim() || null,
-      avatar_url: null,
+      avatar_url: googleAvatarUrl,
       beli_connected: false,
     });
 
