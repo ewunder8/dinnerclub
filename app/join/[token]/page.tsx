@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isInviteExpired, getInviteTimeRemaining } from "@/lib/utils";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 // This page is what people see when they click an invite link
 // foodclub.app/join/abc123
@@ -11,6 +11,10 @@ export default async function JoinPage({
   params: { token: string };
 }) {
   const supabase = await createClient();
+
+  // If already logged in, skip straight to completing the join
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect(`/join/${params.token}/complete`);
 
   // Look up the invite token
   const { data: invite } = await supabase
