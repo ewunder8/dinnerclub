@@ -13,6 +13,7 @@ export async function emailInvite({
   clubName: string;
   inviterName: string;
 }) {
-  const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/join/${token}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dinnerclub.app";
+  const inviteUrl = `${baseUrl}/join/${token}`;
   await sendInviteToClub({ to, inviterName, clubName, inviteUrl });
 }
