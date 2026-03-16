@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function OnboardingForm({
   userId,
@@ -19,7 +18,6 @@ export default function OnboardingForm({
   const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +39,7 @@ export default function OnboardingForm({
       return;
     }
 
-    router.push(next);
+    window.location.href = next;
   };
 
   return (
