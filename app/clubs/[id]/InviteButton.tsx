@@ -5,10 +5,7 @@ import { useState } from "react";
 export default function InviteButton({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
 
-  const inviteUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/join/${token}`
-      : `/join/${token}`;
+  const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://dinnerclub.app"}/join/${token}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(inviteUrl);
