@@ -6,7 +6,13 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+
+  // next can come from query param (email auth) or cookie (Google OAuth)
+  const cookieNext = request.headers.get("cookie")
+    ?.split(";")
+    .find((c) => c.trim().startsWith("dc_return_to="))
+    ?.split("=")[1];
+  const next = searchParams.get("next") ?? (cookieNext ? decodeURIComponent(cookieNext) : "/dashboard");
 
   if (code) {
     const supabase = await createClient();
@@ -28,12 +34,16 @@ export async function GET(request: Request) {
           const confirmedUrl = new URL(`${origin}/auth/confirmed`);
           const onboardingNext = next !== "/dashboard" ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding";
           confirmedUrl.searchParams.set("next", onboardingNext);
-          return NextResponse.redirect(confirmedUrl.toString());
+          const response = NextResponse.redirect(confirmedUrl.toString());
+          if (cookieNext) response.cookies.delete("dc_return_to");
+          return response;
         }
       }
 
-      // Returning user — send to their destination
-      return NextResponse.redirect(`${origin}${next}`);
+      // Returning user — send to their destination, clear the return cookie
+      const response = NextResponse.redirect(`${origin}${next}`);
+      if (cookieNext) response.cookies.delete("dc_return_to");
+      return response;
     }
   }
 
