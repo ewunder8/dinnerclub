@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
-import SignOutButton from "@/app/profile/SignOutButton";
 import UserAvatar from "@/components/UserAvatar";
 
 const DINNER_STATUS_LABEL: Record<string, string> = {
@@ -113,12 +112,9 @@ export default async function DashboardPage() {
         <h1 className="font-sans text-2xl font-extrabold tracking-tight text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <div className="flex items-center gap-3">
-          <a href="/profile" title="Profile">
-            <UserAvatar name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
-          </a>
-          <SignOutButton variant="dark" />
-        </div>
+        <a href="/profile" title="Profile">
+          <UserAvatar name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
+        </a>
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
@@ -282,7 +278,7 @@ export default async function DashboardPage() {
                   className="bg-white border border-slate/15 rounded-2xl p-6 hover:border-slate/30 hover:shadow-md transition-all"
                 >
                   <p className="text-2xl mb-2">{club.emoji}</p>
-                  <h3 className="font-sans text-xl font-bold">{club.name}</h3>
+                  <h3 className="font-sans text-xl font-bold text-ink">{club.name}</h3>
                   {club.city && <p className="text-sm text-ink-muted mt-1">{club.city}</p>}
                 </a>
               ))}
