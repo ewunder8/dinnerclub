@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isInviteExpired, getInviteTimeRemaining } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 
@@ -16,8 +17,11 @@ export default async function JoinPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect(`/join/${params.token}/complete`);
 
+  // Use admin client so unauthenticated visitors can see club info
+  const admin = createAdminClient();
+
   // Look up the invite token
-  const { data: invite } = await supabase
+  const { data: invite } = await admin
     .from("invite_links")
     .select(`
       *,
