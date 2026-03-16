@@ -84,7 +84,7 @@ export default async function JoinPage({
         {/* Card body */}
         <div className="p-8">
           <a
-            href={`/auth/login?next=/join/${params.token}/complete`}
+            href={`/auth/login?signup=1&next=/join/${params.token}/complete`}
             className="block w-full bg-slate text-white text-center font-bold py-4 rounded-xl hover:bg-slate-light transition-colors mb-3"
           >
             Join {club?.name} →

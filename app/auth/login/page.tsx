@@ -5,15 +5,15 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
-
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(searchParams.get("signup") === "1");
+  const [loading, setLoading] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
   const next = searchParams.get("next") ?? "/dashboard";
 
   const urlError = searchParams.get("error");
