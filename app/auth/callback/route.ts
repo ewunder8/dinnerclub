@@ -23,11 +23,12 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single<{ name: string | null }>();
 
-        // New user — send to onboarding, preserving next destination
+        // New user — show confirmed screen, then onboarding
         if (!profile?.name) {
-          const onboardingUrl = new URL(`${origin}/onboarding`);
-          if (next !== "/dashboard") onboardingUrl.searchParams.set("next", next);
-          return NextResponse.redirect(onboardingUrl.toString());
+          const confirmedUrl = new URL(`${origin}/auth/confirmed`);
+          const onboardingNext = next !== "/dashboard" ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding";
+          confirmedUrl.searchParams.set("next", onboardingNext);
+          return NextResponse.redirect(confirmedUrl.toString());
         }
       }
 

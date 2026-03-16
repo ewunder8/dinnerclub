@@ -25,7 +25,6 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(
     urlError ? (ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again.") : null
   );
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -48,10 +47,10 @@ function LoginForm() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
       if (error) setError(error.message);
-      else setSuccessMessage("Check your email to confirm your account.");
+      else router.push(`/auth/check-email?email=${encodeURIComponent(email)}`);
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
@@ -137,9 +136,6 @@ function LoginForm() {
         {/* Feedback */}
         {error && (
           <p className="text-red-500 text-sm text-center mt-4">{error}</p>
-        )}
-        {successMessage && (
-          <p className="text-green-600 text-sm text-center mt-4">{successMessage}</p>
         )}
 
         {/* Switch mode */}
