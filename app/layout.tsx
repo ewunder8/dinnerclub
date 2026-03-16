@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 
 export const metadata: Metadata = {
   title: "DinnerClub — Dinner is better together",
@@ -18,7 +19,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <AuthRedirectHandler />
+      </body>
     </html>
   );
 }
