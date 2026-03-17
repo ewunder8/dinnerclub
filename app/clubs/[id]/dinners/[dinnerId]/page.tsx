@@ -183,7 +183,7 @@ export default async function DinnerPage({
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               Dinner completed
             </span>
-            <h2 className="font-sans text-3xl font-bold">How was it?</h2>
+            <h2 className="font-sans text-3xl font-bold text-ink">How was it?</h2>
           </div>
           <RatingsForm
             dinner={dinner}
@@ -261,7 +261,7 @@ export default async function DinnerPage({
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               Time to book
             </span>
-            <h2 className="font-sans text-3xl font-bold">Seeking reservation</h2>
+            <h2 className="font-sans text-3xl font-bold text-ink">Seeking reservation</h2>
             <p className="text-ink-muted text-sm mt-2">
               Someone needs to book a table. First to confirm wins!
             </p>
@@ -397,7 +397,7 @@ export default async function DinnerPage({
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
               On the waitlist
             </span>
-            <h2 className="font-sans text-3xl font-bold">Fingers crossed 🤞</h2>
+            <h2 className="font-sans text-3xl font-bold text-ink">Fingers crossed 🤞</h2>
             <p className="text-ink-muted text-sm mt-2">
               You&apos;re on the waitlist. Someone will confirm as soon as a table opens up.
             </p>
@@ -530,7 +530,7 @@ export default async function DinnerPage({
           <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
             {getPollStateLabel(pollState)}
           </span>
-          <h2 className="font-sans text-3xl font-bold">Dinner poll</h2>
+          <h2 className="font-sans text-3xl font-bold text-ink">Dinner poll</h2>
           {themeSummary && (
             <p className="text-ink-muted text-sm mt-2">{themeSummary}</p>
           )}

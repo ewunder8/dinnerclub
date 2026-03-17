@@ -44,7 +44,7 @@ export default async function DashboardPage() {
     clubIds.length > 0
       ? supabase
           .from("dinners")
-          .select("id, club_id, status, reservation_datetime, winning_restaurant_place_id, created_at")
+          .select("id, club_id, status, voting_open, theme_cuisine, theme_neighborhood, reservation_datetime, winning_restaurant_place_id, created_at")
           .in("club_id", clubIds)
           .in("status", ["confirmed", "polling", "seeking_reservation", "waitlisted"])
           .order("reservation_datetime", { ascending: true })
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
         {/* ── Coming up ── */}
         {upcoming.length > 0 && (
           <section>
-            <h2 className="font-sans text-2xl font-bold mb-4">Coming up</h2>
+            <h2 className="font-sans text-2xl font-bold text-ink mb-4">Coming up</h2>
             <div className="flex flex-col gap-3">
               {upcoming.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
         {/* ── Rate your dinner ── */}
         {unratedDinners.length > 0 && (
           <section>
-            <h2 className="font-sans text-2xl font-bold mb-4">Rate your dinner</h2>
+            <h2 className="font-sans text-2xl font-bold text-ink mb-4">Rate your dinner</h2>
             <div className="flex flex-col gap-3">
               {unratedDinners.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -211,7 +211,7 @@ export default async function DashboardPage() {
         {/* ── Active polls / reservations ── */}
         {active.length > 0 && (
           <section>
-            <h2 className="font-sans text-2xl font-bold mb-4">Active</h2>
+            <h2 className="font-sans text-2xl font-bold text-ink mb-4">Active</h2>
             <div className="flex flex-col gap-3">
               {active.map((dinner) => {
                 const club = clubMap[dinner.club_id];
@@ -228,13 +228,19 @@ export default async function DashboardPage() {
                       <span className="text-3xl">{club?.emoji ?? "🍽️"}</span>
                       <div>
                         <p className="font-semibold text-ink">
-                          {restaurantName ?? "Dinner poll"}
+                          {restaurantName ?? [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ") || "Dinner poll"}
                         </p>
                         <p className="text-sm text-ink-muted mt-0.5">{club?.name}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-ink-muted bg-slate-faint px-3 py-1 rounded-full shrink-0">
-                      {DINNER_STATUS_LABEL[dinner.status] ?? dinner.status}
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full shrink-0 ${
+                      dinner.status === "polling" && dinner.voting_open
+                        ? "text-citrus-dark bg-citrus/10"
+                        : "text-ink-muted bg-slate-faint"
+                    }`}>
+                      {dinner.status === "polling" && dinner.voting_open
+                        ? "Vote now!"
+                        : (DINNER_STATUS_LABEL[dinner.status] ?? dinner.status)}
                     </span>
                   </a>
                 );
@@ -246,7 +252,7 @@ export default async function DashboardPage() {
         {/* ── Clubs ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-sans text-2xl font-bold">Your clubs</h2>
+            <h2 className="font-sans text-2xl font-bold text-ink">Your clubs</h2>
             <a
               href="/clubs/new"
               className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"

@@ -83,7 +83,7 @@ export default async function DiscoverPage() {
       <div className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-sans text-3xl font-bold">Discover</h2>
+            <h2 className="font-sans text-3xl font-bold text-ink">Discover</h2>
             <p className="text-ink-muted text-sm mt-1">Where your groups have eaten</p>
           </div>
           <span className="text-xs font-semibold text-ink-muted bg-black/5 px-3 py-1 rounded-full">
