@@ -2,7 +2,7 @@
 
 ## Testers
 - **Eric** (owner/admin) — personal email
-- **Wife** — member perspective
+- **Kandace** — member perspective
 - **Shared email** — third member, also used to verify notification emails
 
 ---
@@ -19,7 +19,7 @@
 ## 1. Auth & Onboarding
 
 - [ ] Eric signs up → completes onboarding (name, city)
-- [ ] Wife signs up → completes onboarding
+- [ ] Kandace signs up → completes onboarding
 - [ ] Shared email signs up → completes onboarding
 - [ ] Profile page loads correctly for all three
 - [ ] Sign out and back in works
@@ -30,7 +30,7 @@
 
 - [ ] Eric uploads a profile photo — appears immediately in profile page
 - [ ] Avatar shows in nav bar after upload (no page reload needed)
-- [ ] Wife uploads a photo — her avatar shows in club member list
+- [ ] Kandace uploads a photo — her avatar shows in club member list
 - [ ] Fallback initials show for shared email (no photo uploaded)
 - [ ] Photo over 5MB is rejected with an error message
 - [ ] Updating name saves correctly and reflects in nav
@@ -42,9 +42,9 @@
 - [ ] Eric creates a club (name, emoji, city)
 - [ ] Club appears on Eric's dashboard
 - [ ] Eric generates an invite link
-- [ ] Eric uses **email invite form** → sends invite to wife's email
+- [ ] Eric uses **email invite form** → sends invite to Kandace's email
 - [ ] Eric uses **email invite form** → sends invite to shared email
-- [ ] Wife receives invite email, clicks link, joins club
+- [ ] Kandace receives invite email, clicks link, joins club
 - [ ] Shared email receives invite email, clicks link, joins club
 - [ ] All three members appear in the club member list
 - [ ] Eric sees ⚙️ settings icon, others do not
@@ -58,7 +58,7 @@
 - [ ] Dinner appears on club page for all three members
 - [ ] All three can suggest restaurants via Google Places search
 - [ ] Each suggestion shows who added it
-- [ ] Wife can remove her own suggestion before voting opens
+- [ ] Kandace can remove her own suggestion before voting opens
 - [ ] Eric (owner) can remove any suggestion
 - [ ] Eric opens voting → all three receive **voting open email**
 - [ ] All three cast a vote (one vote per member enforced)
@@ -71,14 +71,14 @@
 
 - [ ] Dinner status shows "Seeking reservation"
 - [ ] Top vote-getters ranked (#1, #2, #3) are displayed
-- [ ] Wife clicks "I'll try to get a table"
-- [ ] Wife appears in the "Trying to get a table" list
+- [ ] Kandace clicks "I'll try to get a table"
+- [ ] Kandace appears in the "Trying to get a table" list
 - [ ] Eric also clicks "I'll try" — both show as attempting
 - [ ] Eric clicks "Never mind" — removed from list
-- [ ] Wife clicks "I got it →"
-- [ ] Wife fills out ConfirmReservationForm (date, time, party size, platform, confirmation #)
-- [ ] Wife selects restaurant (test with #2 or #3 if applicable)
-- [ ] Wife submits — crown 👑 appears next to her name
+- [ ] Kandace clicks "I got it →"
+- [ ] Kandace fills out ConfirmReservationForm (date, time, party size, platform, confirmation #)
+- [ ] Kandace selects restaurant (test with #2 or #3 if applicable)
+- [ ] Kandace submits — crown 👑 appears next to her name
 - [ ] All three receive **reservation confirmed email**
 - [ ] Email shows correct restaurant, date, time, party size, address
 
@@ -88,7 +88,7 @@
 
 - [ ] Dinner status shows confirmed with countdown
 - [ ] Restaurant name, address, time, party size all correct
-- [ ] "👑 Reserved by [wife's name]" shown
+- [ ] "👑 Reserved by [Kandace's name]" shown
 - [ ] All three RSVP — names appear in RSVP list
 - [ ] Share button works
 - [ ] Add to calendar works (Google + .ics)
@@ -123,7 +123,7 @@
 ## 9. Club Management
 
 - [ ] Eric can edit club name/emoji/city in settings
-- [ ] Eric can transfer ownership to wife → wife becomes owner
+- [ ] Eric can transfer ownership to Kandace → Kandace becomes owner
 - [ ] Original owner can leave club (non-owner)
 - [ ] Eric can remove shared email member
 - [ ] Eric can delete club → redirected to dashboard, club gone
