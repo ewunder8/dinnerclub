@@ -10,9 +10,18 @@ import type { Json, RestaurantCache } from "@/lib/supabase/database.types";
 const PLACES_API_BASE = "https://places.googleapis.com/v1";
 const CACHE_TTL_HOURS = 48;
 
-// Fields we request from Places API
-// Only request what you need — Google charges per field group
-const PLACE_FIELDS = [
+// Fields for text/nearby search — only what we show in the dropdown
+const SEARCH_FIELDS = [
+  "id",
+  "displayName",
+  "formattedAddress",
+  "location",
+  "priceLevel",
+  "rating",
+].join(",");
+
+// Fields for full place detail lookups
+const DETAIL_FIELDS = [
   "id",
   "displayName",
   "formattedAddress",
@@ -39,7 +48,7 @@ export async function searchNearbyRestaurants(
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
-      "X-Goog-FieldMask": `places.${PLACE_FIELDS}`,
+      "X-Goog-FieldMask": `places.${SEARCH_FIELDS}`,
     },
     body: JSON.stringify({
       includedTypes: ["restaurant"],
@@ -82,7 +91,7 @@ export async function searchRestaurantsByText(
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
-      "X-Goog-FieldMask": `places.${PLACE_FIELDS}`,
+      "X-Goog-FieldMask": `places.${SEARCH_FIELDS}`,
     },
     body: JSON.stringify(body),
   });
@@ -118,7 +127,7 @@ export async function getPlaceDetails(placeId: string): Promise<RestaurantCache 
 
   // Fetch fresh from Google
   const response = await fetch(
-    `${PLACES_API_BASE}/places/${placeId}?fields=${PLACE_FIELDS}`,
+    `${PLACES_API_BASE}/places/${placeId}?fields=${DETAIL_FIELDS}`,
     {
       headers: {
         "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
