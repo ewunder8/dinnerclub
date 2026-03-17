@@ -34,13 +34,18 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
 
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
+      setError(null);
       try {
         const res = await fetch(
           `/api/places/search?q=${encodeURIComponent(query.trim())}`
         );
         const data = await res.json();
+        if (!res.ok) {
+          setError(`Search error: ${data.error ?? res.status}`);
+        }
         setResults(data.places ?? []);
-      } catch {
+      } catch (e) {
+        setError(`Search failed: ${e instanceof Error ? e.message : "unknown error"}`);
         setResults([]);
       } finally {
         setSearching(false);

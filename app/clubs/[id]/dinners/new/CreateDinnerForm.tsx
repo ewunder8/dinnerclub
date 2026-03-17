@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSuggestionModeLabel } from "@/lib/poll";
 import { cn } from "@/lib/utils";
+import { Calendar } from "lucide-react";
 import type { Dinner } from "@/lib/supabase/database.types";
 
 const PRICE_OPTIONS = [
@@ -47,6 +48,9 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const pollClosesRef = useRef<HTMLInputElement>(null);
+  const targetDateRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +130,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
           <p className="text-ink-muted text-sm mb-1">
             {clubEmoji} {clubName}
           </p>
-          <h2 className="font-sans text-3xl font-bold">Start a dinner</h2>
+          <h2 className="font-sans text-3xl font-bold text-ink">Start a dinner</h2>
           <p className="text-ink-muted text-sm mt-2">
             Set a theme and let the crew suggest where to eat.
           </p>
@@ -137,22 +141,31 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
           {/* ── Poll deadline ── */}
           <section className="flex flex-col gap-3">
             <div>
-              <label
-                htmlFor="poll-closes"
-                className="block text-sm font-semibold text-ink mb-1"
-              >
+              <label className="block text-sm font-semibold text-ink mb-1">
                 Poll closes <span className="text-ink-muted font-normal">(optional)</span>
               </label>
               <p className="text-xs text-ink-muted mb-3">
                 Voting auto-closes at this time. Leave blank to close manually.
               </p>
+              <button
+                type="button"
+                onClick={() => pollClosesRef.current?.showPicker()}
+                className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
+              >
+                <Calendar className="w-5 h-5 text-ink-muted shrink-0" />
+                <span className={pollClosesAt ? "text-ink" : "text-ink-faint"}>
+                  {pollClosesAt
+                    ? new Date(pollClosesAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+                    : "Pick a date & time"}
+                </span>
+              </button>
               <input
-                id="poll-closes"
+                ref={pollClosesRef}
                 type="datetime-local"
                 value={pollClosesAt}
                 onChange={(e) => setPollClosesAt(e.target.value)}
                 min={minDatetime}
-                className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors"
+                className="sr-only"
               />
             </div>
           </section>
@@ -160,21 +173,30 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
           {/* ── Target date ── */}
           <section className="flex flex-col gap-3">
             <div>
-              <label
-                htmlFor="target-date"
-                className="block text-sm font-semibold text-ink mb-1"
-              >
+              <label className="block text-sm font-semibold text-ink mb-1">
                 When are you thinking? <span className="text-ink-muted font-normal">(optional)</span>
               </label>
               <p className="text-xs text-ink-muted mb-3">
                 A rough date and time so the group knows when to aim for.
               </p>
+              <button
+                type="button"
+                onClick={() => targetDateRef.current?.showPicker()}
+                className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
+              >
+                <Calendar className="w-5 h-5 text-ink-muted shrink-0" />
+                <span className={targetDate ? "text-ink" : "text-ink-faint"}>
+                  {targetDate
+                    ? new Date(targetDate).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+                    : "Pick a date & time"}
+                </span>
+              </button>
               <input
-                id="target-date"
+                ref={targetDateRef}
                 type="datetime-local"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors"
+                className="sr-only"
               />
             </div>
           </section>
