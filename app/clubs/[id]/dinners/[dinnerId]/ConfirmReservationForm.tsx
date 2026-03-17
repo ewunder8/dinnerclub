@@ -49,7 +49,8 @@ export default function ConfirmReservationForm({ dinnerId, clubId, userId, topOp
         dinnerId,
         clubId,
         userId,
-        reservationDatetime: datetime,
+        // Convert in the browser so the local timezone is used, not the server's UTC
+        reservationDatetime: new Date(datetime).toISOString(),
         partySize,
         platform,
         confirmationNumber: confirmationNumber.trim() || null,

@@ -9,12 +9,13 @@ export function getInviteShareText(clubName: string, inviteUrl: string): string 
   return `Join ${clubName} on DinnerClub!\n${inviteUrl}`;
 }
 
-/** Build a concise reservation summary for sharing. */
+/** Build a celebratory reservation summary for sharing. */
 export function getReservationShareText(params: {
   restaurantName: string;
   datetime: string;
   partySize: number;
   confirmationNumber?: string | null;
+  url?: string;
 }): string {
   const time = new Date(params.datetime).toLocaleDateString("en-US", {
     weekday: "short",
@@ -23,9 +24,15 @@ export function getReservationShareText(params: {
     hour: "numeric",
     minute: "2-digit",
   });
-  let text = `Dinner at ${params.restaurantName} — ${time} for ${params.partySize}`;
-  if (params.confirmationNumber) text += `\nConf: ${params.confirmationNumber}`;
-  return text;
+  const lines = [
+    "🎉 Dinner is booked!",
+    "",
+    `🍽️ ${params.restaurantName}`,
+    `📅 ${time}`,
+    `👥 Party of ${params.partySize}`,
+  ];
+  if (params.url) lines.push(`🔗 RSVP here: ${params.url}`);
+  return lines.join("\n");
 }
 
 /** Open native system share sheet (mobile preferred). Returns false if not supported. */

@@ -74,6 +74,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     datetime: dinner.reservation_datetime!,
     partySize: dinner.party_size ?? goingRsvps.length,
     confirmationNumber: dinner.confirmation_number,
+    url: typeof window !== "undefined" ? window.location.href : undefined,
   });
 
   const handleShare = async () => {
@@ -141,16 +142,26 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 .join(" · ")}
             </p>
           </div>
-          {restaurant.beli_url && (
+          <div className="flex gap-2 shrink-0">
             <a
-              href={restaurant.beli_url}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-xs font-semibold text-citrus-dark border border-slate/30 px-3 py-1.5 rounded-xl hover:bg-citrus/10 transition-colors"
+              className="text-xs font-semibold text-ink-muted border border-black/10 px-3 py-1.5 rounded-xl hover:bg-black/5 transition-colors"
             >
-              View on Beli →
+              Google Maps →
             </a>
-          )}
+            {restaurant.beli_url && (
+              <a
+                href={restaurant.beli_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-citrus-dark border border-citrus/30 px-3 py-1.5 rounded-xl hover:bg-citrus/10 transition-colors"
+              >
+                Beli →
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Booker crown */}
