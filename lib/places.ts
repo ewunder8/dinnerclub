@@ -88,6 +88,9 @@ export async function searchRestaurantsByText(
   });
 
   const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message ?? `Places API error ${response.status}`);
+  }
   return data.places || [];
 }
 

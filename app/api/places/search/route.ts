@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ places });
-  } catch {
-    return NextResponse.json({ places: [] }, { status: 500 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ places: [], error: message }, { status: 500 });
   }
 }
