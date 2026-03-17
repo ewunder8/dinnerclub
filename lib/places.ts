@@ -74,7 +74,7 @@ export async function searchRestaurantsByText(
   const body: Record<string, unknown> = {
     textQuery: query,
     includedType: "restaurant",
-    maxResultCount: 20,
+    pageSize: 10,
   };
 
   if (locationBias) {
