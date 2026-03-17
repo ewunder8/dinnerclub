@@ -118,7 +118,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
       });
 
     if (cacheError) {
-      setError("Failed to save restaurant. Try again.");
+      setError(`Cache error: ${cacheError.message}`);
       setSubmitting(false);
       return;
     }
