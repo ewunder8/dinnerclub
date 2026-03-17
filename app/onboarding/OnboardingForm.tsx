@@ -7,14 +7,16 @@ export default function OnboardingForm({
   userId,
   email,
   googleAvatarUrl = null,
+  googleName = null,
   next = "/dashboard",
 }: {
   userId: string;
   email: string;
   googleAvatarUrl?: string | null;
+  googleName?: string | null;
   next?: string;
 }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(googleName ?? "");
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

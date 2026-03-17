@@ -28,13 +28,15 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    // Store next destination in a cookie — OAuth redirect URLs can lose query params
+    // Pass next both in the URL and a cookie for redundancy
+    const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
     if (next !== "/dashboard") {
+      callbackUrl.searchParams.set("next", next);
       document.cookie = `dc_return_to=${encodeURIComponent(next)}; path=/; max-age=600; secure; samesite=lax`;
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl.toString() },
     });
     if (error) setError(error.message);
     setLoading(false);

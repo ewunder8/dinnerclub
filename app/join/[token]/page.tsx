@@ -78,7 +78,7 @@ export default async function JoinPage({
                 key={i}
                 className="w-8 h-8 rounded-full bg-citrus-dark border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold -ml-1 first:ml-0"
               >
-                {member.name.slice(0, 2).toUpperCase()}
+                {member.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
               </div>
             ))}
             {members.length > 5 && (

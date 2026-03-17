@@ -29,12 +29,12 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single<{ name: string | null }>();
 
-        // New user — show confirmed screen, then onboarding
+        // New user — send to onboarding (skip confirmed page for OAuth users)
         if (!profile?.name) {
-          const confirmedUrl = new URL(`${origin}/auth/confirmed`);
+          const isOAuth = user.app_metadata?.provider !== "email";
           const onboardingNext = next !== "/dashboard" ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding";
-          confirmedUrl.searchParams.set("next", onboardingNext);
-          const response = NextResponse.redirect(confirmedUrl.toString());
+          const destination = isOAuth ? onboardingNext : `/auth/confirmed?next=${encodeURIComponent(onboardingNext)}`;
+          const response = NextResponse.redirect(`${origin}${destination}`);
           if (cookieNext) response.cookies.delete("dc_return_to");
           return response;
         }
