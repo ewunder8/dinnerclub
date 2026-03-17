@@ -10,17 +10,17 @@ import type { Json, RestaurantCache } from "@/lib/supabase/database.types";
 const PLACES_API_BASE = "https://places.googleapis.com/v1";
 const CACHE_TTL_HOURS = 48;
 
-// Fields for text/nearby search — only what we show in the dropdown
-const SEARCH_FIELDS = [
+// Field masks for search endpoints (each field needs "places." prefix)
+const SEARCH_FIELD_MASK = [
   "id",
   "displayName",
   "formattedAddress",
   "location",
   "priceLevel",
   "rating",
-].join(",");
+].map((f) => `places.${f}`).join(",");
 
-// Fields for full place detail lookups
+// Fields for full place detail lookups (no prefix — single place endpoint)
 const DETAIL_FIELDS = [
   "id",
   "displayName",
@@ -48,7 +48,7 @@ export async function searchNearbyRestaurants(
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
-      "X-Goog-FieldMask": `places.${SEARCH_FIELDS}`,
+      "X-Goog-FieldMask": SEARCH_FIELD_MASK,
     },
     body: JSON.stringify({
       includedTypes: ["restaurant"],
@@ -91,7 +91,7 @@ export async function searchRestaurantsByText(
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
-      "X-Goog-FieldMask": `places.${SEARCH_FIELDS}`,
+      "X-Goog-FieldMask": SEARCH_FIELD_MASK,
     },
     body: JSON.stringify(body),
   });
