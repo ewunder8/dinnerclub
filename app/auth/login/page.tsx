@@ -28,15 +28,13 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    // Pass next both in the URL and a cookie for redundancy
-    const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
+    // Store next in cookie — don't put it in redirectTo URL (breaks Supabase allowlist)
     if (next !== "/dashboard") {
-      callbackUrl.searchParams.set("next", next);
       document.cookie = `dc_return_to=${encodeURIComponent(next)}; path=/; max-age=600; secure; samesite=lax`;
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: callbackUrl.toString() },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) setError(error.message);
     setLoading(false);

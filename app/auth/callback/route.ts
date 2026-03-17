@@ -8,11 +8,10 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   // next can come from query param (email auth) or cookie (Google OAuth)
-  const cookieNext = request.headers.get("cookie")
-    ?.split(";")
-    .find((c) => c.trim().startsWith("dc_return_to="))
-    ?.split("=")[1];
-  const next = searchParams.get("next") ?? (cookieNext ? decodeURIComponent(cookieNext) : "/dashboard");
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const cookieMatch = cookieHeader.split(";").find((c) => c.trim().startsWith("dc_return_to="));
+  const cookieNext = cookieMatch ? decodeURIComponent(cookieMatch.trim().slice("dc_return_to=".length)) : null;
+  const next = searchParams.get("next") ?? cookieNext ?? "/dashboard";
 
   if (code) {
     const supabase = await createClient();
