@@ -219,9 +219,12 @@ export default async function DinnerPage({
         .is("removed_at", null),
       supabase
         .from("votes")
-        .select("option_id")
+        .select("option_id, user_id")
         .eq("dinner_id", params.dinnerId),
     ]);
+
+    // Count distinct voters for party size hint
+    const voterCount = new Set((rawVotes ?? []).map((v) => v.user_id)).size;
 
     // Compute top 3 alternatives (by vote count, excluding #1 winner)
     const voteCounts: Record<string, number> = {};
@@ -265,30 +268,61 @@ export default async function DinnerPage({
             <p className="text-ink-muted text-sm mt-2">
               Someone needs to book a table. First to confirm wins!
             </p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3">
+              {dinner.target_date && (
+                <p className="text-sm text-ink">
+                  🗓️{" "}
+                  <span className="font-semibold">
+                    {new Date(dinner.target_date).toLocaleDateString("en-US", {
+                      weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })}
+                  </span>
+                </p>
+              )}
+              {voterCount > 0 && (
+                <p className="text-sm text-ink">
+                  🪑 <span className="font-semibold">{voterCount} people</span> voted
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Top picks */}
           <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
             {topOptions.map((opt, i) => (
-              <div key={opt.place_id} className="flex items-center gap-4 p-5">
-                <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-citrus text-ink" : "bg-black/5 text-ink-muted"}`}>
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-semibold truncate ${i === 0 ? "text-ink" : "text-ink-muted"}`}>
-                    {opt.name}
-                  </p>
-                  {i === 0 && <p className="text-xs text-ink-muted mt-0.5">Top pick</p>}
+              <div key={opt.place_id} className="p-5">
+                <div className="flex items-center gap-4">
+                  <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-citrus text-ink" : "bg-black/5 text-ink-muted"}`}>
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold truncate ${i === 0 ? "text-ink" : "text-ink-muted"}`}>
+                      {opt.name}
+                    </p>
+                    <p className="text-xs text-ink-muted mt-0.5">{i === 0 ? "Top pick" : "Fallback"}</p>
+                  </div>
                 </div>
-                {i === 0 && restaurant?.beli_url && (
-                  <a
-                    href={restaurant.beli_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-xs font-semibold text-citrus-dark hover:underline"
-                  >
-                    Beli →
-                  </a>
+                {i === 0 && (
+                  <div className="flex gap-3 mt-3 ml-11">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opt.name)}&query_place_id=${opt.place_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-ink-muted hover:text-ink border border-black/10 rounded-lg px-3 py-1.5 transition-colors"
+                    >
+                      Google Maps →
+                    </a>
+                    {restaurant?.beli_url && (
+                      <a
+                        href={restaurant.beli_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-citrus-dark border border-citrus/30 rounded-lg px-3 py-1.5 hover:bg-citrus/5 transition-colors"
+                      >
+                        Beli →
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -302,9 +336,6 @@ export default async function DinnerPage({
             topOptions={topOptions}
           />
 
-          {isOwner && (
-            <ConfirmReservationForm dinnerId={params.dinnerId} clubId={params.id} userId={user.id} topOptions={topOptions} />
-          )}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
