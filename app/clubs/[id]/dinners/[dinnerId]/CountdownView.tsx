@@ -34,12 +34,14 @@ type Props = {
   reservedByName?: string | null;
 };
 
-const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; countdown: string }> = {
-  far:      { banner: "bg-slate/5 border-slate/10",       countdown: "text-ink" },
-  soon:     { banner: "bg-citrus/10 border-citrus/20",    countdown: "text-citrus-dark" },
-  imminent: { banner: "bg-citrus/15 border-citrus/40",    countdown: "text-citrus-dark" },
-  past:     { banner: "bg-black/5 border-black/10",       countdown: "text-ink-muted" },
+const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; sublabel: string }> = {
+  far:      { banner: "bg-slate text-white",                   label: "text-white",        sublabel: "text-white/60" },
+  soon:     { banner: "bg-citrus-dark text-white",             label: "text-white",        sublabel: "text-white/70" },
+  imminent: { banner: "bg-red-500 text-white",                 label: "text-white",        sublabel: "text-white/80" },
+  past:     { banner: "bg-black/5 border border-black/10",     label: "text-ink",          sublabel: "text-ink-muted" },
 };
+
+const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
 export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName }: Props) {
   const router = useRouter();
@@ -103,51 +105,49 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     appUrl: typeof window !== "undefined" ? window.location.href : undefined,
   });
 
-  const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
-
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5">
 
       {/* Countdown banner */}
-      <div className={cn("border rounded-2xl p-6 text-center", styles.banner)}>
-        <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">
-          {countdown.urgency === "past" ? "Dinner was" : "Dinner in"}
+      <div className={cn("rounded-2xl px-6 py-8 text-center", styles.banner)}>
+        <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
+          {countdown.urgency === "past" ? "Dinner was" : countdown.urgency === "imminent" ? "🔥 Tonight!" : "Dinner in"}
         </p>
-        <p className={cn("font-sans text-5xl font-bold", styles.countdown)}>
+        <p className={cn("font-sans text-6xl font-bold leading-none mb-3", styles.label)}>
           {countdown.label}
         </p>
-        <p className="text-sm text-ink-muted mt-3">
+        <p className={cn("text-sm font-medium", styles.sublabel)}>
           {formatReservationTime(dinner.reservation_datetime!)}
         </p>
       </div>
 
       {/* Restaurant info */}
-      <div className="bg-white border border-black/8 rounded-2xl p-5">
-        <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">
-          Restaurant
-        </h3>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-sans text-xl font-bold text-ink">{restaurant.name}</p>
-            {restaurant.address && (
-              <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
-            )}
-            <p className="text-sm text-ink-muted mt-0.5">
-              {[
-                restaurant.price_level ? PRICE_LABELS[restaurant.price_level] : null,
-                restaurant.rating ? `★ ${restaurant.rating}` : null,
-                dinner.party_size ? `Party of ${dinner.party_size}` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          </div>
-          <div className="flex gap-2 shrink-0">
+      <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/5">
+          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Restaurant</h3>
+        </div>
+        <div className="p-5">
+          <p className="font-sans text-xl font-bold text-ink">{restaurant.name}</p>
+          {restaurant.address && (
+            <p className="text-sm text-ink-muted mt-1">{restaurant.address}</p>
+          )}
+          <p className="text-sm text-ink-muted mt-1">
+            {[
+              restaurant.price_level ? PRICE_LABELS[restaurant.price_level] : null,
+              restaurant.rating ? `★ ${restaurant.rating}` : null,
+              dinner.party_size ? `Party of ${dinner.party_size}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+
+          {/* Map + Beli links */}
+          <div className="flex gap-2 mt-4">
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-semibold text-ink-muted border border-black/10 px-3 py-1.5 rounded-xl hover:bg-black/5 transition-colors"
+              className="flex-1 text-center text-xs font-semibold text-ink border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
             >
               Google Maps →
             </a>
@@ -156,106 +156,107 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 href={restaurant.beli_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-citrus-dark border border-citrus/30 px-3 py-1.5 rounded-xl hover:bg-citrus/10 transition-colors"
+                className="flex-1 text-center text-xs font-semibold text-citrus-dark border border-citrus/30 px-3 py-2.5 rounded-xl hover:bg-citrus/10 transition-colors"
               >
                 Beli →
               </a>
             )}
           </div>
-        </div>
 
-        {/* Booker crown */}
-        {reservedByName && (
-          <div className="mt-4 pt-4 border-t border-black/5 flex items-center gap-2">
-            <span className="text-base">👑</span>
-            <p className="text-sm text-ink-muted">
-              Reserved by <span className="font-semibold text-ink">{reservedByName}</span>
-            </p>
-          </div>
-        )}
-
-        {/* Reservation details */}
-        {dinner.reservation_platform && (
-          <div className="mt-4 pt-4 border-t border-black/5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs text-ink-muted">Reserved via</p>
-              <p className="font-semibold text-ink text-sm">
-                {getPlatformName(dinner.reservation_platform)}
-                {dinner.confirmation_number && (
-                  <span className="text-ink-muted font-normal ml-2">
-                    #{dinner.confirmation_number}
-                  </span>
-                )}
+          {/* Booker */}
+          {reservedByName && (
+            <div className="mt-4 pt-4 border-t border-black/5 flex items-center gap-2">
+              <span className="text-base">👑</span>
+              <p className="text-sm text-ink-muted">
+                Reserved by <span className="font-semibold text-ink">{reservedByName}</span>
               </p>
             </div>
-            {reservationUrl && (
-              <a
-                href={reservationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-citrus-dark border border-slate/30 px-4 py-2 rounded-xl hover:bg-citrus/10 transition-colors"
-              >
-                Manage →
-              </a>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Reservation platform */}
+          {dinner.reservation_platform && (
+            <div className="mt-4 pt-4 border-t border-black/5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-ink-muted">Reserved via</p>
+                <p className="font-semibold text-ink text-sm">
+                  {getPlatformName(dinner.reservation_platform)}
+                  {dinner.confirmation_number && (
+                    <span className="text-ink-muted font-normal ml-2">
+                      #{dinner.confirmation_number}
+                    </span>
+                  )}
+                </p>
+              </div>
+              {reservationUrl && (
+                <a
+                  href={reservationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-citrus-dark border border-slate/30 px-4 py-2 rounded-xl hover:bg-citrus/10 transition-colors"
+                >
+                  Manage →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* RSVP */}
-      <div className="bg-white border border-black/8 rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
+      <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
             Who&apos;s coming · {goingRsvps.length}
           </h3>
-
+        </div>
+        <div className="p-5">
           {/* RSVP buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-5">
             {(["going", "not_going"] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => handleRsvp(s)}
                 disabled={rsvpLoading}
                 className={cn(
-                  "text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-40",
+                  "flex-1 text-sm font-semibold py-3 rounded-xl border transition-all disabled:opacity-40",
                   myRsvp?.status === s
                     ? s === "going"
-                      ? "bg-green-100 text-green-600 border border-green-300"
-                      : "bg-black/10 text-ink border border-black/20"
-                    : "bg-black/5 text-ink-muted hover:bg-black/10"
+                      ? "bg-green-100 text-green-700 border-green-300"
+                      : "bg-black/8 text-ink border-black/20"
+                    : "bg-surface text-ink-muted border-black/10 hover:bg-black/5"
                 )}
               >
-                {s === "going" ? "Going ✓" : "Can't make it"}
+                {s === "going" ? "✓ Going" : "Can't make it"}
               </button>
             ))}
           </div>
-        </div>
 
-        {rsvpError && <p className="text-red-500 text-xs mb-2">{rsvpError}</p>}
+          {rsvpError && <p className="text-red-500 text-xs mb-3">{rsvpError}</p>}
 
-        {goingRsvps.length === 0 ? (
-          <p className="text-sm text-ink-muted">No RSVPs yet — be the first!</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {goingRsvps.map((r) => (
-              <div
-                key={r.id}
-                className="flex items-center gap-2 bg-surface border border-black/5 rounded-full px-3 py-1.5"
-              >
-                <div className="w-5 h-5 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-xs font-bold">
-                  {(r.users.name || r.users.email).slice(0, 1).toUpperCase()}
+          {goingRsvps.length === 0 ? (
+            <p className="text-sm text-ink-muted">No RSVPs yet — be the first!</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {goingRsvps.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center gap-3"
+                >
+                  <div className="w-8 h-8 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-sm font-bold shrink-0">
+                    {(r.users.name || r.users.email).slice(0, 1).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-ink">
+                    {r.users.name || r.users.email.split("@")[0]}
+                  </span>
+                  {r.user_id === userId && (
+                    <span className="text-xs text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">you</span>
+                  )}
                 </div>
-                <span className="text-sm text-ink">
-                  {r.users.name || r.users.email.split("@")[0]}
-                </span>
-                {r.user_id === userId && (
-                  <span className="text-xs text-ink-muted">(you)</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Action buttons */}
       <div className="flex flex-col gap-3">
