@@ -33,6 +33,7 @@ export default async function DashboardPage() {
     .select("id, club_id, expires_at, status, clubs ( id, name, emoji ), users ( name, email )")
     .eq("invited_email", user.email!.toLowerCase().trim())
     .eq("status", "active");
+  console.log("[dashboard] rawInvites full:", JSON.stringify(rawInvites));
 
   type PendingInvite = { id: string; club_id: string; expires_at: string; status: string; clubs: { id: string; name: string; emoji: string | null } | null; users: { name: string | null; email: string } | null };
   const pendingInvites = ((rawInvites ?? []) as PendingInvite[]).filter(
