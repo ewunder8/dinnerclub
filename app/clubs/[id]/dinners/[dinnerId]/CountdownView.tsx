@@ -147,7 +147,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 text-center text-xs font-semibold text-ink border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
+              className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
             >
               Google Maps →
             </a>
@@ -156,7 +156,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 href={restaurant.beli_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center text-xs font-semibold text-citrus-dark border border-citrus/30 px-3 py-2.5 rounded-xl hover:bg-citrus/10 transition-colors"
+                className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
               >
                 Beli →
               </a>
@@ -192,7 +192,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   href={reservationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-citrus-dark border border-slate/30 px-4 py-2 rounded-xl hover:bg-citrus/10 transition-colors"
+                  className="text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
                 >
                   Open {getPlatformName(dinner.reservation_platform)} →
                 </a>
