@@ -47,17 +47,14 @@ export default async function ClubSettingsPage({
 
   return (
     <main className="min-h-screen bg-snow">
-      <nav className="bg-slate px-6 py-5 flex items-center justify-between">
-        <a
-          href={`/clubs/${params.id}`}
-          className="text-white/60 hover:text-white transition-colors text-sm"
-        >
-          ← Club
-        </a>
-        <h1 className="font-sans text-xl font-extrabold text-white">
-          dinner<span className="text-citrus">club</span>
-        </h1>
-        <NavUser name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+      <nav className="bg-slate px-6 py-4 flex items-center">
+        <div className="flex-1">
+          <a href={`/clubs/${params.id}`} className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</a>
+        </div>
+        <h1 className="font-sans text-base font-bold text-white">Settings</h1>
+        <div className="flex-1 flex justify-end">
+          <NavUser name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        </div>
       </nav>
 
       <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-4">

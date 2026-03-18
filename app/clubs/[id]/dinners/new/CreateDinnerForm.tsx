@@ -112,16 +112,12 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   return (
     <main className="min-h-screen bg-snow">
       {/* Nav */}
-      <nav className="bg-slate px-8 py-5 flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
-          className="text-white/60 hover:text-white transition-colors text-sm"
-        >
-          ← Back
-        </button>
-        <h1 className="font-sans text-xl font-extrabold text-white">
-          dinner<span className="text-citrus">club</span>
-        </h1>
+      <nav className="bg-slate px-6 py-4 flex items-center">
+        <div className="flex-1">
+          <button onClick={() => router.back()} className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</button>
+        </div>
+        <h1 className="font-sans text-base font-bold text-white">New dinner</h1>
+        <div className="flex-1" />
       </nav>
 
       <div className="max-w-lg mx-auto px-6 py-12">

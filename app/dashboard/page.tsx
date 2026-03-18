@@ -108,7 +108,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-snow">
-      <nav className="bg-slate px-6 py-5 flex items-center justify-between">
+      <nav className="bg-slate px-6 py-4 flex items-center justify-between">
         <h1 className="font-sans text-2xl font-extrabold tracking-tight text-white">
           dinner<span className="text-citrus">club</span>
         </h1>

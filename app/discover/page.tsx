@@ -234,17 +234,14 @@ export default async function DiscoverPage() {
 
 function Nav({ name, email, avatarUrl }: { name?: string | null; email?: string | null; avatarUrl?: string | null }) {
   return (
-    <nav className="bg-slate px-8 py-5 flex items-center justify-between">
-      <a
-        href="/dashboard"
-        className="text-white/60 hover:text-white transition-colors text-sm"
-      >
-        ← Dashboard
-      </a>
-      <h1 className="font-sans text-xl font-extrabold text-white">
-        dinner<span className="text-citrus">club</span>
-      </h1>
-      <NavUser name={name} email={email} avatarUrl={avatarUrl} />
+    <nav className="bg-slate px-6 py-4 flex items-center">
+      <div className="flex-1">
+        <a href="/dashboard" className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</a>
+      </div>
+      <h1 className="font-sans text-base font-bold text-white">Discover</h1>
+      <div className="flex-1 flex justify-end">
+        <NavUser name={name} email={email} avatarUrl={avatarUrl} />
+      </div>
     </nav>
   );
 }

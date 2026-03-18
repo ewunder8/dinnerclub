@@ -25,27 +25,26 @@ import MarkCompletedButton from "./MarkCompletedButton";
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
   clubId,
+  title,
   name,
   email,
   avatarUrl,
 }: {
   clubId: string;
+  title?: string | null;
   name?: string | null;
   email?: string | null;
   avatarUrl?: string | null;
 }) {
   return (
-    <nav className="bg-slate px-8 py-5 flex items-center justify-between">
-      <a
-        href={`/clubs/${clubId}`}
-        className="text-white/60 hover:text-white transition-colors text-sm"
-      >
-        ← Club
-      </a>
-      <h1 className="font-sans text-xl font-extrabold text-white">
-        dinner<span className="text-citrus">club</span>
-      </h1>
-      <NavUser name={name} email={email} avatarUrl={avatarUrl} />
+    <nav className="bg-slate px-6 py-4 flex items-center">
+      <div className="flex-1">
+        <a href={`/clubs/${clubId}`} className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</a>
+      </div>
+      <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{title ?? "Dinner"}</h1>
+      <div className="flex-1 flex justify-end">
+        <NavUser name={name} email={email} avatarUrl={avatarUrl} />
+      </div>
     </nav>
   );
 }
@@ -67,7 +66,7 @@ export default async function DinnerPage({
   const [{ data: membership }, { data: profile }] = await Promise.all([
     supabase
       .from("club_members")
-      .select("role")
+      .select("role, clubs ( name )")
       .eq("club_id", params.id)
       .eq("user_id", user.id)
       .single(),
@@ -124,7 +123,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <CountdownView
             dinner={dinner}
@@ -175,7 +174,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           <div className="mb-6">
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -256,7 +255,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -348,7 +347,7 @@ export default async function DinnerPage({
   if (dinner.status === "cancelled") {
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <p className="text-4xl mb-4">🚫</p>
           <h2 className="font-sans text-2xl font-bold text-ink mb-2">Dinner cancelled</h2>
@@ -420,7 +419,7 @@ export default async function DinnerPage({
 
     return (
       <main className="min-h-screen bg-snow">
-        <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
           <div>
             <span className="inline-block text-xs font-semibold text-ink-muted uppercase tracking-wide bg-black/5 px-3 py-1 rounded-full mb-3">
@@ -550,7 +549,7 @@ export default async function DinnerPage({
 
   return (
     <main className="min-h-screen bg-snow">
-      <Nav clubId={params.id} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+      <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 

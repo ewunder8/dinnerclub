@@ -20,17 +20,12 @@ export default async function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-snow">
-      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
-        <a
-          href="/dashboard"
-          className="text-white/60 hover:text-white transition-colors text-sm"
-        >
-          ← Dashboard
-        </a>
-        <h1 className="font-sans text-xl font-extrabold tracking-tight text-white">
-          dinner<span className="text-citrus">club</span>
-        </h1>
-        <div className="w-16" />
+      <nav className="bg-slate px-6 py-4 flex items-center">
+        <div className="flex-1">
+          <a href="/dashboard" className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</a>
+        </div>
+        <h1 className="font-sans text-base font-bold text-white">Profile</h1>
+        <div className="flex-1" />
       </nav>
 
       <div className="max-w-md mx-auto px-6 py-12">
