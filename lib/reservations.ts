@@ -44,7 +44,7 @@ function buildResyURL(options: ReservationLinkOptions): string {
     const query = params.toString();
     return query ? `${base}?${query}` : base;
   }
-  return "https://resy.com/reservations";
+  return "https://resy.com";
 }
 
 function buildOpenTableURL(options: ReservationLinkOptions): string {
