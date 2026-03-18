@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { transferOwnership } from "./actions";
 
 type Member = { id: string; user_id: string; name: string };
 
@@ -29,16 +29,13 @@ export default function TransferOwnershipButton({
 
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-
-    // Demote current owner, promote new owner
-    const [{ error: e1 }, { error: e2 }] = await Promise.all([
-      supabase.from("club_members").update({ role: "member" }).eq("club_id", clubId).eq("user_id", currentUserId),
-      supabase.from("club_members").update({ role: "owner" }).eq("club_id", clubId).eq("user_id", selectedUserId),
-    ]);
-
-    if (e1 || e2) { setError("Transfer failed. Try again."); setLoading(false); return; }
-    router.push(`/clubs/${clubId}`);
+    try {
+      await transferOwnership(clubId, selectedUserId);
+      router.push(`/clubs/${clubId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Transfer failed. Try again.");
+      setLoading(false);
+    }
   };
 
   if (others.length === 0) return null;
