@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
 import { isInviteExpired } from "@/lib/utils";
@@ -27,13 +28,14 @@ export default async function DashboardPage() {
 
   const memberClubIds = new Set(clubs.map((c) => c.id));
 
-  // Pending invitations sent to this user's email
+  // Pending invitations sent to this user's email — use admin client to bypass
+  // RLS on clubs (invited user isn't a member yet so clubs RLS would block the join)
+  const adminClient = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rawInvites } = await (supabase.from("invite_links") as any)
+  const { data: rawInvites } = await (adminClient.from("invite_links") as any)
     .select("id, club_id, expires_at, status, clubs ( id, name, emoji ), users ( name, email )")
     .eq("invited_email", user.email!.toLowerCase().trim())
     .eq("status", "active");
-  console.log("[dashboard] rawInvites full:", JSON.stringify(rawInvites));
 
   type PendingInvite = { id: string; club_id: string; expires_at: string; status: string; clubs: { id: string; name: string; emoji: string | null } | null; users: { name: string | null; email: string } | null };
   const pendingInvites = ((rawInvites ?? []) as PendingInvite[]).filter(
