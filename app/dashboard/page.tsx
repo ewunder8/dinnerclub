@@ -29,12 +29,10 @@ export default async function DashboardPage() {
 
   // Pending invitations sent to this user's email
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rawInvites, error: inviteError } = await (supabase.from("invite_links") as any)
+  const { data: rawInvites } = await (supabase.from("invite_links") as any)
     .select("id, club_id, expires_at, status, clubs ( id, name, emoji ), users ( name, email )")
     .eq("invited_email", user.email!.toLowerCase().trim())
     .eq("status", "active");
-  if (inviteError) console.error("[dashboard] invite query error:", inviteError);
-  console.log("[dashboard] rawInvites:", JSON.stringify(rawInvites), "email:", user.email);
 
   type PendingInvite = { id: string; club_id: string; expires_at: string; status: string; clubs: { id: string; name: string; emoji: string | null } | null; users: { name: string | null; email: string } | null };
   const pendingInvites = ((rawInvites ?? []) as PendingInvite[]).filter(
