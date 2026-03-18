@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
+import { isInviteExpired } from "@/lib/utils";
 import UserAvatar from "@/components/UserAvatar";
+import AcceptInviteButton from "./AcceptInviteButton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,6 +24,22 @@ export default async function DashboardPage() {
   const clubs = (memberships ?? []).map((m) => m.clubs as {
     id: string; name: string; emoji: string | null; city: string | null;
   });
+
+  const memberClubIds = new Set(clubs.map((c) => c.id));
+
+  // Pending invitations sent to this user's email
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rawInvites } = await (supabase.from("invite_links") as any)
+    .select("id, club_id, expires_at, status, clubs ( id, name, emoji ), users ( name, email )")
+    .eq("invited_email", user.email!.toLowerCase().trim())
+    .eq("status", "active");
+
+  type PendingInvite = { id: string; club_id: string; expires_at: string; status: string; clubs: { id: string; name: string; emoji: string | null } | null; users: { name: string | null; email: string } | null };
+  const pendingInvites = ((rawInvites ?? []) as PendingInvite[]).filter(
+    (inv) =>
+      !isInviteExpired(inv.expires_at) &&
+      !memberClubIds.has(inv.club_id)
+  );
 
   const clubIds = clubs.map((c) => c.id);
   const now = new Date().toISOString();
@@ -97,6 +115,34 @@ export default async function DashboardPage() {
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+
+        {/* ── Pending invitations ── */}
+        {pendingInvites.length > 0 && (
+          <section className="bg-white border border-slate/20 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invitations</h2>
+            </div>
+            <div className="divide-y divide-black/5">
+              {pendingInvites.map((inv) => {
+                const club = inv.clubs as { id: string; name: string; emoji: string | null } | null;
+                const inviter = inv.users as { name: string | null; email: string } | null;
+                const inviterName = inviter?.name || inviter?.email?.split("@")[0] || "Someone";
+                return (
+                  <div key={inv.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{club?.emoji ?? "🍽️"}</span>
+                      <div>
+                        <p className="font-semibold text-ink text-sm">{club?.name ?? "A dinner club"}</p>
+                        <p className="text-xs text-ink-muted mt-0.5">Invited by {inviterName}</p>
+                      </div>
+                    </div>
+                    <AcceptInviteButton inviteId={inv.id} />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ── Rate your dinner ── */}
         {unratedDinners.length > 0 && (
