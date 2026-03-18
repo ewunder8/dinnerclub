@@ -29,7 +29,10 @@ export default function MembersCanInviteToggle({
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="font-semibold text-ink text-sm">Members can invite</p>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-ink text-sm">Members can invite</p>
+          {loading && <span className="text-xs text-ink-muted">Saving…</span>}
+        </div>
         <p className="text-ink-muted text-xs mt-0.5">
           {enabled ? "All members can share the invite link." : "Only you can invite new members."}
         </p>

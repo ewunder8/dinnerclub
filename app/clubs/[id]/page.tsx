@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { getInviteTimeRemaining } from "@/lib/utils";
 import UserAvatar from "@/components/UserAvatar";
+import NavUser from "@/components/NavUser";
 
 import InviteButton from "./InviteButton";
 import GenerateInviteButton from "./GenerateInviteButton";
 import EmailInviteForm from "./EmailInviteForm";
 import LeaveClubButton from "./LeaveClubButton";
 import RemoveMemberButton from "./RemoveMemberButton";
+import CoOwnerButton from "./CoOwnerButton";
 
 export default async function ClubPage({
   params,
@@ -47,6 +49,7 @@ export default async function ClubPage({
   if (!currentMembership) notFound();
 
   const isOwner = currentMembership.role === "owner";
+  const isMainOwner = isOwner && club.owner_id === user.id;
 
   // Fetch dinners for this club
   const { data: dinners } = await supabase
@@ -97,9 +100,7 @@ export default async function ClubPage({
         <h1 className="font-sans text-xl font-extrabold text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <a href="/profile" title="Profile & sign out">
-          <UserAvatar name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
-        </a>
+        <NavUser name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
       </nav>
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
@@ -126,11 +127,16 @@ export default async function ClubPage({
         </div>
 
         {/* Members */}
-        <section>
-          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
-            Members · {members.length}
-          </h3>
-          <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+              Members · {members.length}
+            </h3>
+            {!isOwner && (
+              <LeaveClubButton clubId={params.id} memberId={currentMembership.id} />
+            )}
+          </div>
+          <div className="divide-y divide-black/5">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 px-5 py-4">
                 <UserAvatar name={m.users.name} email={m.users.email} avatarUrl={m.users.avatar_url} />
@@ -145,67 +151,69 @@ export default async function ClubPage({
                 {m.users.id === user.id ? (
                   <span className="text-xs text-ink-muted bg-black/5 px-2 py-1 rounded-full">You</span>
                 ) : isOwner ? (
-                  <RemoveMemberButton
-                    memberId={m.id}
-                    memberName={m.users.name || m.users.email.split("@")[0]}
-                  />
+                  <div className="flex items-center gap-2">
+                    <CoOwnerButton
+                      clubId={params.id}
+                      targetUserId={m.users.id}
+                      currentRole={m.role}
+                      memberName={m.users.name || m.users.email.split("@")[0]}
+                    />
+                    <RemoveMemberButton
+                      memberId={m.id}
+                      memberName={m.users.name || m.users.email.split("@")[0]}
+                    />
+                  </div>
                 ) : null}
               </div>
             ))}
           </div>
-
-          {/* Leave club — non-owners only */}
-          {!isOwner && (
-            <div className="pt-2 flex justify-end">
-              <LeaveClubButton
-                clubId={params.id}
-                memberId={currentMembership.id}
-              />
-            </div>
-          )}
         </section>
 
         {/* Invite link — hidden from members when owner has disabled it */}
-        {(isOwner || (club as any).members_can_invite) && <section>
-          <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
-            Invite friends
-          </h3>
-          {invite ? (
-            <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-sm text-ink-muted mb-3">
-                Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
-              </p>
-              <InviteButton token={invite.token} />
-              <EmailInviteForm
-                token={invite.token}
-                clubName={club.name}
-                inviterName={displayName}
-              />
+        {(isOwner || (club as any).members_can_invite) && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
             </div>
-          ) : (
-            <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
-              <GenerateInviteButton clubId={params.id} />
+            <div className="p-5">
+              {invite ? (
+                <>
+                  <p className="text-sm text-ink-muted mb-3">
+                    Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
+                  </p>
+                  <InviteButton token={invite.token} />
+                  <EmailInviteForm
+                    token={invite.token}
+                    clubName={club.name}
+                    inviterName={displayName}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
+                  <GenerateInviteButton clubId={params.id} />
+                </>
+              )}
             </div>
-          )}
-        </section>}
+          </section>
+        )}
 
         {/* Dinners */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
               Dinners · {dinners?.length ?? 0}
             </h3>
             <a
               href={`/clubs/${params.id}/dinners/new`}
-              className="text-sm font-semibold text-citrus-dark hover:text-citrus transition-colors"
+              className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
             >
               + Start a dinner
             </a>
           </div>
 
           {!dinners || dinners.length === 0 ? (
-            <div className="border-2 border-dashed border-slate/20 rounded-2xl p-12 text-center">
+            <div className="p-12 text-center">
               <p className="text-4xl mb-4">🍽️</p>
               <p className="font-semibold text-ink mb-2">No dinners yet</p>
               <p className="text-ink-muted text-sm mb-6">
@@ -219,7 +227,7 @@ export default async function ClubPage({
               </a>
             </div>
           ) : (
-            <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/5">
+            <div className="divide-y divide-black/5">
               {dinners.map((dinner) => {
                 const restaurantName = dinner.winning_restaurant_place_id
                   ? restaurantNameMap[dinner.winning_restaurant_place_id]

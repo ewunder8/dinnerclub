@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import UserAvatar from "@/components/UserAvatar";
+import NavUser from "@/components/NavUser";
 import EditClubForm from "./EditClubForm";
 import DeleteClubButton from "./DeleteClubButton";
 import TransferOwnershipButton from "./TransferOwnershipButton";
@@ -30,6 +30,8 @@ export default async function ClubSettingsPage({
   if (!membership) notFound();
   if (membership.role !== "owner") redirect(`/clubs/${params.id}`);
 
+  const isMainOwner = club.owner_id === user.id;
+
   const { data: profile } = await supabase
     .from("users")
     .select("name, avatar_url")
@@ -55,7 +57,7 @@ export default async function ClubSettingsPage({
         <h1 className="font-sans text-xl font-extrabold text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <UserAvatar name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <NavUser name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
       </nav>
 
       <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-4">
@@ -90,8 +92,8 @@ export default async function ClubSettingsPage({
           </div>
         </section>
 
-        {/* Transfer ownership */}
-        {members.length > 1 && (
+        {/* Transfer ownership — main owner only */}
+        {isMainOwner && members.length > 1 && (
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
             <div className="px-5 py-3 border-b border-black/5">
               <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Transfer ownership</h3>
@@ -107,16 +109,18 @@ export default async function ClubSettingsPage({
           </section>
         )}
 
-        {/* Danger zone */}
-        <section className="bg-white border border-red-100 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-red-100">
-            <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h3>
-          </div>
-          <div className="p-5">
-            <p className="text-sm text-ink-muted mb-4">Permanently delete this club and all its dinners.</p>
-            <DeleteClubButton clubId={params.id} clubName={club.name} />
-          </div>
-        </section>
+        {/* Danger zone — main owner only */}
+        {isMainOwner && (
+          <section className="bg-white border border-red-100 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-red-100">
+              <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h3>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-ink-muted mb-4">Permanently delete this club and all its dinners.</p>
+              <DeleteClubButton clubId={params.id} clubName={club.name} />
+            </div>
+          </section>
+        )}
 
       </div>
     </main>

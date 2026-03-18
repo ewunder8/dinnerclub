@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import UserAvatar from "@/components/UserAvatar";
+import NavUser from "@/components/NavUser";
 import {
   getPollState,
   getPollStateLabel,
@@ -45,9 +45,7 @@ function Nav({
       <h1 className="font-sans text-xl font-extrabold text-white">
         dinner<span className="text-citrus">club</span>
       </h1>
-      <a href="/profile" title="Profile & sign out">
-        <UserAvatar name={name} email={email} avatarUrl={avatarUrl} />
-      </a>
+      <NavUser name={name} email={email} avatarUrl={avatarUrl} />
     </nav>
   );
 }

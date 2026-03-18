@@ -20,7 +20,7 @@ export default function DeleteClubButton({ clubId, clubName }: { clubId: string;
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="text-sm text-ink-muted hover:text-red-500 transition-colors disabled:opacity-40"
+      className="w-full py-3 rounded-xl border border-red-200 text-red-500 font-semibold text-sm hover:bg-red-50 transition-colors disabled:opacity-40"
     >
       {loading ? "Deleting…" : "Delete club"}
     </button>

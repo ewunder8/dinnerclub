@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
 import { isInviteExpired } from "@/lib/utils";
-import UserAvatar from "@/components/UserAvatar";
+import NavUser from "@/components/NavUser";
 import AcceptInviteButton from "./AcceptInviteButton";
 
 export default async function DashboardPage() {
@@ -112,9 +112,7 @@ export default async function DashboardPage() {
         <h1 className="font-sans text-2xl font-extrabold tracking-tight text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <a href="/profile" title="Profile">
-          <UserAvatar name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
-        </a>
+        <NavUser name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
