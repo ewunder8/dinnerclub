@@ -194,7 +194,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   rel="noopener noreferrer"
                   className="text-sm font-semibold text-citrus-dark border border-slate/30 px-4 py-2 rounded-xl hover:bg-citrus/10 transition-colors"
                 >
-                  Manage →
+                  Open {getPlatformName(dinner.reservation_platform)} →
                 </a>
               )}
             </div>
