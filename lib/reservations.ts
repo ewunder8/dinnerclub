@@ -36,25 +36,22 @@ export function getReservationURL(options: ReservationLinkOptions): string {
 }
 
 function buildResyURL(options: ReservationLinkOptions): string {
-  const base = options.restaurantSlug
-    ? `https://resy.com/cities/ny/${options.restaurantSlug}`
-    : "https://resy.com";
-
-  const params = new URLSearchParams();
-  if (options.partySize) params.set("seats", String(options.partySize));
-  if (options.date) params.set("date", formatDateForResy(options.date));
-
-  const query = params.toString();
-  return query ? `${base}?${query}` : base;
+  if (options.restaurantSlug) {
+    const base = `https://resy.com/cities/ny/${options.restaurantSlug}`;
+    const params = new URLSearchParams();
+    if (options.partySize) params.set("seats", String(options.partySize));
+    if (options.date) params.set("date", formatDateForResy(options.date));
+    const query = params.toString();
+    return query ? `${base}?${query}` : base;
+  }
+  return "https://resy.com/reservations";
 }
 
 function buildOpenTableURL(options: ReservationLinkOptions): string {
-  // OpenTable referral parameter — worth adding for their partner program
-  const base = options.restaurantSlug
-    ? `https://www.opentable.com/r/${options.restaurantSlug}`
-    : "https://www.opentable.com";
-
-  return base;
+  if (options.restaurantSlug) {
+    return `https://www.opentable.com/r/${options.restaurantSlug}`;
+  }
+  return "https://www.opentable.com/dining-diary";
 }
 
 function formatDateForResy(date: Date): string {
