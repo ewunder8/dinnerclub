@@ -4,6 +4,7 @@ import { getInitials } from "@/lib/utils";
 import EditClubForm from "./EditClubForm";
 import DeleteClubButton from "./DeleteClubButton";
 import TransferOwnershipButton from "./TransferOwnershipButton";
+import MembersCanInviteToggle from "./MembersCanInviteToggle";
 
 export default async function ClubSettingsPage({
   params,
@@ -15,9 +16,9 @@ export default async function ClubSettingsPage({
 
   if (!user) redirect("/auth/login");
 
-  const { data: club } = await supabase
-    .from("clubs")
-    .select("id, name, emoji, city, club_members ( id, user_id, role, users ( name, email ) )")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: club } = await (supabase.from("clubs") as any)
+    .select("id, name, emoji, city, members_can_invite, club_members ( id, user_id, role, users ( name, email ) )")
     .eq("id", params.id)
     .single();
 
@@ -77,6 +78,18 @@ export default async function ClubSettingsPage({
             initialEmoji={club.emoji ?? "🍜"}
             initialCity={club.city ?? ""}
           />
+        </div>
+
+        {/* Members can invite */}
+        <div>
+          <h3 className="font-sans text-lg font-bold mb-1">Invitations</h3>
+          <p className="text-ink-muted text-sm mb-4">Control who can invite new members to this club.</p>
+          <div className="bg-white border border-black/8 rounded-2xl px-5 py-4">
+            <MembersCanInviteToggle
+              clubId={params.id}
+              initialValue={(club as any).members_can_invite ?? true}
+            />
+          </div>
         </div>
 
         {/* Transfer ownership */}

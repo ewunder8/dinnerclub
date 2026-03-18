@@ -166,8 +166,8 @@ export default async function ClubPage({
           )}
         </section>
 
-        {/* Invite link */}
-        <section>
+        {/* Invite link — hidden from members when owner has disabled it */}
+        {(isOwner || (club as any).members_can_invite) && <section>
           <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
             Invite friends
           </h3>
@@ -189,7 +189,7 @@ export default async function ClubPage({
               <GenerateInviteButton clubId={params.id} />
             </div>
           )}
-        </section>
+        </section>}
 
         {/* Dinners */}
         <section>
