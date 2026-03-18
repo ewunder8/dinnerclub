@@ -26,7 +26,7 @@ export default function NavUser({ name, email, avatarUrl }: Props) {
       </a>
       <button
         onClick={handleSignOut}
-        className="text-xs text-white/60 hover:text-white transition-colors"
+        className="hidden sm:block text-xs text-white/60 hover:text-white transition-colors"
       >
         Sign out
       </button>

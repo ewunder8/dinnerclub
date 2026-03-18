@@ -18,7 +18,7 @@ export default async function ClubSettingsPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: club } = await (supabase.from("clubs") as any)
-    .select("id, name, emoji, city, members_can_invite, club_members ( id, user_id, role, users ( name, email ) )")
+    .select("id, name, emoji, city, owner_id, members_can_invite, club_members ( id, user_id, role, users ( name, email ) )")
     .eq("id", params.id)
     .single();
 
