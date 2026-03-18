@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { getInitials } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 import EditClubForm from "./EditClubForm";
 import DeleteClubButton from "./DeleteClubButton";
 import TransferOwnershipButton from "./TransferOwnershipButton";
@@ -32,11 +32,9 @@ export default async function ClubSettingsPage({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name")
+    .select("name, avatar_url")
     .eq("id", user.id)
     .single();
-
-  const displayName = profile?.name || user.email || "?";
 
   const members = (club.club_members as { id: string; user_id: string; role: string; users: { name: string; email: string } }[])
     .map((m) => ({
@@ -47,7 +45,7 @@ export default async function ClubSettingsPage({
 
   return (
     <main className="min-h-screen bg-snow">
-      <nav className="bg-slate px-8 py-5 flex items-center justify-between">
+      <nav className="bg-slate px-6 py-5 flex items-center justify-between">
         <a
           href={`/clubs/${params.id}`}
           className="text-white/60 hover:text-white transition-colors text-sm"
@@ -57,60 +55,68 @@ export default async function ClubSettingsPage({
         <h1 className="font-sans text-xl font-extrabold text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
-        <a
-          href="/profile"
-          title="Profile & sign out"
-          className="w-9 h-9 rounded-full bg-citrus-dark flex items-center justify-center text-white text-sm font-bold hover:bg-citrus transition-colors"
-        >
-          {getInitials(displayName)}
-        </a>
+        <UserAvatar name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
       </nav>
 
-      <div className="max-w-lg mx-auto px-6 py-12 flex flex-col gap-12">
+      <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-4">
+
+        <h2 className="font-sans text-2xl font-bold text-ink px-1">Club settings</h2>
 
         {/* Edit club */}
-        <div>
-          <h2 className="font-sans text-3xl font-bold mb-2">Club settings</h2>
-          <p className="text-ink-muted text-sm mb-8">Update your club&apos;s name, emoji, and city.</p>
-          <EditClubForm
-            clubId={params.id}
-            initialName={club.name}
-            initialEmoji={club.emoji ?? "🍜"}
-            initialCity={club.city ?? ""}
-          />
-        </div>
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Details</h3>
+          </div>
+          <div className="p-5">
+            <EditClubForm
+              clubId={params.id}
+              initialName={club.name}
+              initialEmoji={club.emoji ?? "🍜"}
+              initialCity={club.city ?? ""}
+            />
+          </div>
+        </section>
 
         {/* Members can invite */}
-        <div>
-          <h3 className="font-sans text-lg font-bold mb-1">Invitations</h3>
-          <p className="text-ink-muted text-sm mb-4">Control who can invite new members to this club.</p>
-          <div className="bg-white border border-black/8 rounded-2xl px-5 py-4">
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invitations</h3>
+          </div>
+          <div className="px-5 py-4">
             <MembersCanInviteToggle
               clubId={params.id}
               initialValue={(club as any).members_can_invite ?? true}
             />
           </div>
-        </div>
+        </section>
 
         {/* Transfer ownership */}
         {members.length > 1 && (
-          <div>
-            <h3 className="font-sans text-lg font-bold mb-1">Transfer ownership</h3>
-            <p className="text-ink-muted text-sm mb-4">Hand over the club to another member. You&apos;ll become a regular member.</p>
-            <TransferOwnershipButton
-              clubId={params.id}
-              currentUserId={user.id}
-              members={members}
-            />
-          </div>
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Transfer ownership</h3>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-ink-muted mb-4">Hand over the club to another member. You&apos;ll become a regular member.</p>
+              <TransferOwnershipButton
+                clubId={params.id}
+                currentUserId={user.id}
+                members={members}
+              />
+            </div>
+          </section>
         )}
 
         {/* Danger zone */}
-        <div className="border-t border-black/8 pt-8">
-          <h3 className="font-sans text-lg font-bold mb-1 text-red-500">Danger zone</h3>
-          <p className="text-ink-muted text-sm mb-4">Permanently delete this club and all its dinners.</p>
-          <DeleteClubButton clubId={params.id} clubName={club.name} />
-        </div>
+        <section className="bg-white border border-red-100 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-red-100">
+            <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h3>
+          </div>
+          <div className="p-5">
+            <p className="text-sm text-ink-muted mb-4">Permanently delete this club and all its dinners.</p>
+            <DeleteClubButton clubId={params.id} clubName={club.name} />
+          </div>
+        </section>
 
       </div>
     </main>

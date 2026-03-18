@@ -118,10 +118,9 @@ export default async function ClubPage({
           {isOwner && (
             <a
               href={`/clubs/${params.id}/settings`}
-              className="text-sm text-ink-muted hover:text-ink transition-colors"
-              title="Club settings"
+              className="text-xs font-semibold text-ink-muted border border-black/10 px-3 py-1.5 rounded-xl hover:bg-black/5 transition-colors shrink-0"
             >
-              ⚙️
+              Settings
             </a>
           )}
         </div>

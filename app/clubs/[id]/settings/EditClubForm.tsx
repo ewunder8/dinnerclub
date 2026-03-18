@@ -8,7 +8,7 @@ const FOOD_EMOJIS = [
   "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
   "🥗", "🍔", "🍝", "🥟", "🦞", "🍗",
   "🥘", "🍛", "🍲", "🫕", "🥙", "🌯",
-  "🍤", "🥂", "🍷", "🫙", "🥩", "🍖",
+  "🍤", "🥂", "🍷", "🧆", "🥞", "🍖",
 ];
 
 export default function EditClubForm({
@@ -115,21 +115,13 @@ export default function EditClubForm({
       {error && <p className="text-red-500 text-sm">{error}</p>}
       {saved && <p className="text-green-600 text-sm">Changes saved.</p>}
 
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={loading || !name.trim()}
-          className="flex-1 bg-slate text-white font-bold py-3 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40"
-        >
-          {loading ? "Saving…" : "Save changes"}
-        </button>
-        <a
-          href={`/clubs/${clubId}`}
-          className="px-6 py-3 border border-black/10 rounded-xl text-ink font-semibold hover:border-black/25 transition-colors text-center"
-        >
-          Cancel
-        </a>
-      </div>
+      <button
+        type="submit"
+        disabled={loading || !name.trim()}
+        className="w-full bg-slate text-white font-bold py-3 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40"
+      >
+        {loading ? "Saving…" : "Save changes"}
+      </button>
     </form>
   );
 }
