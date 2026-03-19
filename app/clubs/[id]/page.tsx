@@ -34,7 +34,7 @@ export default async function ClubPage({
       *,
       club_members (
         id, role,
-        users ( id, name, email, avatar_url )
+        users ( id, name, email, avatar_url, beli_username )
       )
     `)
     .eq("id", params.id)
@@ -201,9 +201,21 @@ export default async function ClubPage({
                   <p className="font-semibold text-ink truncate">
                     {m.users.name || m.users.email}
                   </p>
-                  {m.role === "owner" && (
-                    <p className="text-xs text-ink-muted">Owner</p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {m.role === "owner" && (
+                      <p className="text-xs text-ink-muted">Owner</p>
+                    )}
+                    {m.users.beli_username && (
+                      <a
+                        href={`https://beliapp.com/${m.users.beli_username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-citrus-dark font-semibold hover:underline"
+                      >
+                        Beli
+                      </a>
+                    )}
+                  </div>
                 </div>
                 {m.users.id === user.id ? (
                   <span className="text-xs text-ink-muted bg-black/5 px-2 py-1 rounded-full">You</span>

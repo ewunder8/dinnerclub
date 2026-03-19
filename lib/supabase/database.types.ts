@@ -19,6 +19,7 @@ export type Database = {
           avatar_url: string | null;
           city: string | null;
           beli_connected: boolean;
+          beli_username: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at">;

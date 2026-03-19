@@ -16,6 +16,7 @@ export default function ProfileForm({ user }: Props) {
 
   const [name, setName] = useState(user.name ?? "");
   const [city, setCity] = useState(user.city ?? "");
+  const [beliUsername, setBeliUsername] = useState(user.beli_username ?? "");
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -68,7 +69,7 @@ export default function ProfileForm({ user }: Props) {
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("users")
-      .update({ name: name.trim(), city: city.trim() || null })
+      .update({ name: name.trim(), city: city.trim() || null, beli_username: beliUsername.trim() || null })
       .eq("id", user.id);
 
     if (updateError) {
@@ -149,6 +150,24 @@ export default function ProfileForm({ user }: Props) {
           maxLength={60}
           className="w-full border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface transition-colors"
         />
+      </div>
+
+      {/* Beli */}
+      <div>
+        <label className="block text-sm font-semibold text-ink mb-1">
+          Beli username <span className="text-ink-muted font-normal">(optional)</span>
+        </label>
+        <div className="flex items-center border border-slate/20 rounded-xl bg-surface focus-within:border-slate transition-colors overflow-hidden">
+          <span className="pl-4 pr-1 text-ink-muted text-sm select-none">beliapp.com/</span>
+          <input
+            type="text"
+            value={beliUsername}
+            onChange={(e) => setBeliUsername(e.target.value.replace(/[^a-zA-Z0-9_.-]/g, ""))}
+            placeholder="username"
+            maxLength={60}
+            className="flex-1 pr-4 py-3 text-ink placeholder-ink-faint focus:outline-none bg-transparent"
+          />
+        </div>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
