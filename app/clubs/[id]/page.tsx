@@ -87,7 +87,7 @@ export default async function ClubPage({
   const members = club.club_members as {
     id: string;
     role: string;
-    users: { id: string; name: string; email: string; avatar_url: string | null };
+    users: { id: string; name: string; email: string; avatar_url: string | null; beli_username: string | null };
   }[];
 
   return (
