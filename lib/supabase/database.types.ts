@@ -22,7 +22,7 @@ export type Database = {
           beli_username: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at" | "beli_username"> & { beli_username?: string | null };
         Update: Partial<Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "created_at">>;
         Relationships: [];
       };
