@@ -343,7 +343,7 @@ export type Database = {
           recommend: boolean | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["dinner_ratings"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["dinner_ratings"]["Row"], "id" | "created_at" | "recommend"> & { recommend?: boolean | null };
         Update: Partial<Database["public"]["Tables"]["dinner_ratings"]["Insert"]>;
         Relationships: [
           {
