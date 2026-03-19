@@ -294,8 +294,8 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">🍽️</span>
             <div>
-              <p className="font-semibold text-ink text-sm">Discover restaurants</p>
-              <p className="text-xs text-ink-muted mt-0.5">Browse and explore new spots</p>
+              <p className="font-semibold text-ink text-sm">Past dinners & ratings</p>
+              <p className="text-xs text-ink-muted mt-0.5">See where you've been and how you rated it</p>
             </div>
           </div>
           <span className="text-ink-faint text-sm">→</span>

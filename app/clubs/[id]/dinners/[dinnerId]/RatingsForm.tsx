@@ -85,7 +85,8 @@ export default function RatingsForm({
   const [note, setNote] = useState(existingRating?.note ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(!!existingRating);
+  const [hasRating] = useState(!!existingRating);
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const toggleTag = (tag: string) => {
     setTags((prev) =>
@@ -122,7 +123,7 @@ export default function RatingsForm({
       await supabase.from("dinner_ratings").insert(payload);
     }
 
-    setSubmitted(true);
+    setJustSubmitted(true);
     setSubmitting(false);
     setTimeout(() => router.push("/discover"), 1500);
   };
@@ -149,7 +150,7 @@ export default function RatingsForm({
       ) : (
         <form id="rating-form" onSubmit={handleSubmit} className="bg-white border border-black/8 rounded-2xl p-5 flex flex-col gap-6">
           <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
-            {submitted ? "Your rating" : "Rate this dinner"}
+            {hasRating ? "Your rating" : "Rate this dinner"}
           </h3>
 
           {/* Overall — required, large */}
@@ -228,17 +229,17 @@ export default function RatingsForm({
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {submitted && (
+          {justSubmitted && (
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
               <p className="font-semibold text-green-700">Rating saved!</p>
-              <p className="text-sm text-green-600 mt-0.5">Thanks for rating — heading back to your dashboard…</p>
+              <p className="text-sm text-green-600 mt-0.5">Thanks for rating — heading to past dinners…</p>
             </div>
           )}
         </form>
       )}
 
-      {/* Community summary — shown only after submitting */}
-      {submitted && summary && summary.rating_count > 0 && (
+      {/* Community summary — shown after submitting or when revisiting a rated dinner */}
+      {(justSubmitted || hasRating) && summary && summary.rating_count > 0 && (
         <div className="bg-slate/5 border border-slate/10 rounded-2xl p-5">
           <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">
             Group verdict · {summary.rating_count} {summary.rating_count === 1 ? "rating" : "ratings"}
@@ -289,16 +290,21 @@ export default function RatingsForm({
         </div>
       )}
 
+      {/* Back to club */}
+      <a href="/discover" className="block text-center text-sm text-ink-muted hover:text-ink transition-colors py-2">
+        ← Back to past dinners
+      </a>
+
       {/* Sticky submit button */}
       {ratingWindowOpen && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-snow/90 backdrop-blur-sm border-t border-black/8">
           <button
             type="submit"
             form="rating-form"
-            disabled={submitting || submitted}
+            disabled={submitting || justSubmitted}
             className="w-full max-w-2xl mx-auto block bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? "Saving…" : submitted ? "Rating saved!" : "Submit rating →"}
+            {submitting ? "Saving…" : justSubmitted ? "Rating saved!" : hasRating ? "Update rating →" : "Submit rating →"}
           </button>
         </div>
       )}
