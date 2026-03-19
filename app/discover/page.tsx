@@ -114,7 +114,7 @@ export default async function DiscoverPage() {
                     </p>
                     {restaurant.address && (
                       <p className="text-sm text-ink-muted mt-0.5 truncate">
-                        {restaurant.address}
+                        {restaurant.address.replace(/, USA$/, "")}
                       </p>
                     )}
                     <p className="text-xs text-ink-muted mt-0.5">
