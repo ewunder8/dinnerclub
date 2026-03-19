@@ -207,7 +207,7 @@ export default async function ClubPage({
                     )}
                     {m.users.beli_username && (
                       <a
-                        href={`https://beliapp.com/${m.users.beli_username}`}
+                        href={`https://beliapp.co/app/${m.users.beli_username}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-citrus-dark font-semibold hover:underline"

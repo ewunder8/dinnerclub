@@ -158,7 +158,7 @@ export default function ProfileForm({ user }: Props) {
           Beli username <span className="text-ink-muted font-normal">(optional)</span>
         </label>
         <div className="flex items-center border border-slate/20 rounded-xl bg-surface focus-within:border-slate transition-colors overflow-hidden">
-          <span className="pl-4 pr-1 text-ink-muted text-sm select-none">beliapp.com/</span>
+          <span className="pl-4 pr-1 text-ink-muted text-sm select-none">beliapp.co/app/</span>
           <input
             type="text"
             value={beliUsername}
