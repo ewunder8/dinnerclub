@@ -196,7 +196,9 @@ export default async function ClubPage({
           <div className="divide-y divide-black/5">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 px-5 py-4">
-                <UserAvatar name={m.users.name} email={m.users.email} avatarUrl={m.users.avatar_url} />
+                <a href={`/users/${m.users.id}`}>
+                  <UserAvatar name={m.users.name} email={m.users.email} avatarUrl={m.users.avatar_url} />
+                </a>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-ink truncate">
                     {m.users.name || m.users.email}

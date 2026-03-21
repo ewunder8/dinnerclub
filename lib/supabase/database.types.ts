@@ -20,9 +20,11 @@ export type Database = {
           city: string | null;
           beli_connected: boolean;
           beli_username: string | null;
+          dietary_restrictions: string[];
+          dietary_public: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at" | "beli_username"> & { beli_username?: string | null };
+        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at" | "beli_username" | "dietary_restrictions" | "dietary_public"> & { beli_username?: string | null; dietary_restrictions?: string[]; dietary_public?: boolean };
         Update: Partial<Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "created_at">>;
         Relationships: [];
       };
