@@ -18,6 +18,7 @@ export type PlaceSearchResult = {
   lng: number | null;
   price_level: number | null;
   rating: number | null;
+  types: string[] | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -43,6 +44,7 @@ export async function GET(req: NextRequest) {
       lng:         p.location?.longitude ?? null,
       price_level: p.priceLevel ? (PRICE_MAP[p.priceLevel] ?? null) : null,
       rating:      p.rating ?? null,
+      types:       p.types ?? null,
     }));
 
     return NextResponse.json({ places });

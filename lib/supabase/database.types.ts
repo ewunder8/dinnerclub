@@ -412,6 +412,7 @@ export type Database = {
           photo_urls: string[] | null;
           hours: Json | null;
           beli_url: string | null;
+          types: string[] | null;
           cached_at: string;
         };
         Insert: Database["public"]["Tables"]["restaurant_cache"]["Row"];

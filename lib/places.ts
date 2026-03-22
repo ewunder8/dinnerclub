@@ -18,6 +18,7 @@ const SEARCH_FIELD_MASK = [
   "location",
   "priceLevel",
   "rating",
+  "types",
 ].map((f) => `places.${f}`).join(",");
 
 // Fields for full place detail lookups (no prefix — single place endpoint)
@@ -35,6 +36,7 @@ const DETAIL_FIELDS = [
   "photos",
   "reservable",
   "editorialSummary",
+  "types",
 ].join(",");
 
 // Search restaurants near a location
@@ -169,6 +171,7 @@ function normalizePlaceData(place: Record<string, unknown>): Omit<RestaurantCach
     photo_urls: null, // Google photo refs need separate handling
     hours: (place.currentOpeningHours as Json) ?? null,
     beli_url: null,
+    types: (place.types as string[]) ?? null,
   };
 }
 
@@ -187,4 +190,41 @@ function parsePriceLevel(level: string | undefined): number | null {
 export function formatPriceLevel(level: number | null): string {
   if (!level) return "";
   return "$".repeat(level);
+}
+
+// Generic / non-cuisine types to skip when extracting cuisine
+const GENERIC_TYPES = new Set([
+  "restaurant", "food", "point_of_interest", "establishment",
+  "meal_takeaway", "meal_delivery", "bar", "cafe", "bakery",
+]);
+
+// Overrides for types that don't cleanly convert via the default rule
+const CUISINE_OVERRIDES: Record<string, string> = {
+  steak_house: "Steakhouse",
+  bar_and_grill: "Bar & Grill",
+  seafood_restaurant: "Seafood",
+  sushi_restaurant: "Sushi",
+  pizza_restaurant: "Pizza",
+  burger_restaurant: "Burgers",
+  sandwich_shop: "Sandwiches",
+};
+
+// Extract a human-readable cuisine name from Google Places types array
+export function extractCuisineFromTypes(types: string[] | null): string | null {
+  if (!types || types.length === 0) return null;
+
+  for (const type of types) {
+    if (CUISINE_OVERRIDES[type]) return CUISINE_OVERRIDES[type];
+  }
+
+  for (const type of types) {
+    if (!GENERIC_TYPES.has(type)) {
+      return type
+        .replace(/_restaurant$/, "")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  }
+
+  return null;
 }

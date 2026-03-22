@@ -113,6 +113,7 @@ export default function SuggestRestaurant({ dinnerId }: Props) {
         reservation_platform: null,
         photo_urls: null,
         hours: null,
+        types: selected.types,
         beli_url: parsedBeliUrl,
         cached_at: new Date().toISOString(),
       });
