@@ -471,7 +471,7 @@ export default async function DinnerPage({
   }
 
   // ── Default: poll view ───────────────────────────────────────
-  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }] =
+  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }, { data: memberProfiles }] =
     await Promise.all([
       supabase
         .from("club_members")
@@ -486,7 +486,21 @@ export default async function DinnerPage({
         .from("votes")
         .select("*")
         .eq("dinner_id", params.dinnerId),
+      supabase
+        .from("club_members")
+        .select("users ( dietary_restrictions, dietary_public )")
+        .eq("club_id", params.id),
     ]);
+
+  // Aggregate public dietary restrictions across all members
+  const dietarySet = new Set<string>();
+  for (const m of memberProfiles ?? []) {
+    const u = (m as any).users;
+    if (u?.dietary_public && Array.isArray(u.dietary_restrictions)) {
+      for (const r of u.dietary_restrictions) dietarySet.add(r);
+    }
+  }
+  const dietaryRestrictions = Array.from(dietarySet);
 
   const opts = rawOptions ?? [];
 
@@ -569,6 +583,14 @@ export default async function DinnerPage({
             <p className="text-xs text-ink-muted mt-1">Poll closes {pollCloseLabel}</p>
           )}
         </div>
+
+        {/* Dietary restrictions banner */}
+        {dietaryRestrictions.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+            <p className="text-xs font-semibold text-amber-700 mb-1">Group dietary needs</p>
+            <p className="text-sm text-amber-800">{dietaryRestrictions.join(" · ")}</p>
+          </div>
+        )}
 
         {/* Owner controls */}
         {isOwner && (

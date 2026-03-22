@@ -13,6 +13,7 @@ import RemoveMemberButton from "./RemoveMemberButton";
 import CoOwnerButton from "./CoOwnerButton";
 import WishlistSection from "./WishlistSection";
 import OpenSeatsSection from "./OpenSeatsSection";
+import AvailabilityPollSection from "./AvailabilityPollSection";
 
 export default async function ClubPage({
   params,
@@ -142,6 +143,33 @@ export default async function ClubPage({
     })),
   }));
 
+  // Fetch active availability poll with dates, responses, and member names
+  const { data: rawPoll } = await supabase
+    .from("availability_polls")
+    .select(`
+      *,
+      availability_poll_dates ( id, proposed_date ),
+      availability_responses ( poll_id, user_id, date_id, available )
+    `)
+    .eq("club_id", params.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const availabilityPoll = rawPoll ? {
+    id: rawPoll.id,
+    club_id: rawPoll.club_id,
+    created_by: rawPoll.created_by,
+    title: rawPoll.title,
+    status: rawPoll.status as "open" | "closed",
+    dates: (rawPoll.availability_poll_dates ?? []) as unknown as { id: string; proposed_date: string }[],
+    responses: (rawPoll.availability_responses ?? []) as unknown as { poll_id: string; user_id: string; date_id: string; available: "yes" | "maybe" | "no" }[],
+    members: (club.club_members as any[]).map((m: any) => ({
+      user_id: m.users.id,
+      name: m.users.name || m.users.email?.split("@")[0] || "Member",
+    })),
+  } : null;
+
   // Fetch active invite link
   const { data: invite } = await supabase
     .from("invite_links")
@@ -187,6 +215,13 @@ export default async function ClubPage({
             </Link>
           )}
         </div>
+
+        {/* Find a Date */}
+        <AvailabilityPollSection
+          clubId={params.id}
+          userId={user.id}
+          poll={availabilityPoll}
+        />
 
         {/* Dinners */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">

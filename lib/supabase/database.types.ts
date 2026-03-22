@@ -53,6 +53,48 @@ export type Database = {
         ];
       };
 
+      availability_polls: {
+        Row: {
+          id: string;
+          club_id: string;
+          created_by: string;
+          title: string;
+          status: "open" | "closed";
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["availability_polls"]["Row"], "id" | "created_at" | "title" | "status"> & {
+          title?: string;
+          status?: "open" | "closed";
+        };
+        Update: Partial<Database["public"]["Tables"]["availability_polls"]["Insert"]>;
+        Relationships: [];
+      };
+
+      availability_poll_dates: {
+        Row: {
+          id: string;
+          poll_id: string;
+          proposed_date: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["availability_poll_dates"]["Row"], "id">;
+        Update: Partial<Database["public"]["Tables"]["availability_poll_dates"]["Insert"]>;
+        Relationships: [];
+      };
+
+      availability_responses: {
+        Row: {
+          id: string;
+          poll_id: string;
+          user_id: string;
+          date_id: string;
+          available: "yes" | "maybe" | "no";
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["availability_responses"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["availability_responses"]["Insert"]>;
+        Relationships: [];
+      };
+
       open_seats: {
         Row: {
           id: string;
