@@ -53,6 +53,20 @@ export type Database = {
         ];
       };
 
+      club_wishlist: {
+        Row: {
+          id: string;
+          club_id: string;
+          place_id: string;
+          added_by: string;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["club_wishlist"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["club_wishlist"]["Insert"]>;
+        Relationships: [];
+      };
+
       club_members: {
         Row: {
           id: string;

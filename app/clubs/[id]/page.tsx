@@ -11,6 +11,7 @@ import EmailInviteForm from "./EmailInviteForm";
 import LeaveClubButton from "./LeaveClubButton";
 import RemoveMemberButton from "./RemoveMemberButton";
 import CoOwnerButton from "./CoOwnerButton";
+import WishlistSection from "./WishlistSection";
 
 export default async function ClubPage({
   params,
@@ -74,6 +75,40 @@ export default async function ClubPage({
       restaurantNameMap[r.place_id] = r.name;
     }
   }
+
+  // Fetch wishlist
+  const { data: rawWishlist } = await supabase
+    .from("club_wishlist")
+    .select("id, place_id, note, added_by, created_at, users ( name, email )")
+    .eq("club_id", params.id)
+    .order("created_at", { ascending: false });
+
+  const wishlistPlaceIds = (rawWishlist ?? []).map((w) => w.place_id);
+  const wishlistRestaurantMap: Record<string, { name: string; address: string | null }> = {};
+  if (wishlistPlaceIds.length > 0) {
+    const { data: wRestaurants } = await supabase
+      .from("restaurant_cache")
+      .select("place_id, name, address")
+      .in("place_id", wishlistPlaceIds);
+    for (const r of wRestaurants ?? []) {
+      wishlistRestaurantMap[r.place_id] = { name: r.name, address: r.address };
+    }
+  }
+
+  const wishlistItems = (rawWishlist ?? []).map((w) => {
+    const u = w.users as { name: string | null; email: string } | null;
+    const r = wishlistRestaurantMap[w.place_id];
+    return {
+      id: w.id,
+      place_id: w.place_id,
+      note: w.note,
+      added_by: w.added_by,
+      created_at: w.created_at,
+      restaurant_name: r?.name ?? "Unknown",
+      restaurant_address: r?.address ?? null,
+      adder_name: u?.name || u?.email?.split("@")[0] || "Someone",
+    };
+  });
 
   // Fetch active invite link
   const { data: invite } = await supabase
@@ -183,6 +218,14 @@ export default async function ClubPage({
             </div>
           )}
         </section>
+
+        {/* Wishlist */}
+        <WishlistSection
+          clubId={params.id}
+          userId={user.id}
+          isOwner={isOwner}
+          items={wishlistItems}
+        />
 
         {/* Members */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
