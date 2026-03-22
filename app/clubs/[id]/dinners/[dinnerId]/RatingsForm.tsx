@@ -87,7 +87,6 @@ export default function RatingsForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasRating] = useState(!!existingRating);
-  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const toggleTag = (tag: string) => {
     setTags((prev) =>
@@ -124,8 +123,6 @@ export default function RatingsForm({
       await supabase.from("dinner_ratings").insert(payload);
     }
 
-    setJustSubmitted(true);
-    setSubmitting(false);
     toast.success("Rating saved! Thanks for rating.");
     setTimeout(() => router.push("/discover"), 1500);
   };
@@ -230,18 +227,11 @@ export default function RatingsForm({
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          {justSubmitted && (
-            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
-              <p className="font-semibold text-green-700">Rating saved!</p>
-              <p className="text-sm text-green-600 mt-0.5">Thanks for rating — heading to past dinners…</p>
-            </div>
-          )}
         </form>
       )}
 
       {/* Community summary — shown after submitting or when revisiting a rated dinner */}
-      {(justSubmitted || hasRating) && summary && summary.rating_count > 0 && (
+      {hasRating && summary && summary.rating_count > 0 && (
         <div className="bg-slate/5 border border-slate/10 rounded-2xl p-5">
           <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-3">
             Group verdict · {summary.rating_count} {summary.rating_count === 1 ? "rating" : "ratings"}
@@ -303,10 +293,10 @@ export default function RatingsForm({
           <button
             type="submit"
             form="rating-form"
-            disabled={submitting || justSubmitted}
+            disabled={submitting}
             className="w-full max-w-2xl mx-auto block bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? "Saving…" : justSubmitted ? "Rating saved!" : hasRating ? "Update rating →" : "Submit rating →"}
+            {submitting ? "Saving…" : hasRating ? "Update rating →" : "Submit rating →"}
           </button>
         </div>
       )}

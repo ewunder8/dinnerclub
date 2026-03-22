@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const FOOD_EMOJIS = [
   "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
@@ -27,7 +28,6 @@ export default function EditClubForm({
   const [city, setCity] = useState(initialCity);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const router = useRouter();
 
@@ -35,7 +35,6 @@ export default function EditClubForm({
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSaved(false);
 
     const supabase = createClient();
     const { error } = await supabase
@@ -49,7 +48,7 @@ export default function EditClubForm({
       return;
     }
 
-    setSaved(true);
+    toast.success("Changes saved.");
     setLoading(false);
     router.refresh();
   };
@@ -113,7 +112,6 @@ export default function EditClubForm({
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      {saved && <p className="text-green-600 text-sm">Changes saved.</p>}
 
       <button
         type="submit"

@@ -38,7 +38,6 @@ export default function ProfileForm({ user }: Props) {
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,7 +81,6 @@ export default function ProfileForm({ user }: Props) {
 
     setLoading(true);
     setError(null);
-    setSaved(false);
 
     const supabase = createClient();
     const { error: updateError } = await supabase
@@ -96,7 +94,6 @@ export default function ProfileForm({ user }: Props) {
       return;
     }
 
-    setSaved(true);
     toast.success("Profile saved!");
     router.refresh();
     setLoading(false);
@@ -226,7 +223,6 @@ export default function ProfileForm({ user }: Props) {
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      {saved && <p className="text-green-600 text-sm font-semibold">Profile saved!</p>}
 
       <button
         type="submit"
