@@ -248,6 +248,27 @@ export default async function DashboardPage() {
           </section>
         )}
 
+        {/* ── Nothing active nudge ── */}
+        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && unratedDinners.length === 0 && (
+          <div className="bg-citrus/8 border border-citrus/20 rounded-2xl px-6 py-8 text-center">
+            <p className="text-3xl mb-3">🍽️</p>
+            <p className="font-semibold text-ink mb-1">Nothing cooking right now</p>
+            <p className="text-ink-muted text-sm mb-5">
+              No active polls or upcoming dinners. Time to plan the next one?
+            </p>
+            {clubs.length === 1 ? (
+              <Link
+                href={`/clubs/${clubs[0].id}/dinners/new`}
+                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors text-sm"
+              >
+                Start a dinner →
+              </Link>
+            ) : (
+              <p className="text-xs text-ink-muted">Pick a club below to start a dinner.</p>
+            )}
+          </div>
+        )}
+
         {/* ── Your clubs ── */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
