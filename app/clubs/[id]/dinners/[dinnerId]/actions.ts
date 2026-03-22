@@ -70,7 +70,7 @@ async function sendConfirmationEmails({
   const [{ data: members }, { data: restaurant }] = await Promise.all([
     supabase
       .from("club_members")
-      .select("users ( email )")
+      .select("users ( email, email_notifications )")
       .eq("club_id", clubId),
     winningPlaceId
       ? supabase
@@ -95,7 +95,9 @@ async function sendConfirmationEmails({
   });
   const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${clubId}/dinners/${dinnerId}`;
 
-  const emails = (members as { users: { email: string } }[])
+  type MemberRow = { users: { email: string; email_notifications: Record<string, boolean> | null } };
+  const emails = (members as MemberRow[])
+    .filter((m) => m.users?.email_notifications?.reservation_confirmed !== false)
     .map((m) => m.users?.email)
     .filter(Boolean) as string[];
 
@@ -135,7 +137,7 @@ async function sendVotingOpenEmails({ dinnerId, clubId }: { dinnerId: string; cl
   const [{ data: dinner }, { data: club }, { data: members }, { data: options }] = await Promise.all([
     supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
     supabase.from("clubs").select("name").eq("id", clubId).single(),
-    supabase.from("club_members").select("users ( email )").eq("club_id", clubId),
+    supabase.from("club_members").select("users ( email, email_notifications )").eq("club_id", clubId),
     supabase.from("poll_options").select("id").eq("dinner_id", dinnerId).is("removed_at", null),
   ]);
 
@@ -144,7 +146,10 @@ async function sendVotingOpenEmails({ dinnerId, clubId }: { dinnerId: string; cl
   const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${clubId}/dinners/${dinnerId}`;
   const name = dinnerLabel(dinner);
   const theme = [dinner.theme_cuisine, dinner.theme_neighborhood, dinner.theme_vibe].filter(Boolean).join(", ") || "No theme set";
-  const emails = (members as { users: { email: string } }[]).map((m) => m.users?.email).filter(Boolean) as string[];
+  type MemberRow = { users: { email: string; email_notifications: Record<string, boolean> | null } };
+  const emails = (members as MemberRow[])
+    .filter((m) => m.users?.email_notifications?.voting_open !== false)
+    .map((m) => m.users?.email).filter(Boolean) as string[];
 
   await Promise.allSettled(
     emails.map((to) =>
@@ -190,7 +195,7 @@ async function sendRatingPromptEmails({ dinnerId, clubId }: { dinnerId: string; 
   if (!dinner) return;
 
   const [{ data: members }, { data: restaurant }] = await Promise.all([
-    supabase.from("club_members").select("users ( email )").eq("club_id", clubId),
+    supabase.from("club_members").select("users ( email, email_notifications )").eq("club_id", clubId),
     dinner.winning_restaurant_place_id
       ? supabase.from("restaurant_cache").select("name").eq("place_id", dinner.winning_restaurant_place_id).single()
       : Promise.resolve({ data: null }),
@@ -204,7 +209,10 @@ async function sendRatingPromptEmails({ dinnerId, clubId }: { dinnerId: string; 
     ? new Date(dinner.reservation_datetime).toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
-  const emails = (members as { users: { email: string } }[]).map((m) => m.users?.email).filter(Boolean) as string[];
+  type MemberRow = { users: { email: string; email_notifications: Record<string, boolean> | null } };
+  const emails = (members as MemberRow[])
+    .filter((m) => m.users?.email_notifications?.rating_prompt !== false)
+    .map((m) => m.users?.email).filter(Boolean) as string[];
 
   await Promise.allSettled(
     emails.map((to) =>

@@ -38,6 +38,9 @@ export default function ProfileForm({ user }: Props) {
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailNotifs, setEmailNotifs] = useState<Record<string, boolean>>(
+    user.email_notifications ?? { reservation_confirmed: true, dinner_reminder: true, voting_open: true, rating_prompt: true }
+  );
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,7 +88,7 @@ export default function ProfileForm({ user }: Props) {
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("users")
-      .update({ name: name.trim(), city: city.trim() || null, beli_username: beliUsername.trim() || null, dietary_restrictions: dietary, dietary_public: dietaryPublic })
+      .update({ name: name.trim(), city: city.trim() || null, beli_username: beliUsername.trim() || null, dietary_restrictions: dietary, dietary_public: dietaryPublic, email_notifications: emailNotifs })
       .eq("id", user.id);
 
     if (updateError) {
@@ -217,6 +220,36 @@ export default function ProfileForm({ user }: Props) {
             >
               <span>{emoji}</span>
               <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Email notifications */}
+      <div>
+        <label className="block text-sm font-semibold text-ink mb-3">Email notifications</label>
+        <div className="flex flex-col gap-2">
+          {[
+            { key: "reservation_confirmed", label: "Reservation confirmed", desc: "When a club dinner is confirmed" },
+            { key: "dinner_reminder",        label: "Dinner reminder",       desc: "The day before your dinner" },
+            { key: "voting_open",            label: "Voting open",           desc: "When voting opens on a dinner" },
+            { key: "rating_prompt",          label: "Dinner rating prompt",  desc: "When a dinner wraps up and ratings open" },
+            { key: "open_seat_posted",       label: "Open seat available",   desc: "When a club member posts a spare seat" },
+            { key: "open_seat_update",       label: "Seat request updates",  desc: "Requests on your seat, or replies to yours" },
+          ].map(({ key, label, desc }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setEmailNotifs((prev) => ({ ...prev, [key]: !prev[key] }))}
+              className="flex items-center justify-between w-full border border-slate/20 rounded-xl px-4 py-3 bg-surface hover:border-slate/40 transition-colors text-left"
+            >
+              <div>
+                <p className="text-sm font-semibold text-ink">{label}</p>
+                <p className="text-xs text-ink-muted mt-0.5">{desc}</p>
+              </div>
+              <span className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 shrink-0 ml-4 ${emailNotifs[key] !== false ? "bg-slate" : "bg-black/20"}`}>
+                <span className={`w-4 h-4 rounded-full bg-white transition-transform ${emailNotifs[key] !== false ? "translate-x-4" : "translate-x-0"}`} />
+              </span>
             </button>
           ))}
         </div>

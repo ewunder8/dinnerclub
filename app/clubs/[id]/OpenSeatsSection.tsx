@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { postOpenSeat, requestSeat, respondToSeatRequest } from "./open-seats-actions";
 
 type Request = {
   id: string;
@@ -59,23 +60,17 @@ function PostForm({ clubId, onPosted }: { clubId: string; onPosted: () => void }
     setSubmitting(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Not authenticated."); setSubmitting(false); return; }
-
     const reservation_datetime = new Date(`${date}T${time}`).toISOString();
-
-    const { error: insertError } = await supabase.from("open_seats").insert({
-      club_id: clubId,
-      created_by: user.id,
-      restaurant_name: restaurantName.trim(),
-      reservation_datetime,
-      seats_available: seats,
+    const result = await postOpenSeat({
+      clubId,
+      restaurantName: restaurantName.trim(),
+      reservationDatetime: reservation_datetime,
+      seatsAvailable: seats,
       note: note.trim() || null,
     });
 
-    if (insertError) {
-      setError("Failed to post. Try again.");
+    if (result.error) {
+      setError(result.error);
       setSubmitting(false);
       return;
     }
@@ -150,13 +145,9 @@ function SeatCard({ seat, userId }: { seat: OpenSeat; userId: string }) {
 
   const handleRequest = async () => {
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("open_seat_requests").insert({
-      open_seat_id: seat.id,
-      user_id: userId,
-    });
-    if (error) {
-      toast.error("Couldn't send request.");
+    const result = await requestSeat({ seatId: seat.id });
+    if (result.error) {
+      toast.error(result.error);
     } else {
       toast.success("Request sent!");
       router.refresh();
@@ -175,8 +166,8 @@ function SeatCard({ seat, userId }: { seat: OpenSeat; userId: string }) {
   };
 
   const handleRespondRequest = async (requestId: string, newStatus: "confirmed" | "declined") => {
-    const supabase = createClient();
-    await supabase.from("open_seat_requests").update({ status: newStatus }).eq("id", requestId);
+    const result = await respondToSeatRequest({ requestId, newStatus });
+    if (result.error) { toast.error(result.error); return; }
     if (newStatus === "confirmed") toast.success("Request confirmed!");
     else toast.success("Request declined.");
     router.refresh();

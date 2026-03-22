@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       if (!dinner.winning_restaurant_place_id) return;
 
       const [{ data: members }, { data: restaurant }] = await Promise.all([
-        supabase.from("club_members").select("users ( email )").eq("club_id", dinner.club_id),
+        supabase.from("club_members").select("users ( email, email_notifications )").eq("club_id", dinner.club_id),
         supabase.from("restaurant_cache").select("name, address").eq("place_id", dinner.winning_restaurant_place_id).single(),
       ]);
 
@@ -47,7 +47,9 @@ export async function GET(request: Request) {
       const dinnerTime = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${dinner.club_id}/dinners/${dinner.id}`;
 
-      const emails = (members as { users: { email: string } }[])
+      type MemberRow = { users: { email: string; email_notifications: Record<string, boolean> | null } };
+      const emails = (members as MemberRow[])
+        .filter((m) => m.users?.email_notifications?.dinner_reminder !== false)
         .map((m) => m.users?.email)
         .filter(Boolean) as string[];
 

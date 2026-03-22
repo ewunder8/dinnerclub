@@ -22,6 +22,7 @@ export type Database = {
           beli_username: string | null;
           dietary_restrictions: string[];
           dietary_public: boolean;
+          email_notifications: Record<string, boolean>;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at" | "beli_username" | "dietary_restrictions" | "dietary_public"> & { beli_username?: string | null; dietary_restrictions?: string[]; dietary_public?: boolean };
