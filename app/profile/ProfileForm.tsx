@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import UserAvatar from "@/components/UserAvatar";
 import type { User } from "@/lib/supabase/database.types";
+import { toast } from "sonner";
 
 type Props = {
   user: User;
@@ -70,6 +71,7 @@ export default function ProfileForm({ user }: Props) {
     await supabase.from("users").update({ avatar_url: publicUrl }).eq("id", user.id);
 
     setAvatarUrl(publicUrl);
+    toast.success("Photo updated!");
     router.refresh();
     setAvatarLoading(false);
   };
@@ -95,6 +97,7 @@ export default function ProfileForm({ user }: Props) {
     }
 
     setSaved(true);
+    toast.success("Profile saved!");
     router.refresh();
     setLoading(false);
   };

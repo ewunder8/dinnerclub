@@ -5,6 +5,7 @@ import { getCountdown } from "@/lib/countdown";
 import { isInviteExpired } from "@/lib/utils";
 import NavUser from "@/components/NavUser";
 import AcceptInviteButton from "./AcceptInviteButton";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -156,7 +157,7 @@ export default async function DashboardPage() {
                 const club = clubMap[dinner.club_id];
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
                 return (
-                  <a key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-citrus/5 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -167,7 +168,7 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                     <span className="text-xs font-semibold text-citrus-dark shrink-0">Rate →</span>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -186,7 +187,7 @@ export default async function DashboardPage() {
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
                 const countdown = getCountdown(dinner.reservation_datetime!);
                 return (
-                  <a key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -204,7 +205,7 @@ export default async function DashboardPage() {
                         })}
                       </p>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -225,7 +226,7 @@ export default async function DashboardPage() {
                 const dinnerLabel = restaurantName ?? (themeLabel || "Dinner poll");
                 const votingOpen = dinner.status === "polling" && dinner.voting_open;
                 return (
-                  <a key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -240,7 +241,7 @@ export default async function DashboardPage() {
                     }`}>
                       {votingOpen ? "Vote now!" : dinner.status === "seeking_reservation" ? "Finding a table" : dinner.status === "waitlisted" ? "Waitlisted" : "Taking suggestions"}
                     </span>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -251,9 +252,9 @@ export default async function DashboardPage() {
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
             <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Your clubs</h2>
-            <a href="/clubs/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
+            <Link href="/clubs/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
               + New club
-            </a>
+            </Link>
           </div>
 
           {clubs.length === 0 ? (
@@ -263,16 +264,16 @@ export default async function DashboardPage() {
               <p className="text-ink-muted text-sm mb-6">
                 Create a club and invite your friends, or ask someone to share their invite link.
               </p>
-              <a href="/clubs/new"
+              <Link href="/clubs/new"
                 className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
               >
                 Create your first club →
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-black/5">
               {clubs.map((club) => (
-                <a key={club.id} href={`/clubs/${club.id}`}
+                <Link key={club.id} href={`/clubs/${club.id}`}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-snow transition-colors"
                 >
                   <span className="text-2xl">{club.emoji ?? "🍽️"}</span>
@@ -281,14 +282,14 @@ export default async function DashboardPage() {
                     {club.city && <p className="text-xs text-ink-muted mt-0.5">{club.city}</p>}
                   </div>
                   <span className="text-ink-faint text-sm">→</span>
-                </a>
+                </Link>
               ))}
             </div>
           )}
         </section>
 
         {/* ── Discover ── */}
-        <a href="/discover"
+        <Link href="/discover"
           className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
         >
           <div className="flex items-center gap-3">
@@ -299,7 +300,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <span className="text-ink-faint text-sm">→</span>
-        </a>
+        </Link>
 
       </div>
     </main>

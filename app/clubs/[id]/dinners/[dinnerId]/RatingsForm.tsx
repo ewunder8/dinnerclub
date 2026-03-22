@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   RATING_TAGS,
   scoreToStars,
@@ -125,6 +126,7 @@ export default function RatingsForm({
 
     setJustSubmitted(true);
     setSubmitting(false);
+    toast.success("Rating saved! Thanks for rating.");
     setTimeout(() => router.push("/discover"), 1500);
   };
 

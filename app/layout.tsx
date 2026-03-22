@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "DinnerClub — Dinner is better together",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body>
         {children}
         <AuthRedirectHandler />
+        <Toaster position="bottom-center" richColors />
       </body>
     </html>
   );

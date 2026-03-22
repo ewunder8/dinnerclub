@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getInviteTimeRemaining } from "@/lib/utils";
 import UserAvatar from "@/components/UserAvatar";
 import NavUser from "@/components/NavUser";
+import Link from "next/link";
 
 import InviteButton from "./InviteButton";
 import GenerateInviteButton from "./GenerateInviteButton";
@@ -95,7 +96,7 @@ export default async function ClubPage({
       {/* Nav */}
       <nav className="bg-slate px-6 py-4 flex items-center">
         <div className="flex-1">
-          <a href="/dashboard" className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</a>
+          <Link href="/dashboard" className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</Link>
         </div>
         <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{club.name}</h1>
         <div className="flex-1 flex justify-end">
@@ -111,12 +112,12 @@ export default async function ClubPage({
           <h2 className="font-sans text-2xl font-bold text-ink">{club.name}</h2>
           {club.city && <p className="text-ink-muted text-sm mt-1">{club.city}</p>}
           {isOwner && (
-            <a
+            <Link
               href={`/clubs/${params.id}/settings`}
               className="inline-block mt-3 text-xs font-semibold text-ink-muted border border-black/10 px-3 py-1.5 rounded-xl hover:bg-black/5 transition-colors"
             >
               Settings
-            </a>
+            </Link>
           )}
         </div>
 
@@ -126,12 +127,12 @@ export default async function ClubPage({
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
               Dinners · {dinners?.length ?? 0}
             </h3>
-            <a
+            <Link
               href={`/clubs/${params.id}/dinners/new`}
               className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
             >
               + Start a dinner
-            </a>
+            </Link>
           </div>
 
           {!dinners || dinners.length === 0 ? (
@@ -141,12 +142,12 @@ export default async function ClubPage({
               <p className="text-ink-muted text-sm mb-6">
                 Start a poll and let the crew vote on where to eat.
               </p>
-              <a
+              <Link
                 href={`/clubs/${params.id}/dinners/new`}
                 className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
               >
                 Start a dinner →
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-black/5">
@@ -160,7 +161,7 @@ export default async function ClubPage({
                 const label = restaurantName ?? theme ?? "Dinner poll";
                 const dateStr = (dinner.reservation_datetime ?? dinner.created_at);
                 return (
-                  <a
+                  <Link
                     key={dinner.id}
                     href={`/clubs/${params.id}/dinners/${dinner.id}`}
                     className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors"
@@ -176,7 +177,7 @@ export default async function ClubPage({
                       </p>
                     </div>
                     <span className="text-ink-muted text-sm">→</span>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
