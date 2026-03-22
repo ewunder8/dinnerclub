@@ -21,6 +21,8 @@ import ConfirmReservationForm from "./ConfirmReservationForm";
 import ReservationAttempts from "./ReservationAttempts";
 import CancelDinnerButton from "./CancelDinnerButton";
 import MarkCompletedButton from "./MarkCompletedButton";
+import DinnerComments from "./DinnerComments";
+import type { DinnerComment } from "./DinnerComments";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -97,7 +99,7 @@ export default async function DinnerPage({
 
   // ── Confirmed: show countdown view ───────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
-    const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }, { data: rawComments }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -115,16 +117,29 @@ export default async function DinnerPage({
       dinner.reserved_by
         ? supabase.from("users").select("name, email").eq("id", dinner.reserved_by).single()
         : Promise.resolve({ data: null }),
+      supabase
+        .from("dinner_comments")
+        .select("id, user_id, body, created_at, users ( name, email )")
+        .eq("dinner_id", params.dinnerId)
+        .order("created_at", { ascending: true }),
     ]);
 
     if (!restaurant) notFound();
 
     const rsvps = (rawRsvps ?? []) as (RSVP & { users: User })[];
 
+    const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
+      id: c.id,
+      user_id: c.user_id,
+      body: c.body,
+      created_at: c.created_at,
+      author_name: c.users?.name || c.users?.email?.split("@")[0] || "Member",
+    }));
+
     return (
       <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
-        <div className="max-w-2xl mx-auto px-6 py-10">
+        <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-5">
           <CountdownView
             dinner={dinner}
             restaurant={restaurant as RestaurantCache}
@@ -133,8 +148,9 @@ export default async function DinnerPage({
             clubName={club?.name ?? ""}
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
           />
+          <DinnerComments dinnerId={params.dinnerId} userId={user.id} comments={comments} />
           {isOwner && (
-            <div className="flex items-center justify-end gap-4 mt-6">
+            <div className="flex items-center justify-end gap-4">
               <MarkCompletedButton dinnerId={params.dinnerId} clubId={params.id} />
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />
             </div>

@@ -395,6 +395,22 @@ export type Database = {
         ];
       };
 
+      dinner_comments: {
+        Row: {
+          id: string;
+          dinner_id: string;
+          user_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["dinner_comments"]["Row"], "id" | "created_at">;
+        Update: never;
+        Relationships: [
+          { foreignKeyName: "dinner_comments_dinner_id_fkey"; columns: ["dinner_id"]; isOneToOne: false; referencedRelation: "dinners"; referencedColumns: ["id"] },
+          { foreignKeyName: "dinner_comments_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "users"; referencedColumns: ["id"] }
+        ];
+      };
+
       // Added beli_url for Beli app deep links
       restaurant_cache: {
         Row: {
