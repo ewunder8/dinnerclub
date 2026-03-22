@@ -12,6 +12,7 @@ import LeaveClubButton from "./LeaveClubButton";
 import RemoveMemberButton from "./RemoveMemberButton";
 import CoOwnerButton from "./CoOwnerButton";
 import WishlistSection from "./WishlistSection";
+import OpenSeatsSection from "./OpenSeatsSection";
 
 export default async function ClubPage({
   params,
@@ -96,7 +97,7 @@ export default async function ClubPage({
   }
 
   const wishlistItems = (rawWishlist ?? []).map((w) => {
-    const u = w.users as { name: string | null; email: string } | null;
+    const u = w.users as unknown as { name: string | null; email: string } | null;
     const r = wishlistRestaurantMap[w.place_id];
     return {
       id: w.id,
@@ -109,6 +110,37 @@ export default async function ClubPage({
       adder_name: u?.name || u?.email?.split("@")[0] || "Someone",
     };
   });
+
+  // Fetch open seats with requests
+  const { data: rawOpenSeats } = await supabase
+    .from("open_seats")
+    .select(`
+      *,
+      users ( name, email ),
+      open_seat_requests ( id, user_id, status, users ( name, email ) )
+    `)
+    .eq("club_id", params.id)
+    .order("reservation_datetime", { ascending: true });
+
+  const openSeats = (rawOpenSeats ?? []).map((s: any) => ({
+    id: s.id,
+    club_id: s.club_id,
+    created_by: s.created_by,
+    restaurant_name: s.restaurant_name,
+    place_id: s.place_id,
+    reservation_datetime: s.reservation_datetime,
+    seats_available: s.seats_available,
+    note: s.note,
+    status: s.status as "open" | "closed",
+    created_at: s.created_at,
+    poster_name: s.users?.name || s.users?.email?.split("@")[0] || "Someone",
+    requests: (s.open_seat_requests ?? []).map((r: any) => ({
+      id: r.id,
+      user_id: r.user_id,
+      status: r.status as "pending" | "confirmed" | "declined",
+      user_name: r.users?.name || r.users?.email?.split("@")[0] || "Someone",
+    })),
+  }));
 
   // Fetch active invite link
   const { data: invite } = await supabase
@@ -225,6 +257,13 @@ export default async function ClubPage({
           userId={user.id}
           isOwner={isOwner}
           items={wishlistItems}
+        />
+
+        {/* Open Seats */}
+        <OpenSeatsSection
+          clubId={params.id}
+          userId={user.id}
+          openSeats={openSeats}
         />
 
         {/* Members */}

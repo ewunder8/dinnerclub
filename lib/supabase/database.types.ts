@@ -53,6 +53,44 @@ export type Database = {
         ];
       };
 
+      open_seats: {
+        Row: {
+          id: string;
+          club_id: string;
+          created_by: string;
+          restaurant_name: string;
+          place_id: string | null;
+          reservation_datetime: string;
+          seats_available: number;
+          note: string | null;
+          status: "open" | "closed";
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["open_seats"]["Row"], "id" | "created_at" | "place_id" | "note" | "seats_available" | "status"> & {
+          place_id?: string | null;
+          note?: string | null;
+          seats_available?: number;
+          status?: "open" | "closed";
+        };
+        Update: Partial<Database["public"]["Tables"]["open_seats"]["Insert"]>;
+        Relationships: [];
+      };
+
+      open_seat_requests: {
+        Row: {
+          id: string;
+          open_seat_id: string;
+          user_id: string;
+          status: "pending" | "confirmed" | "declined";
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["open_seat_requests"]["Row"], "id" | "created_at" | "status"> & {
+          status?: "pending" | "confirmed" | "declined";
+        };
+        Update: Partial<Database["public"]["Tables"]["open_seat_requests"]["Insert"]>;
+        Relationships: [];
+      };
+
       club_wishlist: {
         Row: {
           id: string;
@@ -421,6 +459,8 @@ export type RSVP = Database["public"]["Tables"]["rsvps"]["Row"];
 export type RestaurantCache = Database["public"]["Tables"]["restaurant_cache"]["Row"];
 export type DinnerRating = Database["public"]["Tables"]["dinner_ratings"]["Row"];
 export type DinnerRatingSummary = Database["public"]["Views"]["dinner_rating_summaries"]["Row"];
+export type OpenSeat = Database["public"]["Tables"]["open_seats"]["Row"];
+export type OpenSeatRequest = Database["public"]["Tables"]["open_seat_requests"]["Row"];
 
 // Poll state derived from dinner fields — used in lib/poll.ts
 export type PollState =
