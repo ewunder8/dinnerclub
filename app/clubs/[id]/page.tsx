@@ -16,6 +16,7 @@ import WishlistSection from "./WishlistSection";
 import OpenSeatsSection from "./OpenSeatsSection";
 import AvailabilityPollSection from "./AvailabilityPollSection";
 import ClubStatsCard from "./ClubStatsCard";
+import ActivityFeed from "./ActivityFeed";
 
 export default async function ClubPage({
   params,
@@ -380,6 +381,9 @@ export default async function ClubPage({
             </div>
           )}
         </section>
+
+        {/* Activity Feed */}
+        <ActivityFeed clubId={params.id} />
 
         {/* Club Stats */}
         <ClubStatsCard stats={clubStats} />
