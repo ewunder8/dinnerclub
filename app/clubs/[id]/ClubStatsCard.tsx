@@ -1,9 +1,12 @@
+const STATS_UNLOCK_THRESHOLD = 3;
+
 type ClubStats = {
   mostDinnersAttended: { name: string; count: number } | null;
   topVoter: { name: string; count: number } | null;
   mostSuggestionsAccepted: { name: string; count: number } | null;
   cuisineBreakdown: { cuisine: string; count: number }[];
   avgRating: number | null;
+  totalDinners: number;
 };
 
 export default function ClubStatsCard({ stats }: { stats: ClubStats }) {
@@ -11,8 +14,26 @@ export default function ClubStatsCard({ stats }: { stats: ClubStats }) {
     stats.mostDinnersAttended || stats.topVoter || stats.mostSuggestionsAccepted;
   const hasAnyStats =
     hasPersonStats || stats.cuisineBreakdown.length > 0 || stats.avgRating !== null;
+  const remaining = STATS_UNLOCK_THRESHOLD - stats.totalDinners;
 
-  if (!hasAnyStats) return null;
+  if (!hasAnyStats) {
+    return (
+      <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/5">
+          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Stats</h3>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-2xl mb-2">📊</p>
+          <p className="font-semibold text-ink text-sm mb-1">Stats unlock after {STATS_UNLOCK_THRESHOLD} dinners</p>
+          <p className="text-xs text-ink-muted">
+            {remaining > 0
+              ? `${remaining} more dinner${remaining !== 1 ? "s" : ""} to go — keep the streak alive!`
+              : "Complete your first dinners to start tracking trends."}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">

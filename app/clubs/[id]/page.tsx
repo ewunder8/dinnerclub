@@ -263,7 +263,7 @@ export default async function ClubPage({
       ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
       : null;
 
-  const clubStats = { mostDinnersAttended, topVoter, mostSuggestionsAccepted, cuisineBreakdown, avgRating };
+  const clubStats = { mostDinnersAttended, topVoter, mostSuggestionsAccepted, cuisineBreakdown, avgRating, totalDinners: dinners?.length ?? 0 };
 
   // Fetch active invite link
   const { data: invite } = await supabase
