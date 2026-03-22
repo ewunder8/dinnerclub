@@ -269,6 +269,28 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {/* ── Onboarding hero — no clubs yet ── */}
+        {clubs.length === 0 && pendingInvites.length === 0 && (
+          <div className="bg-white border border-black/8 rounded-2xl px-6 py-12 text-center">
+            <p className="text-5xl mb-5">🍽️</p>
+            <h2 className="font-sans text-2xl font-bold text-ink mb-2">Welcome to DinnerClub</h2>
+            <p className="text-ink-muted text-sm mb-8 max-w-xs mx-auto leading-relaxed">
+              Stop debating, start eating. Create a club, invite your crew, and let the group vote on where to go.
+            </p>
+            <div className="flex flex-col gap-3 max-w-xs mx-auto">
+              <Link
+                href="/clubs/new"
+                className="block bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors text-sm"
+              >
+                Create your first club →
+              </Link>
+              <p className="text-xs text-ink-muted pt-1">
+                Already invited? Ask your friend to share their invite link and you&apos;ll show up here automatically.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── Your clubs ── */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
@@ -279,16 +301,11 @@ export default async function DashboardPage() {
           </div>
 
           {clubs.length === 0 ? (
-            <div className="px-5 py-16 text-center">
-              <p className="text-4xl mb-4">🍜</p>
-              <p className="font-semibold text-ink mb-2">No clubs yet</p>
-              <p className="text-ink-muted text-sm mb-6">
-                Create a club and invite your friends, or ask someone to share their invite link.
-              </p>
+            <div className="px-5 py-6 text-center">
               <Link href="/clubs/new"
-                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
+                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors text-sm"
               >
-                Create your first club →
+                + New club
               </Link>
             </div>
           ) : (

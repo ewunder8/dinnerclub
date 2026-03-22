@@ -17,6 +17,7 @@ import OpenSeatsSection from "./OpenSeatsSection";
 import AvailabilityPollSection from "./AvailabilityPollSection";
 import ClubStatsCard from "./ClubStatsCard";
 import ActivityFeed from "./ActivityFeed";
+import DinnersList from "./DinnersList";
 
 export default async function ClubPage({
   params,
@@ -333,53 +334,11 @@ export default async function ClubPage({
             </Link>
           </div>
 
-          {!dinners || dinners.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="text-4xl mb-4">🍽️</p>
-              <p className="font-semibold text-ink mb-2">No dinners yet</p>
-              <p className="text-ink-muted text-sm mb-6">
-                Start a poll and let the crew vote on where to eat.
-              </p>
-              <Link
-                href={`/clubs/${params.id}/dinners/new`}
-                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors"
-              >
-                Start a dinner →
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-black/5">
-              {dinners.map((dinner) => {
-                const restaurantName = dinner.winning_restaurant_place_id
-                  ? restaurantNameMap[dinner.winning_restaurant_place_id]
-                  : null;
-                const theme = [dinner.theme_cuisine, dinner.theme_neighborhood]
-                  .filter(Boolean)
-                  .join(" · ");
-                const label = restaurantName ?? theme ?? "Dinner poll";
-                const dateStr = (dinner.reservation_datetime ?? dinner.created_at);
-                return (
-                  <Link
-                    key={dinner.id}
-                    href={`/clubs/${params.id}/dinners/${dinner.id}`}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors"
-                  >
-                    <div>
-                      <p className="font-semibold text-ink text-sm">{label}</p>
-                      <p className="text-xs text-ink-muted mt-0.5 capitalize">
-                        {dinner.status.replace(/_/g, " ")} ·{" "}
-                        {new Date(dateStr).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <span className="text-ink-muted text-sm">→</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          <DinnersList
+            dinners={dinners ?? []}
+            clubId={params.id}
+            restaurantNameMap={restaurantNameMap}
+          />
         </section>
 
         {/* Activity Feed */}

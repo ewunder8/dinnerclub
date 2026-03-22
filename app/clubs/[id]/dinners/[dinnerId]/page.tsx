@@ -23,6 +23,7 @@ import CancelDinnerButton from "./CancelDinnerButton";
 import MarkCompletedButton from "./MarkCompletedButton";
 import DinnerComments from "./DinnerComments";
 import type { DinnerComment } from "./DinnerComments";
+import SharePollButton from "./SharePollButton";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -656,6 +657,9 @@ export default async function DinnerPage({
             <SuggestRestaurant dinnerId={params.dinnerId} />
           </section>
         )}
+
+        {/* Share poll */}
+        <SharePollButton dinnerLabel={themeSummary ?? "our next dinner"} />
 
       </div>
     </main>
