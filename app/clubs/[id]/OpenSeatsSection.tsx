@@ -281,9 +281,12 @@ export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
   return (
     <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
       <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-        <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
-          Open Seats{activeSeats.length > 0 ? ` · ${activeSeats.length}` : ""}
-        </h3>
+        <div>
+          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+            Open Seats{activeSeats.length > 0 ? ` · ${activeSeats.length}` : ""}
+          </h3>
+          <p className="text-xs text-ink-faint mt-0.5">Spare reservations members can request</p>
+        </div>
         <button
           onClick={() => setShowPost((v) => !v)}
           className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
@@ -296,7 +299,8 @@ export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
         <div className="px-5 py-10 text-center">
           <p className="text-3xl mb-3">🪑</p>
           <p className="font-semibold text-ink text-sm mb-1">No open seats</p>
-          <p className="text-xs text-ink-muted">Got a reservation with room? Post it here.</p>
+          <p className="text-xs text-ink-muted mb-4">Got a reservation with room? Post it here so club members can request a spot.</p>
+          <p className="text-xs text-ink-faint max-w-xs mx-auto leading-relaxed">Open Seats lets members share spare reservations — post how many seats you have, and your club can request one. You confirm or decline.</p>
         </div>
       ) : (
         <div className="divide-y divide-black/5">

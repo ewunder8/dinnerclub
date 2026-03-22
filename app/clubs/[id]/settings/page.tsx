@@ -5,6 +5,7 @@ import EditClubForm from "./EditClubForm";
 import DeleteClubButton from "./DeleteClubButton";
 import TransferOwnershipButton from "./TransferOwnershipButton";
 import MembersCanInviteToggle from "./MembersCanInviteToggle";
+import OpenSeatsToggle from "./OpenSeatsToggle";
 
 export default async function ClubSettingsPage({
   params,
@@ -18,7 +19,7 @@ export default async function ClubSettingsPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: club } = await (supabase.from("clubs") as any)
-    .select("id, name, emoji, city, owner_id, members_can_invite, club_members ( id, user_id, role, users ( name, email ) )")
+    .select("id, name, emoji, city, owner_id, members_can_invite, open_seats_enabled, club_members ( id, user_id, role, users ( name, email ) )")
     .eq("id", params.id)
     .single();
 
@@ -85,6 +86,19 @@ export default async function ClubSettingsPage({
             <MembersCanInviteToggle
               clubId={params.id}
               initialValue={(club as any).members_can_invite ?? true}
+            />
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Features</h3>
+          </div>
+          <div className="px-5 py-4">
+            <OpenSeatsToggle
+              clubId={params.id}
+              initialValue={(club as any).open_seats_enabled ?? true}
             />
           </div>
         </section>

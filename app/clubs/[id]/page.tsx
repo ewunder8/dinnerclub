@@ -393,11 +393,13 @@ export default async function ClubPage({
         />
 
         {/* Open Seats */}
-        <OpenSeatsSection
-          clubId={params.id}
-          userId={user.id}
-          openSeats={openSeats}
-        />
+        {(club as any).open_seats_enabled !== false && (
+          <OpenSeatsSection
+            clubId={params.id}
+            userId={user.id}
+            openSeats={openSeats}
+          />
+        )}
 
         {/* Members */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
