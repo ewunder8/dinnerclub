@@ -6,6 +6,7 @@ import {
   sendSeatRequestReceived,
   sendSeatRequestResponse,
 } from "@/lib/email";
+import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -17,6 +18,7 @@ function formatDateTime(iso: string) {
 }
 
 type MemberRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+
 
 export async function postOpenSeat({
   clubId,
@@ -91,6 +93,7 @@ async function sendOpenSeatNotifications({
         dateTime,
         note,
         clubUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(m.users.id, "open_seat_posted"),
       })
     )
   );
@@ -150,6 +153,7 @@ async function sendRequestReceivedNotification({
     restaurantName: seat.restaurant_name,
     dateTime: formatDateTime(seat.reservation_datetime),
     clubUrl,
+    unsubscribeUrl: generateUnsubscribeUrl(seat.created_by, "open_seat_update"),
   });
 }
 
@@ -210,5 +214,6 @@ async function sendRequestResponseNotification({
     restaurantName: seat.restaurant_name,
     dateTime: formatDateTime(seat.reservation_datetime),
     clubUrl: `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${seat.club_id}`,
+    unsubscribeUrl: generateUnsubscribeUrl(req.user_id, "open_seat_update"),
   });
 }

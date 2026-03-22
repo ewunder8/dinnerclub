@@ -35,6 +35,7 @@ export default function OnboardingForm({
       city: city.trim() || null,
       avatar_url: googleAvatarUrl,
       beli_connected: false,
+      email_notifications: { reservation_confirmed: true, dinner_reminder: true, voting_open: true, rating_prompt: true, open_seat_posted: true, open_seat_update: true, dinner_cancelled: true },
     });
 
     if (error) {

@@ -88,6 +88,7 @@ const RESERVATION_CONFIRMED_TEMPLATE = `<!DOCTYPE html>
           <tr>
             <td align="center" style="padding-top:28px;">
               <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
         </table>
@@ -158,6 +159,7 @@ const DINNER_REMINDER_TEMPLATE = `<!DOCTYPE html>
           <tr>
             <td align="center" style="padding-top:28px;">
               <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
         </table>
@@ -228,6 +230,7 @@ const VOTING_OPEN_TEMPLATE = `<!DOCTYPE html>
           <tr>
             <td align="center" style="padding-top:28px;">
               <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
         </table>
@@ -292,6 +295,7 @@ const RATING_PROMPT_TEMPLATE = `<!DOCTYPE html>
           <tr>
             <td align="center" style="padding-top:28px;">
               <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
         </table>
@@ -375,6 +379,7 @@ export async function sendReservationConfirmed({
   partySize,
   restaurantAddress,
   dinnerUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   restaurantName: string;
@@ -383,6 +388,7 @@ export async function sendReservationConfirmed({
   partySize: number;
   restaurantAddress: string;
   dinnerUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = RESERVATION_CONFIRMED_TEMPLATE
     .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
@@ -390,7 +396,8 @@ export async function sendReservationConfirmed({
     .replace(/{{DINNER_TIME}}/g, dinnerTime)
     .replace(/{{PARTY_SIZE}}/g, String(partySize))
     .replace(/{{RESTAURANT_ADDRESS}}/g, restaurantAddress)
-    .replace(/{{DINNER_URL}}/g, dinnerUrl);
+    .replace(/{{DINNER_URL}}/g, dinnerUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
 
   return send(to, `You're booked at ${restaurantName} 🎉`, html);
 }
@@ -401,18 +408,21 @@ export async function sendDinnerReminder({
   dinnerTime,
   restaurantAddress,
   dinnerUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   restaurantName: string;
   dinnerTime: string;
   restaurantAddress: string;
   dinnerUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = DINNER_REMINDER_TEMPLATE
     .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
     .replace(/{{DINNER_TIME}}/g, dinnerTime)
     .replace(/{{RESTAURANT_ADDRESS}}/g, restaurantAddress)
-    .replace(/{{DINNER_URL}}/g, dinnerUrl);
+    .replace(/{{DINNER_URL}}/g, dinnerUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
 
   return send(to, `Tonight at ${restaurantName} 🍽️`, html);
 }
@@ -424,6 +434,7 @@ export async function sendVotingOpen({
   dinnerTheme,
   restaurantCount,
   pollUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   clubName: string;
@@ -431,13 +442,15 @@ export async function sendVotingOpen({
   dinnerTheme: string;
   restaurantCount: number;
   pollUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = VOTING_OPEN_TEMPLATE
     .replace(/{{CLUB_NAME}}/g, clubName)
     .replace(/{{DINNER_NAME}}/g, dinnerName)
     .replace(/{{DINNER_THEME}}/g, dinnerTheme)
     .replace(/{{RESTAURANT_COUNT}}/g, String(restaurantCount))
-    .replace(/{{POLL_URL}}/g, pollUrl);
+    .replace(/{{POLL_URL}}/g, pollUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
 
   return send(to, `Vote on where ${clubName} is eating 🗳️`, html);
 }
@@ -448,18 +461,21 @@ export async function sendRatingPrompt({
   dinnerName,
   dinnerDate,
   ratingUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   restaurantName: string;
   dinnerName: string;
   dinnerDate: string;
   ratingUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = RATING_PROMPT_TEMPLATE
     .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
     .replace(/{{DINNER_NAME}}/g, dinnerName)
     .replace(/{{DINNER_DATE}}/g, dinnerDate)
-    .replace(/{{RATING_URL}}/g, ratingUrl);
+    .replace(/{{RATING_URL}}/g, ratingUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
 
   return send(to, `How was ${restaurantName}? Leave a rating ⭐`, html);
 }
@@ -471,6 +487,7 @@ export async function sendOpenSeatPosted({
   dateTime,
   note,
   clubUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   posterName: string;
@@ -478,6 +495,7 @@ export async function sendOpenSeatPosted({
   dateTime: string;
   note: string | null;
   clubUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -500,6 +518,7 @@ export async function sendOpenSeatPosted({
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -515,12 +534,14 @@ export async function sendSeatRequestReceived({
   restaurantName,
   dateTime,
   clubUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   requesterName: string;
   restaurantName: string;
   dateTime: string;
   clubUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -543,6 +564,7 @@ export async function sendSeatRequestReceived({
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -558,12 +580,14 @@ export async function sendSeatRequestResponse({
   restaurantName,
   dateTime,
   clubUrl,
+  unsubscribeUrl,
 }: {
   to: string;
   confirmed: boolean;
   restaurantName: string;
   dateTime: string;
   clubUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -589,6 +613,7 @@ export async function sendSeatRequestResponse({
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -596,6 +621,50 @@ export async function sendSeatRequestResponse({
 </body>
 </html>`;
   return send(to, confirmed ? `Seat confirmed at ${restaurantName} 🎉` : `Seat request at ${restaurantName}`, html);
+}
+
+export async function sendDinnerCancelled({
+  to,
+  clubName,
+  dinnerName,
+  clubUrl,
+  unsubscribeUrl,
+}: {
+  to: string;
+  clubName: string;
+  dinnerName: string;
+  clubUrl: string;
+  unsubscribeUrl?: string;
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dinner Cancelled — DinnerClub</title></head>
+<body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td align="center" style="padding-bottom:40px;">
+          <span style="font-family:Georgia,serif;font-size:30px;font-weight:700;color:#ffffff;letter-spacing:-1px;">dinner<span style="color:#c49a00;">club</span></span>
+        </td></tr>
+        <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
+          <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Cancelled</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Dinner's off.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">The upcoming <strong style="color:#ffffff;">${dinnerName}</strong> dinner for <strong style="color:#ffffff;">${clubName}</strong> has been cancelled. Check the club for updates.</p>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
+            <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">View club →</a>
+          </td></tr></table>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">We'll get another one on the books.</p>
+        </td></tr>
+        <tr><td align="center" style="padding-top:28px;">
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  return send(to, `${dinnerName} dinner cancelled`, html);
 }
 
 export async function sendInviteToClub({

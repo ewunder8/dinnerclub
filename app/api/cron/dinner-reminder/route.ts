@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendDinnerReminder } from "@/lib/email";
+import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
 
 export async function GET(request: Request) {
   // Verify the request is from Vercel Cron
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
       if (!dinner.winning_restaurant_place_id) return;
 
       const [{ data: members }, { data: restaurant }] = await Promise.all([
-        supabase.from("club_members").select("users ( email, email_notifications )").eq("club_id", dinner.club_id),
+        supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", dinner.club_id),
         supabase.from("restaurant_cache").select("name, address").eq("place_id", dinner.winning_restaurant_place_id).single(),
       ]);
 
@@ -47,25 +48,24 @@ export async function GET(request: Request) {
       const dinnerTime = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${dinner.club_id}/dinners/${dinner.id}`;
 
-      type MemberRow = { users: { email: string; email_notifications: Record<string, boolean> | null } };
-      const emails = (members as MemberRow[])
-        .filter((m) => m.users?.email_notifications?.dinner_reminder !== false)
-        .map((m) => m.users?.email)
-        .filter(Boolean) as string[];
+      type MemberRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+      const eligibleMembers = (members as MemberRow[])
+        .filter((m) => m.users?.email_notifications?.dinner_reminder !== false);
 
       await Promise.allSettled(
-        emails.map((to) =>
+        eligibleMembers.map((m) =>
           sendDinnerReminder({
-            to,
+            to: m.users.email,
             restaurantName: restaurant.name,
             dinnerTime,
             restaurantAddress: restaurant.address ?? "",
             dinnerUrl,
+            unsubscribeUrl: generateUnsubscribeUrl(m.users.id, "dinner_reminder"),
           })
         )
       );
 
-      sent += emails.length;
+      sent += eligibleMembers.length;
     })
   );
 

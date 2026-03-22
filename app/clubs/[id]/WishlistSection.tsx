@@ -78,7 +78,7 @@ function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
       rating: selected.rating,
       phone: null, website: null, reservation_url: null,
       reservation_platform: null, photo_urls: null, hours: null,
-      beli_url: null, cached_at: new Date().toISOString(),
+      beli_url: null, types: null, cached_at: new Date().toISOString(),
     });
 
     const { data: { user } } = await supabase.auth.getUser();

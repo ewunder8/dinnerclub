@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { cancelDinner } from "./actions";
+import { toast } from "sonner";
 
 export default function CancelDinnerButton({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
   const [loading, setLoading] = useState(false);
@@ -11,8 +12,12 @@ export default function CancelDinnerButton({ dinnerId, clubId }: { dinnerId: str
   const handleCancel = async () => {
     if (!confirm("Cancel this dinner? This can't be undone.")) return;
     setLoading(true);
-    const supabase = createClient();
-    await supabase.from("dinners").update({ status: "cancelled" }).eq("id", dinnerId);
+    const result = await cancelDinner({ dinnerId, clubId });
+    if (result.error) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push(`/clubs/${clubId}`);
   };
 

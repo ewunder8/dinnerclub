@@ -50,6 +50,7 @@ You use `<a href="...">` extensively (dashboard, club pages). Switch to `next/li
 ### 6. Add Route-Level Loading States
 
 No `loading.tsx` files exist. Add skeletons for key routes:
+
 - `app/dashboard/loading.tsx`
 - `app/clubs/[id]/loading.tsx`
 - `app/clubs/[id]/dinners/[dinnerId]/loading.tsx`
@@ -128,6 +129,7 @@ You have `lib/calendar.ts` for one-off .ics. Consider a per-club or per-user iCa
 ### 21. Add Automated Tests
 
 You have a manual checklist but no unit/integration tests. Start with:
+
 - `lib/poll.ts` (poll state machine)
 - `lib/countdown.ts` (urgency labels)
 - `lib/utils.ts` (isInviteExpired, etc.)
@@ -154,10 +156,49 @@ Validate env vars at startup with `zod` or similar — fail fast with clear erro
 
 ## Priority Summary
 
-| Priority | Item |
-|----------|------|
-| **P0** | Places API auth, regenerate DB types |
-| **P1** | Fix middleware cookie handling, add loading states, use `Link` |
-| **P2** | Toast notifications, segment error boundaries |
-| **P3** | Dietary filters in Discover, notification preferences |
+
+| Priority         | Item                                                                |
+| ---------------- | ------------------------------------------------------------------- |
+| **P0**           | Places API auth, regenerate DB types                                |
+| **P1**           | Fix middleware cookie handling, add loading states, use `Link`      |
+| **P2**           | Toast notifications, segment error boundaries                       |
+| **P3**           | Dietary filters in Discover, notification preferences               |
 | **Nice-to-have** | Recurring dinners, shared photos, wishlist, PWA, push notifications |
+
+
+Core workflow gaps
+
+- Push / in-app notifications — Email is covered but there's no real-time nudge. A badge on the club when there's a new vote, comment, or open seat
+  request would help engagement significantly.
+- Waitlist for open seats — Right now a seat gets one request at a time; if the poster declines, there's no queue. Users who missed out get nothing.
+- Dinner cancellation notifications — If a dinner is cancelled, members currently find out only when they check the app. No email or alert is sent.
+
+  Social & engagement
+
+- Reactions on dinner comments — A quick 👍 or 🔥 on a note without needing to post a full comment.
+- Post-dinner photos — A simple way to attach a photo to the rating, or a shared album for the dinner. Beli handles some of this but it's offsite.
+- **Member activity feed — Right now the club page is static. A lightweight "what happened recently" (who rated, who RSVPed, who suggested) would make
+  clubs feel alive.**
+
+  Restaurant discovery
+
+- Wishlist voting — Members can +1 wishlist items rather than the owner curating the whole list. This feeds naturally into poll suggestions.
+- "We've been here" indicator — When suggesting a restaurant in a poll, flag if the club has already gone there (based on past confirmed dinners).
+- Price / neighborhood filters on the poll — Currently theme is set once at dinner creation; members can't filter the poll options during voting.
+
+  Reliability & trust
+
+- Reservation attempt coordination — The reservation_attempts table exists but it's unclear if it's actively surfaced anywhere. If multiple people are
+   trying to book, they need to see each other's attempts.
+- Dinner frequency tracking — The club settings have a frequency field (weekly, monthly, etc.) but it doesn't do anything. A gentle nudge ("You
+  haven't had a dinner in 6 weeks") could drive re-engagement.
+- Unsubscribe link in emails — Currently users must go to profile settings to manage notifications. Transactional email best practice (and legally
+  expected in many jurisdictions) is a one-click unsubscribe in the footer.
+
+  Polish
+
+- Empty dashboard state — New users with no clubs see a blank page. An onboarding prompt to create or join a club would reduce drop-off.
+- Mobile share sheet for dinner details — The share button works but only for confirmed dinners. Sharing a poll link to recruit voters would be
+  useful.
+- Pagination on the dinners list — Clubs with many dinners have no pagination; the list grows unbounded.
+

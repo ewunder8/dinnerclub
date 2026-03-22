@@ -39,7 +39,7 @@ export default function ProfileForm({ user }: Props) {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailNotifs, setEmailNotifs] = useState<Record<string, boolean>>(
-    user.email_notifications ?? { reservation_confirmed: true, dinner_reminder: true, voting_open: true, rating_prompt: true }
+    user.email_notifications ?? { reservation_confirmed: true, dinner_reminder: true, voting_open: true, rating_prompt: true, open_seat_posted: true, open_seat_update: true, dinner_cancelled: true }
   );
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,6 +236,7 @@ export default function ProfileForm({ user }: Props) {
             { key: "rating_prompt",          label: "Dinner rating prompt",  desc: "When a dinner wraps up and ratings open" },
             { key: "open_seat_posted",       label: "Open seat available",   desc: "When a club member posts a spare seat" },
             { key: "open_seat_update",       label: "Seat request updates",  desc: "Requests on your seat, or replies to yours" },
+            { key: "dinner_cancelled",       label: "Dinner cancelled",      desc: "When an upcoming dinner is cancelled" },
           ].map(({ key, label, desc }) => (
             <button
               key={key}
