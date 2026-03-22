@@ -505,7 +505,7 @@ export default async function DinnerPage({
         .eq("dinner_id", params.dinnerId),
       supabase
         .from("club_members")
-        .select("users ( dietary_restrictions, dietary_public )")
+        .select("user_id, users ( name, email, dietary_restrictions, dietary_public )")
         .eq("club_id", params.id),
     ]);
 
@@ -518,6 +518,14 @@ export default async function DinnerPage({
     }
   }
   const dietaryRestrictions = Array.from(dietarySet);
+
+  // Vote status — who has/hasn't voted
+  const voterIds = new Set((rawVotes ?? []).map((v) => v.user_id));
+  const voteStatus = (memberProfiles ?? []).map((m: any) => ({
+    userId: m.user_id,
+    name: m.users?.name || m.users?.email?.split("@")[0] || "Member",
+    voted: voterIds.has(m.user_id),
+  }));
 
   const opts = rawOptions ?? [];
 
@@ -612,6 +620,29 @@ export default async function DinnerPage({
         {/* Owner controls */}
         {isOwner && (
           <OwnerControls dinnerId={params.dinnerId} clubId={params.id} pollState={pollState} />
+        )}
+
+        {/* Vote status */}
+        {pollState === "voting_open" && voteStatus.length > 0 && (
+          <div className="bg-white border border-black/8 rounded-2xl px-5 py-4">
+            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">
+              Voted · {voterIds.size}/{voteStatus.length}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {voteStatus.map((m) => (
+                <span
+                  key={m.userId}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                    m.voted
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-surface text-ink-muted border-black/10"
+                  }`}
+                >
+                  {m.voted ? "✓" : "○"} {m.name}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Options list */}
