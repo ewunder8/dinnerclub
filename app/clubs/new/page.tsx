@@ -9,7 +9,7 @@ const FOOD_EMOJIS = [
   "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
   "🥗", "🍔", "🍝", "🥟", "🦞", "🍗",
   "🥘", "🍛", "🍲", "🫕", "🥙", "🌯",
-  "🍤", "🥂", "🍷", "🧆", "🥞", "🍖",
+  "🍤", "🥂", "🍷", "🫙", "🥩", "🍖",
 ];
 
 export default function CreateClubPage() {
@@ -70,12 +70,16 @@ export default function CreateClubPage() {
   return (
     <main className="min-h-screen bg-snow">
       {/* Nav */}
-      <nav className="bg-slate px-6 py-4 flex items-center">
-        <div className="flex-1">
-          <button onClick={() => router.back()} className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</button>
-        </div>
-        <h1 className="font-sans text-base font-bold text-white">New club</h1>
-        <div className="flex-1" />
+      <nav className="bg-slate px-8 py-5 flex items-center gap-4">
+        <button
+          onClick={() => router.back()}
+          className="text-white/60 hover:text-white transition-colors text-sm"
+        >
+          ← Back
+        </button>
+        <h1 className="font-sans text-xl font-extrabold text-white">
+          dinner<span className="text-citrus">club</span>
+        </h1>
       </nav>
 
       <div className="max-w-lg mx-auto px-6 py-12">
@@ -168,7 +172,7 @@ export default function CreateClubPage() {
           <button
             type="submit"
             disabled={loading || !name.trim()}
-            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full bg-clay text-white font-bold py-4 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? "Creating…" : "Create club →"}
           </button>
