@@ -68,6 +68,35 @@ export async function searchNearbyRestaurants(
   return data.places || [];
 }
 
+// Autocomplete — fast type-ahead suggestions (name + address only)
+export async function autocompleteRestaurants(input: string) {
+  const response = await fetch(`${PLACES_API_BASE}/places:autocomplete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": process.env.GOOGLE_PLACES_API_KEY!,
+    },
+    body: JSON.stringify({
+      input,
+      includedPrimaryTypes: ["restaurant", "food", "cafe", "bar"],
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message ?? `Places API error ${response.status}`);
+  }
+  return (data.suggestions ?? []) as {
+    placePrediction: {
+      placeId: string;
+      structuredFormat: {
+        mainText: { text: string };
+        secondaryText?: { text: string };
+      };
+    };
+  }[];
+}
+
 // Text search — powers the Discover search bar
 export async function searchRestaurantsByText(
   query: string,

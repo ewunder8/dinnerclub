@@ -488,7 +488,7 @@ export default async function DinnerPage({
   }
 
   // ── Default: poll view ───────────────────────────────────────
-  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }, { data: memberProfiles }] =
+  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }, { data: memberProfiles }, { data: rawWishlist }] =
     await Promise.all([
       supabase
         .from("club_members")
@@ -506,6 +506,10 @@ export default async function DinnerPage({
       supabase
         .from("club_members")
         .select("user_id, users ( name, email, dietary_restrictions, dietary_public )")
+        .eq("club_id", params.id),
+      supabase
+        .from("club_wishlist")
+        .select("place_id")
         .eq("club_id", params.id),
     ]);
 
@@ -528,6 +532,18 @@ export default async function DinnerPage({
   }));
 
   const opts = rawOptions ?? [];
+
+  // Wishlist items not already in the poll
+  const pollPlaceIds = new Set(opts.map((o) => o.place_id));
+  const wishlistPlaceIds = (rawWishlist ?? []).map((w) => w.place_id).filter((id) => !pollPlaceIds.has(id));
+  let wishlistForPoll: { place_id: string; name: string; address: string | null }[] = [];
+  if (wishlistPlaceIds.length > 0) {
+    const { data: wRestaurants } = await supabase
+      .from("restaurant_cache")
+      .select("place_id, name, address")
+      .in("place_id", wishlistPlaceIds);
+    wishlistForPoll = (wRestaurants ?? []).map((r) => ({ place_id: r.place_id, name: r.name, address: r.address }));
+  }
 
   // Group votes by option_id
   const votesByOption: Record<string, Vote[]> = {};
@@ -685,7 +701,7 @@ export default async function DinnerPage({
             <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
               Suggest a restaurant
             </h3>
-            <SuggestRestaurant dinnerId={params.dinnerId} />
+            <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} />
           </section>
         )}
 
