@@ -14,12 +14,11 @@ type WishlistItem = {
 type Props = {
   dinnerId: string;
   wishlist?: WishlistItem[];
-  wishlistOnly?: boolean;
 };
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnly = false }: Props) {
+export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
@@ -61,16 +60,7 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnl
   };
 
   const handleSelectFromWishlist = (item: WishlistItem) => {
-    setSelected({
-      place_id: item.place_id,
-      name: item.name,
-      address: item.address,
-      lat: null,
-      lng: null,
-      price_level: null,
-      rating: null,
-      types: null,
-    });
+    setSelected({ place_id: item.place_id, name: item.name, address: item.address, lat: null, lng: null, price_level: null, rating: null, types: null });
     setQuery(item.name);
     setResults([]);
   };
@@ -116,14 +106,9 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnl
       lng: selected.lng,
       price_level: selected.price_level,
       rating: selected.rating,
-      phone: null,
-      website: null,
-      reservation_url: null,
-      reservation_platform: null,
-      photo_urls: null,
-      hours: null,
-      types: selected.types,
-      beli_url: parsedBeliUrl,
+      phone: null, website: null, reservation_url: null,
+      reservation_platform: null, photo_urls: null, hours: null,
+      types: selected.types, beli_url: parsedBeliUrl,
       cached_at: new Date().toISOString(),
     });
 
@@ -134,11 +119,7 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnl
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Not authenticated.");
-      setSubmitting(false);
-      return;
-    }
+    if (!user) { setError("Not authenticated."); setSubmitting(false); return; }
 
     const { error: optionError } = await supabase.from("poll_options").insert({
       dinner_id: dinnerId,
@@ -168,40 +149,44 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnl
 
       {/* Wishlist quick-add */}
       {wishlist.length > 0 && !selected && (
-        <div className="flex flex-col gap-1">
-          {wishlist.map((item) => (
-            <button
-              key={item.place_id}
-              onClick={() => handleSelectFromWishlist(item)}
-              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-black/8 hover:border-citrus/40 hover:bg-citrus/5 transition-colors text-left"
-            >
-              <div className="min-w-0">
-                <p className="font-semibold text-ink text-sm truncate">{item.name}</p>
-                {item.address && <p className="text-xs text-ink-muted truncate mt-0.5">{item.address.replace(/, USA$/, "")}</p>}
-              </div>
-              <span className="text-xs font-semibold text-citrus-dark shrink-0 ml-3">+ Add</span>
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="flex flex-col gap-1">
+            {wishlist.map((item) => (
+              <button
+                key={item.place_id}
+                onClick={() => handleSelectFromWishlist(item)}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-black/8 hover:border-citrus/40 hover:bg-citrus/5 transition-colors text-left"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-ink text-sm truncate">{item.name}</p>
+                  {item.address && <p className="text-xs text-ink-muted truncate mt-0.5">{item.address.replace(/, USA$/, "")}</p>}
+                </div>
+                <span className="text-xs font-semibold text-citrus-dark shrink-0 ml-3">+ Add</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-black/8" />
+            <span className="text-xs text-ink-faint">or search</span>
+            <div className="flex-1 h-px bg-black/8" />
+          </div>
+        </>
       )}
 
-      {/* Search — hidden in wishlistOnly mode */}
-      {!wishlistOnly && (
+      {/* Search input */}
+      {!selected && (
         <div className="relative">
           <input
             type="text"
             placeholder="Search restaurants…"
             value={query}
-            onChange={(e) => { if (selected) handleClear(); setQuery(e.target.value); }}
+            onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
           />
-          {selected && (
-            <button onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg leading-none">×</button>
-          )}
           {searching && (
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">…</span>
           )}
-          {results.length > 0 && !selected && (
+          {results.length > 0 && (
             <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden">
               {results.map((place) => (
                 <button
@@ -222,15 +207,14 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnl
 
       {/* Selected restaurant */}
       {selected && (
-        <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3">
-          <p className="font-semibold text-ink text-sm">{selected.name}</p>
-          <p className="text-xs text-ink-muted mt-0.5">
-            {[
-              selected.address,
-              selected.price_level ? PRICE_LABELS[selected.price_level] : null,
-              selected.rating ? `★ ${selected.rating}` : null,
-            ].filter(Boolean).join(" · ")}
-          </p>
+        <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-semibold text-ink text-sm">{selected.name}</p>
+            <p className="text-xs text-ink-muted mt-0.5">
+              {[selected.address, selected.price_level ? PRICE_LABELS[selected.price_level] : null, selected.rating ? `★ ${selected.rating}` : null].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <button onClick={handleClear} className="text-ink-muted hover:text-ink text-lg leading-none shrink-0">×</button>
         </div>
       )}
 

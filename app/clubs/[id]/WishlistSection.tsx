@@ -187,7 +187,7 @@ export default function WishlistSection({ clubId, userId, isOwner, items }: Prop
   };
 
   return (
-    <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+    <section className="bg-white border border-black/8 rounded-2xl">
       <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
         <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
           Wishlist · {items.length}
