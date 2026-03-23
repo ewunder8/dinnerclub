@@ -131,7 +131,7 @@ function ExpiredInvite({ clubName }: { clubName?: string }) {
           href="/"
           className="block w-full bg-slate text-white text-center font-bold py-3 rounded-xl hover:bg-slate-light transition-colors"
         >
-          Go to DinnerClub
+          Go to dinnerclub
         </a>
       </div>
     </main>

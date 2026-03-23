@@ -1,12 +1,12 @@
 // ============================================================
-// DinnerClub — Sharing Utilities
+// dinnerclub — Sharing Utilities
 // Invite links + reservation details via Web Share, WhatsApp,
 // iMessage, and clipboard.
 // ============================================================
 
 /** Build invite share text for a club. */
 export function getInviteShareText(clubName: string, inviteUrl: string): string {
-  return `Join ${clubName} on DinnerClub!\n${inviteUrl}`;
+  return `Join ${clubName} on dinnerclub!\n${inviteUrl}`;
 }
 
 /** Build a celebratory reservation summary for sharing. */

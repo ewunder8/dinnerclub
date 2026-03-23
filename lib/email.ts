@@ -1,4 +1,4 @@
-const FROM = "DinnerClub <noreply@dinnerclub.app>";
+const FROM = "dinnerclub <noreply@dinnerclub.app>";
 const API_URL = "https://api.resend.com/emails";
 
 async function send(to: string, subject: string, html: string) {
@@ -26,7 +26,7 @@ const RESERVATION_CONFIRMED_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reservation Confirmed — DinnerClub</title>
+<title>Reservation Confirmed — dinnerclub</title>
 </head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
@@ -87,7 +87,7 @@ const RESERVATION_CONFIRMED_TEMPLATE = `<!DOCTYPE html>
           </tr>
           <tr>
             <td align="center" style="padding-top:28px;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
               <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
@@ -103,7 +103,7 @@ const DINNER_REMINDER_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dinner Tomorrow — DinnerClub</title>
+<title>Dinner Tomorrow — dinnerclub</title>
 </head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
@@ -158,7 +158,7 @@ const DINNER_REMINDER_TEMPLATE = `<!DOCTYPE html>
           </tr>
           <tr>
             <td align="center" style="padding-top:28px;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
               <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
@@ -174,7 +174,7 @@ const VOTING_OPEN_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time to Vote — DinnerClub</title>
+<title>Time to Vote — dinnerclub</title>
 </head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
@@ -229,7 +229,7 @@ const VOTING_OPEN_TEMPLATE = `<!DOCTYPE html>
           </tr>
           <tr>
             <td align="center" style="padding-top:28px;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
               <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
@@ -245,7 +245,7 @@ const RATING_PROMPT_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How was dinner? — DinnerClub</title>
+<title>How was dinner? — dinnerclub</title>
 </head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
@@ -294,7 +294,7 @@ const RATING_PROMPT_TEMPLATE = `<!DOCTYPE html>
           </tr>
           <tr>
             <td align="center" style="padding-top:28px;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
               <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="{{UNSUBSCRIBE_URL}}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
             </td>
           </tr>
@@ -310,7 +310,7 @@ const INVITE_TO_CLUB_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>You're invited — DinnerClub</title>
+<title>You're invited — dinnerclub</title>
 </head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
@@ -326,7 +326,7 @@ const INVITE_TO_CLUB_TEMPLATE = `<!DOCTYPE html>
             <td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
               <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">You're Invited</p>
               <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">{{INVITER_NAME}} wants you at the table.</p>
-              <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">You've been invited to join <strong style="color:#ffffff;">{{CLUB_NAME}}</strong> on DinnerClub — where friend groups stop debating and start eating.</p>
+              <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">You've been invited to join <strong style="color:#ffffff;">{{CLUB_NAME}}</strong> on dinnerclub — where friend groups stop debating and start eating.</p>
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;">
                 <tr>
                   <td style="padding:24px 28px;">
@@ -359,7 +359,7 @@ const INVITE_TO_CLUB_TEMPLATE = `<!DOCTYPE html>
           </tr>
           <tr>
             <td align="center" style="padding-top:28px;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
             </td>
           </tr>
         </table>
@@ -499,7 +499,7 @@ export async function sendOpenSeatPosted({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Open Seat — DinnerClub</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Open Seat — dinnerclub</title></head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
     <tr><td align="center">
@@ -517,7 +517,7 @@ export async function sendOpenSeatPosted({
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">First come, first served.</p>
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
           <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
@@ -545,7 +545,7 @@ export async function sendSeatRequestReceived({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Seat Request — DinnerClub</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Seat Request — dinnerclub</title></head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
     <tr><td align="center">
@@ -563,7 +563,7 @@ export async function sendSeatRequestReceived({
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">Don't leave them hanging.</p>
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
           <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
@@ -591,7 +591,7 @@ export async function sendSeatRequestResponse({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Seat Request — DinnerClub</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Seat Request — dinnerclub</title></head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
     <tr><td align="center">
@@ -612,7 +612,7 @@ export async function sendSeatRequestResponse({
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">${confirmed ? "Don't be late." : "Better luck next time."}</p>
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
           <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
@@ -638,7 +638,7 @@ export async function sendDinnerCancelled({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dinner Cancelled — DinnerClub</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dinner Cancelled — dinnerclub</title></head>
 <body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
     <tr><td align="center">
@@ -656,7 +656,7 @@ export async function sendDinnerCancelled({
           <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">We'll get another one on the books.</p>
         </td></tr>
         <tr><td align="center" style="padding-top:28px;">
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 DinnerClub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
           <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
         </td></tr>
       </table>
@@ -683,5 +683,5 @@ export async function sendInviteToClub({
     .replace(/{{CLUB_NAME}}/g, clubName)
     .replace(/{{INVITE_URL}}/g, inviteUrl);
 
-  return send(to, `${inviterName} invited you to join ${clubName} on DinnerClub`, html);
+  return send(to, `${inviterName} invited you to join ${clubName} on dinnerclub`, html);
 }

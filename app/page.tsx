@@ -32,7 +32,7 @@ export default async function HomePage() {
           Stop debating.<br />Start eating.
         </h2>
         <p className="text-white/60 text-lg md:text-xl max-w-xl leading-relaxed mb-10">
-          DinnerClub makes it effortless to pick a restaurant, book a reservation,
+          dinnerclub makes it effortless to pick a restaurant, book a reservation,
           and actually show up — together.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
@@ -177,7 +177,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/8 py-8 px-6 text-center">
         <p className="text-white/20 text-xs">
-          © {new Date().getFullYear()} DinnerClub. Dinner is better together.
+          © {new Date().getFullYear()} dinnerclub. Dinner is better together.
         </p>
       </footer>
 

@@ -273,7 +273,7 @@ export default async function DashboardPage() {
         {clubs.length === 0 && pendingInvites.length === 0 && (
           <div className="bg-white border border-black/8 rounded-2xl px-6 py-12 text-center">
             <p className="text-5xl mb-5">🍽️</p>
-            <h2 className="font-sans text-2xl font-bold text-ink mb-2">Welcome to DinnerClub</h2>
+            <h2 className="font-sans text-2xl font-bold text-ink mb-2">Welcome to dinnerclub</h2>
             <p className="text-ink-muted text-sm mb-8 max-w-xs mx-auto leading-relaxed">
               Stop debating, start eating. Create a club, invite your crew, and let the group vote on where to go.
             </p>

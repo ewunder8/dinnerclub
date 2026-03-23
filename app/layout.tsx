@@ -5,14 +5,14 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "DinnerClub — Dinner is better together",
+  title: "dinnerclub — Dinner is better together",
   description:
     "Discover restaurants, vote with your crew, and build a real food culture with the people you love eating with.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "DinnerClub",
+    title: "dinnerclub",
   },
 };
 

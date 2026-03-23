@@ -42,7 +42,7 @@ export default async function UnsubscribePage({
           <p className="font-semibold text-ink text-lg mb-2">Invalid link</p>
           <p className="text-sm text-ink-muted">This unsubscribe link is invalid or has expired.</p>
           <Link href="/" className="mt-6 inline-block text-sm font-semibold text-citrus-dark hover:underline">
-            Go to DinnerClub →
+            Go to dinnerclub →
           </Link>
         </div>
       </div>

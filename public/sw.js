@@ -1,4 +1,4 @@
-// DinnerClub Service Worker
+// dinnerclub Service Worker
 // Minimal SW — satisfies PWA installability requirements.
 // The app relies on server-rendered data, so we don't cache pages.
 
