@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import type { AutocompleteResult } from "@/app/api/places/autocomplete/route";
+import type { PlaceSearchResult } from "@/app/api/places/search/route";
 
 type WishlistItem = {
   id: string;
@@ -26,19 +26,11 @@ type Props = {
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-type SelectedPlace = AutocompleteResult & {
-  lat: number | null;
-  lng: number | null;
-  price_level: number | null;
-  rating: number | null;
-};
-
 function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([]);
+  const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<SelectedPlace | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [selected, setSelected] = useState<PlaceSearchResult | null>(null);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,48 +39,26 @@ function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
   useEffect(() => {
     if (selected) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (query.trim().length < 2) { setSuggestions([]); return; }
+    if (query.trim().length < 2) { setResults([]); return; }
 
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(query.trim())}`);
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}`);
         const data = await res.json();
-        setSuggestions(data.suggestions ?? []);
+        setResults(data.places ?? []);
       } catch {
-        setSuggestions([]);
+        setResults([]);
       } finally {
         setSearching(false);
       }
-    }, 200);
+    }, 400);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, selected]);
 
   const handleClear = () => {
-    setSelected(null); setQuery(""); setSuggestions([]); setNote(""); setError(null);
-  };
-
-  const handleSelect = async (suggestion: AutocompleteResult) => {
-    setSuggestions([]);
-    setQuery(suggestion.name);
-    setLoadingDetails(true);
-    try {
-      const res = await fetch(`/api/places/details?id=${encodeURIComponent(suggestion.place_id)}`);
-      const data = await res.json();
-      const place = data.place;
-      setSelected({
-        ...suggestion,
-        lat: place?.lat ?? null,
-        lng: place?.lng ?? null,
-        price_level: place?.price_level ?? null,
-        rating: place?.rating ?? null,
-      });
-    } catch {
-      setSelected({ ...suggestion, lat: null, lng: null, price_level: null, rating: null });
-    } finally {
-      setLoadingDetails(false);
-    }
+    setSelected(null); setQuery(""); setResults([]); setNote(""); setError(null);
   };
 
   const handleSubmit = async () => {
@@ -148,19 +118,21 @@ function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
         {selected && (
           <button onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg leading-none">×</button>
         )}
-        {(searching || loadingDetails) && (
+        {searching && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">…</span>
         )}
-        {suggestions.length > 0 && !selected && (
+        {results.length > 0 && !selected && (
           <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden">
-            {suggestions.map((s) => (
+            {results.map((place) => (
               <button
-                key={s.place_id}
-                onClick={() => handleSelect(s)}
+                key={place.place_id}
+                onClick={() => { setSelected(place); setQuery(place.name); setResults([]); }}
                 className="w-full text-left px-4 py-3 hover:bg-surface transition-colors border-b border-black/5 last:border-0"
               >
-                <p className="font-semibold text-ink text-sm">{s.name}</p>
-                {s.address && <p className="text-xs text-ink-muted truncate mt-0.5">{s.address}</p>}
+                <p className="font-semibold text-ink text-sm">{place.name}</p>
+                <p className="text-xs text-ink-muted truncate mt-0.5">
+                  {[place.address, place.price_level ? PRICE_LABELS[place.price_level] : null, place.rating ? `★ ${place.rating}` : null].filter(Boolean).join(" · ")}
+                </p>
               </button>
             ))}
           </div>

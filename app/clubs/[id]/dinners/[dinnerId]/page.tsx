@@ -695,13 +695,23 @@ export default async function DinnerPage({
           )}
         </section>
 
+        {/* Add from wishlist */}
+        {showSuggest && wishlistForPoll.length > 0 && (
+          <section>
+            <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
+              Add from Wishlist
+            </h3>
+            <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} wishlistOnly />
+          </section>
+        )}
+
         {/* Suggest a restaurant */}
         {showSuggest && (
           <section>
             <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
               Suggest a restaurant
             </h3>
-            <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} />
+            <SuggestRestaurant dinnerId={params.dinnerId} />
           </section>
         )}
 

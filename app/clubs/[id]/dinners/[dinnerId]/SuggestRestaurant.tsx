@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { AutocompleteResult } from "@/app/api/places/autocomplete/route";
+import type { PlaceSearchResult } from "@/app/api/places/search/route";
 
 type WishlistItem = {
   place_id: string;
@@ -14,25 +14,17 @@ type WishlistItem = {
 type Props = {
   dinnerId: string;
   wishlist?: WishlistItem[];
-};
-
-type SelectedPlace = AutocompleteResult & {
-  lat: number | null;
-  lng: number | null;
-  price_level: number | null;
-  rating: number | null;
-  types: string[] | null;
+  wishlistOnly?: boolean;
 };
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
+export default function SuggestRestaurant({ dinnerId, wishlist = [], wishlistOnly = false }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([]);
+  const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<SelectedPlace | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [selected, setSelected] = useState<PlaceSearchResult | null>(null);
   const [note, setNote] = useState("");
   const [beliUrl, setBeliUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -42,53 +34,51 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
   useEffect(() => {
     if (selected) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (query.trim().length < 2) { setSuggestions([]); return; }
+    if (query.trim().length < 2) { setResults([]); return; }
 
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       setError(null);
       try {
-        const res = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(query.trim())}`);
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}`);
         const data = await res.json();
-        setSuggestions(data.suggestions ?? []);
+        setResults(data.places ?? []);
       } catch (e) {
         setError(`Search failed: ${e instanceof Error ? e.message : "unknown error"}`);
-        setSuggestions([]);
+        setResults([]);
       } finally {
         setSearching(false);
       }
-    }, 200);
+    }, 400);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, selected]);
 
-  const handleSelect = async (suggestion: AutocompleteResult) => {
-    setSuggestions([]);
-    setQuery(suggestion.name);
-    setLoadingDetails(true);
-    try {
-      const res = await fetch(`/api/places/details?id=${encodeURIComponent(suggestion.place_id)}`);
-      const data = await res.json();
-      const place = data.place;
-      setSelected({
-        ...suggestion,
-        lat: place?.lat ?? null,
-        lng: place?.lng ?? null,
-        price_level: place?.price_level ?? null,
-        rating: place?.rating ?? null,
-        types: place?.types ?? null,
-      });
-    } catch {
-      setSelected({ ...suggestion, lat: null, lng: null, price_level: null, rating: null, types: null });
-    } finally {
-      setLoadingDetails(false);
-    }
+  const handleSelect = (place: PlaceSearchResult) => {
+    setSelected(place);
+    setQuery(place.name);
+    setResults([]);
+  };
+
+  const handleSelectFromWishlist = (item: WishlistItem) => {
+    setSelected({
+      place_id: item.place_id,
+      name: item.name,
+      address: item.address,
+      lat: null,
+      lng: null,
+      price_level: null,
+      rating: null,
+      types: null,
+    });
+    setQuery(item.name);
+    setResults([]);
   };
 
   const handleClear = () => {
     setSelected(null);
     setQuery("");
-    setSuggestions([]);
+    setResults([]);
     setNote("");
     setBeliUrl("");
     setError(null);
@@ -173,89 +163,64 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
     router.refresh();
   };
 
-  const handleAddFromWishlist = async (item: WishlistItem) => {
-    setSuggestions([]);
-    setQuery(item.name);
-    setLoadingDetails(true);
-    try {
-      const res = await fetch(`/api/places/details?id=${encodeURIComponent(item.place_id)}`);
-      const data = await res.json();
-      const place = data.place;
-      setSelected({
-        place_id: item.place_id,
-        name: item.name,
-        address: item.address ?? "",
-        lat: place?.lat ?? null,
-        lng: place?.lng ?? null,
-        price_level: place?.price_level ?? null,
-        rating: place?.rating ?? null,
-        types: place?.types ?? null,
-      });
-    } catch {
-      setSelected({ place_id: item.place_id, name: item.name, address: item.address ?? "", lat: null, lng: null, price_level: null, rating: null, types: null });
-    } finally {
-      setLoadingDetails(false);
-    }
-  };
-
   return (
     <div className="bg-white border border-black/8 rounded-2xl p-5 flex flex-col gap-4">
+
+      {/* Wishlist quick-add */}
       {wishlist.length > 0 && !selected && (
-        <div>
-          <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-2">From wishlist</p>
-          <div className="flex flex-col gap-1">
-            {wishlist.map((item) => (
-              <button
-                key={item.place_id}
-                onClick={() => handleAddFromWishlist(item)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-black/8 hover:border-citrus/40 hover:bg-citrus/5 transition-colors text-left"
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold text-ink text-sm truncate">{item.name}</p>
-                  {item.address && <p className="text-xs text-ink-muted truncate mt-0.5">{item.address.replace(/, USA$/, "")}</p>}
-                </div>
-                <span className="text-xs font-semibold text-citrus-dark shrink-0 ml-3">+ Add</span>
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 mt-3 mb-1">
-            <div className="flex-1 h-px bg-black/8" />
-            <span className="text-xs text-ink-faint">or search</span>
-            <div className="flex-1 h-px bg-black/8" />
-          </div>
+        <div className="flex flex-col gap-1">
+          {wishlist.map((item) => (
+            <button
+              key={item.place_id}
+              onClick={() => handleSelectFromWishlist(item)}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-black/8 hover:border-citrus/40 hover:bg-citrus/5 transition-colors text-left"
+            >
+              <div className="min-w-0">
+                <p className="font-semibold text-ink text-sm truncate">{item.name}</p>
+                {item.address && <p className="text-xs text-ink-muted truncate mt-0.5">{item.address.replace(/, USA$/, "")}</p>}
+              </div>
+              <span className="text-xs font-semibold text-citrus-dark shrink-0 ml-3">+ Add</span>
+            </button>
+          ))}
         </div>
       )}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search restaurants…"
-          value={query}
-          onChange={(e) => { if (selected) handleClear(); setQuery(e.target.value); }}
-          className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
-        />
-        {selected && (
-          <button onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg leading-none">×</button>
-        )}
-        {(searching || loadingDetails) && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">…</span>
-        )}
 
-        {suggestions.length > 0 && !selected && (
-          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden">
-            {suggestions.map((s) => (
-              <button
-                key={s.place_id}
-                onClick={() => handleSelect(s)}
-                className="w-full text-left px-4 py-3 hover:bg-surface transition-colors border-b border-black/5 last:border-0"
-              >
-                <p className="font-semibold text-ink text-sm">{s.name}</p>
-                {s.address && <p className="text-xs text-ink-muted truncate mt-0.5">{s.address}</p>}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Search — hidden in wishlistOnly mode */}
+      {!wishlistOnly && (
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search restaurants…"
+            value={query}
+            onChange={(e) => { if (selected) handleClear(); setQuery(e.target.value); }}
+            className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+          />
+          {selected && (
+            <button onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg leading-none">×</button>
+          )}
+          {searching && (
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">…</span>
+          )}
+          {results.length > 0 && !selected && (
+            <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden">
+              {results.map((place) => (
+                <button
+                  key={place.place_id}
+                  onClick={() => handleSelect(place)}
+                  className="w-full text-left px-4 py-3 hover:bg-surface transition-colors border-b border-black/5 last:border-0"
+                >
+                  <p className="font-semibold text-ink text-sm">{place.name}</p>
+                  <p className="text-xs text-ink-muted truncate mt-0.5">
+                    {[place.address, place.price_level ? PRICE_LABELS[place.price_level] : null, place.rating ? `★ ${place.rating}` : null].filter(Boolean).join(" · ")}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
+      {/* Selected restaurant */}
       {selected && (
         <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3">
           <p className="font-semibold text-ink text-sm">{selected.name}</p>
@@ -282,11 +247,9 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
 
       {selected && (
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-ink">
-              Beli link <span className="text-ink-muted font-normal">(optional)</span>
-            </label>
-          </div>
+          <label className="text-xs font-semibold text-ink">
+            Beli link <span className="text-ink-muted font-normal">(optional)</span>
+          </label>
           <input
             type="url"
             placeholder="https://beliapp.co/…"
