@@ -120,7 +120,7 @@ export default async function DashboardPage() {
 
         {/* ── Pending invitations ── */}
         {pendingInvites.length > 0 && (
-          <section className="bg-white border border-slate/20 rounded-2xl overflow-hidden">
+          <section className="bg-white border border-slate/20 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-black/5">
               <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invitations</h2>
             </div>
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
 
         {/* ── Rate your dinner ── */}
         {unratedDinners.length > 0 && (
-          <section className="bg-citrus/8 border border-citrus/20 rounded-2xl overflow-hidden">
+          <section className="bg-citrus/8 border border-citrus/20 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-citrus/15">
               <h2 className="text-xs font-bold text-citrus-dark uppercase tracking-widest">Rate your dinner</h2>
             </div>
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
 
         {/* ── Upcoming reservations ── */}
         {upcoming.length > 0 && (
-          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-black/5">
               <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Upcoming</h2>
             </div>
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
 
         {/* ── Open polls ── */}
         {polls.length > 0 && (
-          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-black/5">
               <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Polls</h2>
             </div>
@@ -292,7 +292,7 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Your clubs ── */}
-        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
             <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Your clubs</h2>
             <Link href="/clubs/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
