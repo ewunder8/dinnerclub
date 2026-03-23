@@ -58,31 +58,37 @@ export default async function HomePage() {
           <p className="text-center text-white/40 text-xs uppercase tracking-widest font-semibold mb-12">
             How it works
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {[
               {
                 step: "01",
-                emoji: "🗳️",
-                title: "Vote",
-                desc: "Members suggest restaurants and vote on their favorite. The group decides together.",
+                emoji: "❤️",
+                title: "Wishlist",
+                desc: "Save restaurants your group has been eyeing. Pull from the list when it's time to vote.",
               },
               {
                 step: "02",
-                emoji: "📞",
-                title: "Reserve",
-                desc: "First person to book a table wins. Resy, OpenTable, Tock — any platform works.",
+                emoji: "🗳️",
+                title: "Vote",
+                desc: "Open a poll, set a theme, and let the crew suggest. See who's voted in real time.",
               },
               {
                 step: "03",
-                emoji: "🍽️",
-                title: "Show up",
-                desc: "RSVP, add it to your calendar, and get the group there on time.",
+                emoji: "📅",
+                title: "Find a time",
+                desc: "Run an availability poll so everyone marks when they're free before committing.",
               },
               {
                 step: "04",
+                emoji: "🍽️",
+                title: "Show up",
+                desc: "RSVP, sync to your calendar, or pass your seat to another member if plans change.",
+              },
+              {
+                step: "05",
                 emoji: "⭐",
                 title: "Rate",
-                desc: "After dinner, everyone rates the meal. Your group builds a real taste profile over time.",
+                desc: "After dinner, everyone rates the meal. Your club builds a real food history over time.",
               },
             ].map(({ step, emoji, title, desc }) => (
               <div key={step} className="flex flex-col gap-3">
@@ -109,32 +115,32 @@ export default async function HomePage() {
               {
                 emoji: "🔒",
                 title: "Invite-only clubs",
-                desc: "Private by default. Share a link to let friends in — it expires in 7 days.",
+                desc: "Private by default. Share a link to let friends in — no account required to join.",
+              },
+              {
+                emoji: "❤️",
+                title: "Club wishlist",
+                desc: "Members save restaurants they want to try. Pull from the wishlist when it's time to vote.",
               },
               {
                 emoji: "🎯",
-                title: "Theme your poll",
+                title: "Themed polls",
                 desc: "Set a cuisine, price range, vibe, or neighborhood before the crew starts suggesting.",
               },
               {
                 emoji: "📅",
-                title: "Sync to calendar",
-                desc: "One tap to add confirmed dinners to Google Calendar, Apple Calendar, or Outlook.",
+                title: "Availability polls",
+                desc: "Find a date that actually works. Members mark when they're free before dinner is planned.",
               },
               {
-                emoji: "🏆",
+                emoji: "🪑",
+                title: "Open seats",
+                desc: "Can't make it? Post your reservation spot so another member can take your place.",
+              },
+              {
+                emoji: "⭐",
                 title: "Track your taste",
-                desc: "Post-dinner ratings build a history of where your group has eaten and loved.",
-              },
-              {
-                emoji: "⚡",
-                title: "First to confirm wins",
-                desc: "Anyone can try to get the reservation. The first one to book it gets the credit.",
-              },
-              {
-                emoji: "📍",
-                title: "Powered by Google Places",
-                desc: "Restaurant data is pulled live — ratings, prices, and addresses always up to date.",
+                desc: "Post-dinner ratings build a shared history of where your group has eaten and loved.",
               },
             ].map(({ emoji, title, desc }) => (
               <div
