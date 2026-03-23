@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCountdown } from "@/lib/countdown";
 import { isInviteExpired } from "@/lib/utils";
 import NavUser from "@/components/NavUser";
+import InstallBanner from "@/components/InstallBanner";
 import AcceptInviteButton from "./AcceptInviteButton";
 import Link from "next/link";
 
@@ -115,6 +116,7 @@ export default async function DashboardPage() {
         </h1>
         <NavUser name={profile.name} email={user.email} avatarUrl={profile.avatar_url} />
       </nav>
+      <InstallBanner />
 
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
 
