@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import NavUser from "@/components/NavUser";
 import { scoreToStars, wouldReturnPct } from "@/lib/countdown";
 import type { DinnerRatingSummary, RestaurantCache } from "@/lib/supabase/database.types";
+import EditorialFeed from "@/components/EditorialFeed";
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
@@ -43,12 +44,15 @@ export default async function DiscoverPage() {
     return (
       <main className="min-h-screen bg-snow">
         <Nav name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
-        <div className="max-w-2xl mx-auto px-6 py-20 text-center">
-          <p className="text-4xl mb-4">🍽️</p>
-          <p className="font-semibold text-ink mb-2">No past dinners yet</p>
-          <p className="text-ink-muted text-sm">
-            Once your club completes a dinner and rates it, you&apos;ll see it here.
-          </p>
+        <div className="max-w-2xl mx-auto px-6 py-10">
+          <div className="text-center py-10">
+            <p className="text-4xl mb-4">🍽️</p>
+            <p className="font-semibold text-ink mb-2">No past dinners yet</p>
+            <p className="text-ink-muted text-sm">
+              Once your club completes a dinner and rates it, you&apos;ll see it here.
+            </p>
+          </div>
+          <EditorialFeed />
         </div>
       </main>
     );
@@ -91,7 +95,7 @@ export default async function DiscoverPage() {
           </span>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mb-4">
           {pastDinners.map((dinner) => {
             const restaurant = restaurantMap[dinner.winning_restaurant_place_id!];
             const summary = summaryMap[dinner.id];
@@ -227,6 +231,8 @@ export default async function DiscoverPage() {
             );
           })}
         </div>
+
+        <EditorialFeed />
       </div>
     </main>
   );
