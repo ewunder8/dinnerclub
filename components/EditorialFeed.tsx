@@ -50,9 +50,12 @@ function SkeletonCard() {
   );
 }
 
+const PAGE_SIZE = 10;
+
 export default function EditorialFeed() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
     fetch("/api/editorial")
@@ -63,6 +66,9 @@ export default function EditorialFeed() {
       })
       .catch(() => setStatus("error"));
   }, []);
+
+  const shown = articles.slice(0, visible);
+  const hasMore = visible < articles.length;
 
   return (
     <section className="mt-10">
@@ -96,52 +102,63 @@ export default function EditorialFeed() {
       )}
 
       {status === "done" && articles.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {articles.map((article, i) => {
-            const meta = SOURCE_META[article.source];
-            return (
-              <a
-                key={i}
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white border border-black/8 rounded-2xl p-4 hover:border-black/20 hover:shadow-sm transition-all block"
-              >
-                <div className="flex gap-3 items-start">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${meta.badgeClass}`}
-                      >
-                        {meta.label}
-                      </span>
-                      <span className="text-[11px] text-ink-faint">
-                        {formatRelativeDate(article.publishedAt)}
-                      </span>
-                    </div>
-                    <p className="font-sans text-sm font-bold text-ink leading-snug mb-1 line-clamp-2">
-                      {article.title}
-                    </p>
-                    {article.excerpt && (
-                      <p className="font-body text-xs text-ink-muted line-clamp-2 leading-relaxed">
-                        {article.excerpt}
+        <>
+          <div className="flex flex-col gap-3">
+            {shown.map((article, i) => {
+              const meta = SOURCE_META[article.source];
+              return (
+                <a
+                  key={i}
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white border border-black/8 rounded-2xl p-4 hover:border-black/20 hover:shadow-sm transition-all block"
+                >
+                  <div className="flex gap-3 items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${meta.badgeClass}`}
+                        >
+                          {meta.label}
+                        </span>
+                        <span className="text-[11px] text-ink-faint">
+                          {formatRelativeDate(article.publishedAt)}
+                        </span>
+                      </div>
+                      <p className="font-sans text-sm font-bold text-ink leading-snug mb-1 line-clamp-2">
+                        {article.title}
                       </p>
+                      {article.excerpt && (
+                        <p className="font-body text-xs text-ink-muted line-clamp-2 leading-relaxed">
+                          {article.excerpt}
+                        </p>
+                      )}
+                    </div>
+
+                    {article.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={article.imageUrl}
+                        alt=""
+                        className="w-20 h-20 object-cover rounded-xl shrink-0 bg-black/5"
+                      />
                     )}
                   </div>
+                </a>
+              );
+            })}
+          </div>
 
-                  {article.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={article.imageUrl}
-                      alt=""
-                      className="w-20 h-20 object-cover rounded-xl shrink-0 bg-black/5"
-                    />
-                  )}
-                </div>
-              </a>
-            );
-          })}
-        </div>
+          {hasMore && (
+            <button
+              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+              className="mt-4 w-full py-3 rounded-2xl border border-black/8 bg-white text-sm font-semibold text-ink-muted hover:border-black/20 hover:text-ink transition-all"
+            >
+              Load more
+            </button>
+          )}
+        </>
       )}
     </section>
   );
