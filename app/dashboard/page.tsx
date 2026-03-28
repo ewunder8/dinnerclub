@@ -18,14 +18,14 @@ export default async function DashboardPage() {
     supabase.from("users").select("name, avatar_url").eq("id", user.id).maybeSingle(),
     supabase
       .from("club_members")
-      .select("club_id, role, clubs ( id, name, emoji, city )")
+      .select("club_id, role, clubs ( id, name, emoji, city, frequency )")
       .eq("user_id", user.id),
   ]);
 
   if (!profile) redirect("/onboarding");
 
   const clubs = (memberships ?? []).map((m) => m.clubs as {
-    id: string; name: string; emoji: string | null; city: string | null;
+    id: string; name: string; emoji: string | null; city: string | null; frequency: string | null;
   });
 
   const memberClubIds = new Set(clubs.map((c) => c.id));
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
   const now = new Date().toISOString();
   const nowDate = new Date();
 
-  const [{ data: rawDinners }, { data: rawCompletedDinners }] = await Promise.all([
+  const [{ data: rawDinners }, { data: rawCompletedDinners }, { data: rawRecentCompleted }] = await Promise.all([
     clubIds.length > 0
       ? supabase
           .from("dinners")
@@ -67,6 +67,14 @@ export default async function DashboardPage() {
           .eq("status", "completed")
           .not("ratings_open_until", "is", null)
           .gt("ratings_open_until", now)
+      : Promise.resolve({ data: [] }),
+    clubIds.length > 0
+      ? supabase
+          .from("dinners")
+          .select("club_id, created_at")
+          .in("club_id", clubIds)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -107,6 +115,59 @@ export default async function DashboardPage() {
   const polls = dinners.filter(
     (d) => d.status === "polling" || d.status === "seeking_reservation" || d.status === "waitlisted"
   );
+
+  // Reservation attempt counts for seeking/waitlisted dinners
+  const seekingIds = polls
+    .filter((d) => d.status === "seeking_reservation" || d.status === "waitlisted")
+    .map((d) => d.id);
+  const { data: rawAttempts } = seekingIds.length > 0
+    ? await supabase
+        .from("reservation_attempts")
+        .select("dinner_id, status")
+        .in("dinner_id", seekingIds)
+        .in("status", ["attempting", "succeeded"])
+    : { data: [] as { dinner_id: string; status: string }[] };
+
+  const attemptsMap: Record<string, { attempting: number; succeeded: boolean }> = {};
+  for (const a of rawAttempts ?? []) {
+    if (!attemptsMap[a.dinner_id]) attemptsMap[a.dinner_id] = { attempting: 0, succeeded: false };
+    if (a.status === "attempting") attemptsMap[a.dinner_id].attempting++;
+    if (a.status === "succeeded") attemptsMap[a.dinner_id].succeeded = true;
+  }
+
+  // Most recent completed dinner per club (for frequency nudge)
+  const lastDinnerMap: Record<string, Date> = {};
+  for (const d of rawRecentCompleted ?? []) {
+    if (!lastDinnerMap[d.club_id]) lastDinnerMap[d.club_id] = new Date(d.created_at);
+  }
+
+  function frequencyToDays(f: string): number | null {
+    const s = f.toLowerCase();
+    if ((s.includes("bi") || s.includes("every two") || s.includes("every 2")) && s.includes("week")) return 14;
+    if (s.includes("week")) return 7;
+    if (s.includes("month")) return 30;
+    if (s.includes("quarter")) return 90;
+    return null;
+  }
+
+  function formatDaysSince(days: number): string {
+    if (days < 14) return `${days}d ago`;
+    if (days < 60) return `${Math.round(days / 7)}wk ago`;
+    return `${Math.round(days / 30)}mo ago`;
+  }
+
+  const activeClubIds = new Set([...polls, ...upcoming].map((d) => d.club_id));
+  const overdueMap: Record<string, number> = {};
+  for (const club of clubs) {
+    if (!club.frequency) continue;
+    const days = frequencyToDays(club.frequency);
+    if (!days) continue;
+    if (activeClubIds.has(club.id)) continue;
+    const lastDinner = lastDinnerMap[club.id];
+    if (!lastDinner) continue;
+    const daysSince = Math.floor((nowDate.getTime() - lastDinner.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince > days) overdueMap[club.id] = daysSince;
+  }
 
   return (
     <main className="min-h-screen bg-snow">
@@ -227,6 +288,12 @@ export default async function DashboardPage() {
                 const themeLabel = [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
                 const dinnerLabel = restaurantName ?? (themeLabel || "Dinner poll");
                 const votingOpen = dinner.status === "polling" && dinner.voting_open;
+                const attempts = attemptsMap[dinner.id];
+                const seekingLabel = attempts?.succeeded
+                  ? "Table booked ✓"
+                  : attempts?.attempting
+                  ? `${attempts.attempting} trying`
+                  : dinner.status === "waitlisted" ? "Waitlisted" : "Finding a table";
                 return (
                   <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
@@ -239,9 +306,15 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full shrink-0 ${
-                      votingOpen ? "text-citrus-dark bg-citrus/10" : "text-ink-muted bg-black/5"
+                      votingOpen
+                        ? "text-citrus-dark bg-citrus/10"
+                        : attempts?.succeeded
+                        ? "text-green-700 bg-green-100"
+                        : attempts?.attempting
+                        ? "text-slate bg-slate/10"
+                        : "text-ink-muted bg-black/5"
                     }`}>
-                      {votingOpen ? "Vote now!" : dinner.status === "seeking_reservation" ? "Finding a table" : dinner.status === "waitlisted" ? "Waitlisted" : "Taking suggestions"}
+                      {votingOpen ? "Vote now!" : seekingLabel}
                     </span>
                   </Link>
                 );
@@ -319,7 +392,13 @@ export default async function DashboardPage() {
                   <span className="text-2xl">{club.emoji ?? "🍽️"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-ink">{club.name}</p>
-                    {club.city && <p className="text-xs text-ink-muted mt-0.5">{club.city}</p>}
+                    {overdueMap[club.id] ? (
+                      <p className="text-xs text-amber-600 mt-0.5">
+                        Last dinner {formatDaysSince(overdueMap[club.id])} · {club.frequency}
+                      </p>
+                    ) : club.city ? (
+                      <p className="text-xs text-ink-muted mt-0.5">{club.city}</p>
+                    ) : null}
                   </div>
                   <span className="text-ink-faint text-sm">→</span>
                 </Link>
