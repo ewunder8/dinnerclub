@@ -175,6 +175,18 @@ export async function respondToSeatRequest({
 
   if (updateError) return { error: "Failed to update request." };
 
+  // When confirming, close the listing so it no longer appears as open
+  if (newStatus === "confirmed") {
+    const { data: req } = await supabase
+      .from("open_seat_requests")
+      .select("open_seat_id")
+      .eq("id", requestId)
+      .single();
+    if (req) {
+      await supabase.from("open_seats").update({ status: "closed" }).eq("id", req.open_seat_id);
+    }
+  }
+
   // Notify requester (fire-and-forget)
   sendRequestResponseNotification({ requestId, confirmed: newStatus === "confirmed" });
 

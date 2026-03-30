@@ -13,20 +13,27 @@ type Dinner = {
   created_at: string;
 };
 
+type ConfirmedSeat = {
+  id: string;
+  restaurantName: string;
+  reservationDatetime: string;
+};
+
 type Props = {
   dinners: Dinner[];
   clubId: string;
   restaurantNameMap: Record<string, string>;
+  confirmedSeats?: ConfirmedSeat[];
 };
 
 const PAGE_SIZE = 5;
 
-export default function DinnersList({ dinners, clubId, restaurantNameMap }: Props) {
+export default function DinnersList({ dinners, clubId, restaurantNameMap, confirmedSeats = [] }: Props) {
   const [showing, setShowing] = useState(PAGE_SIZE);
   const visible = dinners.slice(0, showing);
   const remaining = dinners.length - showing;
 
-  if (dinners.length === 0) {
+  if (dinners.length === 0 && confirmedSeats.length === 0) {
     return (
       <div className="p-12 text-center">
         <p className="text-4xl mb-4">🍽️</p>
@@ -46,6 +53,25 @@ export default function DinnersList({ dinners, clubId, restaurantNameMap }: Prop
 
   return (
     <div className="divide-y divide-black/5">
+      {/* Confirmed open seats shown at the top */}
+      {confirmedSeats.map((seat) => (
+        <div key={seat.id} className="flex items-center justify-between px-5 py-4">
+          <div>
+            <p className="font-semibold text-ink text-sm">{seat.restaurantName}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs bg-citrus/15 text-citrus-dark font-semibold px-2 py-0.5 rounded-full">Open seat</span>
+              <p className="text-xs text-ink-muted">
+                {new Date(seat.reservationDatetime).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+          <span className="text-ink-muted text-sm">→</span>
+        </div>
+      ))}
+
       {visible.map((dinner) => {
         const restaurantName = dinner.winning_restaurant_place_id
           ? restaurantNameMap[dinner.winning_restaurant_place_id]

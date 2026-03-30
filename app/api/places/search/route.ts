@@ -27,14 +27,16 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ places: [], error: "Unauthorized" }, { status: 401 });
 
   const q = req.nextUrl.searchParams.get("q") ?? "";
+  const city = req.nextUrl.searchParams.get("city") ?? "";
 
   if (q.trim().length < 2) {
     return NextResponse.json({ places: [] });
   }
 
   try {
+    const searchQuery = city ? `${q.trim()} in ${city}` : q.trim();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any[] = await searchRestaurantsByText(q.trim());
+    const raw: any[] = await searchRestaurantsByText(searchQuery);
 
     const places: PlaceSearchResult[] = raw.map((p) => ({
       place_id:    p.id,

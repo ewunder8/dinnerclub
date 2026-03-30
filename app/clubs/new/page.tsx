@@ -83,7 +83,7 @@ export default function CreateClubPage() {
       </nav>
 
       <div className="max-w-lg mx-auto px-6 py-12">
-        <h2 className="font-sans text-3xl font-bold mb-2">Create a club</h2>
+        <h2 className="font-sans text-3xl font-bold text-ink mb-2">Create a club</h2>
         <p className="text-ink-muted text-sm mb-10">
           Give your dinner crew a name and a vibe.
         </p>
@@ -172,7 +172,7 @@ export default function CreateClubPage() {
           <button
             type="submit"
             disabled={loading || !name.trim()}
-            className="w-full bg-clay text-white font-bold py-4 rounded-xl hover:bg-clay-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? "Creating…" : "Create club →"}
           </button>

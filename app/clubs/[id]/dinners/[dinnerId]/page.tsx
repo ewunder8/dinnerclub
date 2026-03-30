@@ -24,6 +24,7 @@ import MarkCompletedButton from "./MarkCompletedButton";
 import DinnerComments from "./DinnerComments";
 import type { DinnerComment } from "./DinnerComments";
 import SharePollButton from "./SharePollButton";
+import RefreshButton from "./RefreshButton";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -694,9 +695,12 @@ export default async function DinnerPage({
         {/* Suggest a restaurant */}
         {showSuggest && (
           <section>
-            <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
-              Suggest a restaurant
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide">
+                Suggest a restaurant
+              </h3>
+              <RefreshButton />
+            </div>
             <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} />
           </section>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ type Request = {
   user_id: string;
   status: "pending" | "confirmed" | "declined";
   user_name: string;
+  created_at: string;
 };
 
 type OpenSeat = {
@@ -31,7 +32,14 @@ type OpenSeat = {
 type Props = {
   clubId: string;
   userId: string;
+  clubCity: string | null;
   openSeats: OpenSeat[];
+};
+
+type SearchResult = {
+  place_id: string;
+  name: string;
+  address: string | null;
 };
 
 function formatDateTime(iso: string) {
@@ -43,14 +51,76 @@ function formatDateTime(iso: string) {
   }) + " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-function PostForm({ clubId, onPosted }: { clubId: string; onPosted: () => void }) {
+function timeAgo(ts: string): string {
+  const secs = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function buildGcalUrl(restaurantName: string, reservationDatetime: string): string {
+  const start = new Date(reservationDatetime);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const fmt = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const url = new URL("https://calendar.google.com/calendar/render");
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("text", `Dinner at ${restaurantName}`);
+  url.searchParams.set("dates", `${fmt(start)}/${fmt(end)}`);
+  url.searchParams.set("details", `DinnerClub open seat at ${restaurantName}`);
+  return url.toString();
+}
+
+function PostForm({ clubId, clubCity, onPosted }: { clubId: string; clubCity: string | null; onPosted: () => void }) {
   const [restaurantName, setRestaurantName] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<SearchResult | null>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (selectedPlace) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (restaurantName.trim().length < 2) { setSearchResults([]); return; }
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const cityParam = clubCity ? `&city=${encodeURIComponent(clubCity)}` : "";
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(restaurantName.trim())}${cityParam}`);
+        const data = await res.json();
+        setSearchResults(data.places ?? []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [restaurantName, selectedPlace, clubCity]);
+
+  const handleSelectPlace = (place: SearchResult) => {
+    setSelectedPlace(place);
+    setRestaurantName(place.name);
+    setSearchResults([]);
+  };
+
+  const handleClearPlace = () => {
+    setSelectedPlace(null);
+    setRestaurantName("");
+    setSearchResults([]);
+  };
 
   const handleSubmit = async () => {
     if (!restaurantName.trim() || !date || !time) {
@@ -76,19 +146,54 @@ function PostForm({ clubId, onPosted }: { clubId: string; onPosted: () => void }
     }
 
     toast.success("Open seat posted!");
-    setRestaurantName(""); setDate(""); setTime(""); setSeats(1); setNote("");
+    setRestaurantName(""); setSelectedPlace(null); setDate(""); setTime(""); setSeats(1); setNote("");
     onPosted();
   };
 
   return (
     <div className="flex flex-col gap-3 pt-4 border-t border-black/5">
-      <input
-        type="text"
-        placeholder="Restaurant name"
-        value={restaurantName}
-        onChange={(e) => setRestaurantName(e.target.value)}
-        className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
-      />
+      {/* Restaurant search */}
+      <div className="relative">
+        {selectedPlace ? (
+          <div className="flex items-center justify-between bg-surface border border-slate/20 rounded-xl px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink truncate">{selectedPlace.name}</p>
+              {selectedPlace.address && (
+                <p className="text-xs text-ink-muted truncate">{selectedPlace.address.replace(/, USA$/, "")}</p>
+              )}
+            </div>
+            <button onClick={handleClearPlace} className="text-ink-muted hover:text-ink text-lg leading-none shrink-0 ml-3">×</button>
+          </div>
+        ) : (
+          <input
+            type="text"
+            placeholder="e.g. Galit, Nobu, any restaurant name"
+            value={restaurantName}
+            onChange={(e) => setRestaurantName(e.target.value)}
+            className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
+          />
+        )}
+        {searching && (
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">…</span>
+        )}
+        {searchResults.length > 0 && (
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden">
+            {searchResults.map((place) => (
+              <button
+                key={place.place_id}
+                onClick={() => handleSelectPlace(place)}
+                className="w-full text-left px-4 py-3 hover:bg-surface transition-colors border-b border-black/5 last:border-0"
+              >
+                <p className="font-semibold text-ink text-sm">{place.name}</p>
+                {place.address && (
+                  <p className="text-xs text-ink-muted truncate mt-0.5">{place.address.replace(/, USA$/, "")}</p>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2">
         <input
           type="date"
@@ -183,7 +288,10 @@ function SeatCard({ seat, userId }: { seat: OpenSeat; userId: string }) {
   };
 
   const confirmedCount = seat.requests.filter((r) => r.status === "confirmed").length;
-  const pendingRequests = seat.requests.filter((r) => r.status === "pending");
+  // Sort pending requests by created_at ascending (first come, first served)
+  const pendingRequests = seat.requests
+    .filter((r) => r.status === "pending")
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
     <div className="px-5 py-4 flex flex-col gap-2">
@@ -226,17 +334,42 @@ function SeatCard({ seat, userId }: { seat: OpenSeat; userId: string }) {
             </button>
           )
         )}
-        {seat.status === "closed" && (
+        {seat.status === "closed" && !myRequest && (
           <span className="text-xs text-ink-faint shrink-0 mt-0.5">Closed</span>
         )}
       </div>
 
-      {/* Poster sees pending requests */}
+      {/* Confirmed member: calendar link */}
+      {myRequest?.status === "confirmed" && (
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-xs font-semibold text-green-600">You&apos;re confirmed!</span>
+          <a
+            href={buildGcalUrl(seat.restaurant_name, seat.reservation_datetime)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-ink-muted hover:text-ink transition-colors"
+          >
+            + Add to calendar
+          </a>
+        </div>
+      )}
+
+      {/* Declined member: maybe next time */}
+      {myRequest?.status === "declined" && (
+        <p className="text-xs text-ink-faint italic mt-0.5">
+          Your request wasn&apos;t confirmed this time — maybe next time!
+        </p>
+      )}
+
+      {/* Poster sees pending requests with timestamps, first-come order */}
       {isOwner && pendingRequests.length > 0 && (
-        <div className="flex flex-col gap-1.5 mt-1 pl-0">
+        <div className="flex flex-col gap-1.5 mt-1">
           {pendingRequests.map((req) => (
             <div key={req.id} className="flex items-center justify-between bg-surface rounded-xl px-3 py-2">
-              <p className="text-xs font-semibold text-ink">{req.user_name}</p>
+              <div>
+                <p className="text-xs font-semibold text-ink">{req.user_name}</p>
+                <p className="text-xs text-ink-faint">{timeAgo(req.created_at)}</p>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleRespondRequest(req.id, "confirmed")}
@@ -270,7 +403,7 @@ function SeatCard({ seat, userId }: { seat: OpenSeat; userId: string }) {
   );
 }
 
-export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
+export default function OpenSeatsSection({ clubId, userId, clubCity, openSeats }: Props) {
   const router = useRouter();
   const [showPost, setShowPost] = useState(false);
 
@@ -285,11 +418,11 @@ export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
           <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
             Open Seats{activeSeats.length > 0 ? ` · ${activeSeats.length}` : ""}
           </h3>
-          <p className="text-xs text-ink-faint mt-0.5">Spare reservations members can request</p>
+          <p className="text-xs text-ink-faint mt-0.5">Have a reservation with room to spare? Post it here and let a clubmate join you.</p>
         </div>
         <button
           onClick={() => setShowPost((v) => !v)}
-          className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
+          className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors shrink-0 ml-4"
         >
           {showPost ? "Cancel" : "+ Post seat"}
         </button>
@@ -299,8 +432,8 @@ export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
         <div className="px-5 py-10 text-center">
           <p className="text-3xl mb-3">🪑</p>
           <p className="font-semibold text-ink text-sm mb-1">No open seats</p>
-          <p className="text-xs text-ink-muted mb-4">Got a reservation with room? Post it here so club members can request a spot.</p>
-          <p className="text-xs text-ink-faint max-w-xs mx-auto leading-relaxed">Open Seats lets members share spare reservations — post how many seats you have, and your club can request one. You confirm or decline.</p>
+          <p className="text-xs text-ink-muted mb-2">Have a reservation with room to spare? Post it here and let a clubmate join you.</p>
+          <p className="text-xs text-ink-faint max-w-xs mx-auto leading-relaxed">e.g. Galit, Saturday Jun 14 at 7pm — 2 seats available</p>
         </div>
       ) : (
         <div className="divide-y divide-black/5">
@@ -314,6 +447,7 @@ export default function OpenSeatsSection({ clubId, userId, openSeats }: Props) {
         <div className="px-5 pb-5">
           <PostForm
             clubId={clubId}
+            clubCity={clubCity}
             onPosted={() => { setShowPost(false); router.refresh(); }}
           />
         </div>

@@ -124,7 +124,7 @@ export default async function ClubPage({
     .select(`
       *,
       users ( name, email ),
-      open_seat_requests ( id, user_id, status, users ( name, email ) )
+      open_seat_requests ( id, user_id, status, created_at, users ( name, email ) )
     `)
     .eq("club_id", params.id)
     .order("reservation_datetime", { ascending: true });
@@ -146,8 +146,28 @@ export default async function ClubPage({
       user_id: r.user_id,
       status: r.status as "pending" | "confirmed" | "declined",
       user_name: r.users?.name || r.users?.email?.split("@")[0] || "Someone",
+      created_at: r.created_at,
     })),
   }));
+
+  // Fetch confirmed open seat requests for current user (show as upcoming dinners)
+  const { data: rawConfirmedSeats } = await supabase
+    .from("open_seat_requests")
+    .select("id, open_seats ( restaurant_name, reservation_datetime )")
+    .eq("user_id", user.id)
+    .eq("status", "confirmed");
+
+  const confirmedSeats = (rawConfirmedSeats ?? [])
+    .map((r: any) => {
+      const seat = r.open_seats;
+      if (!seat) return null;
+      return {
+        id: r.id,
+        restaurantName: seat.restaurant_name as string,
+        reservationDatetime: seat.reservation_datetime as string,
+      };
+    })
+    .filter(Boolean) as { id: string; restaurantName: string; reservationDatetime: string }[];
 
   // Fetch active availability poll with dates, responses, and member names
   const { data: rawPoll } = await supabase
@@ -326,18 +346,27 @@ export default async function ClubPage({
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
               Dinners · {dinners?.length ?? 0}
             </h3>
-            <Link
-              href={`/clubs/${params.id}/dinners/new`}
-              className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
-            >
-              + Start a dinner
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/discover"
+                className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
+              >
+                Discover
+              </Link>
+              <Link
+                href={`/clubs/${params.id}/dinners/new`}
+                className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
+              >
+                + Start a dinner
+              </Link>
+            </div>
           </div>
 
           <DinnersList
             dinners={dinners ?? []}
             clubId={params.id}
             restaurantNameMap={restaurantNameMap}
+            confirmedSeats={confirmedSeats}
           />
         </section>
 
@@ -360,8 +389,38 @@ export default async function ClubPage({
           <OpenSeatsSection
             clubId={params.id}
             userId={user.id}
+            clubCity={(club as any).city ?? null}
             openSeats={openSeats}
           />
+        )}
+
+        {/* Invite Friends — near the top of the social section */}
+        {(isOwner || (club as any).members_can_invite) && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
+            </div>
+            <div className="p-5">
+              {invite ? (
+                <>
+                  <p className="text-sm text-ink-muted mb-3">
+                    Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
+                  </p>
+                  <InviteButton token={invite.token} />
+                  <EmailInviteForm
+                    token={invite.token}
+                    clubName={club.name}
+                    inviterName={displayName}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
+                  <GenerateInviteButton clubId={params.id} />
+                </>
+              )}
+            </div>
+          </section>
         )}
 
         {/* Members */}
@@ -420,35 +479,6 @@ export default async function ClubPage({
             ))}
           </div>
         </section>
-
-        {/* Invite link — hidden from members when owner has disabled it */}
-        {(isOwner || (club as any).members_can_invite) && (
-          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-black/5">
-              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
-            </div>
-            <div className="p-5">
-              {invite ? (
-                <>
-                  <p className="text-sm text-ink-muted mb-3">
-                    Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
-                  </p>
-                  <InviteButton token={invite.token} />
-                  <EmailInviteForm
-                    token={invite.token}
-                    clubName={club.name}
-                    inviterName={displayName}
-                  />
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
-                  <GenerateInviteButton clubId={params.id} />
-                </>
-              )}
-            </div>
-          </section>
-        )}
 
       </div>
     </main>

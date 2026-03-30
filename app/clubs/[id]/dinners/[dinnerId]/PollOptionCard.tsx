@@ -177,33 +177,41 @@ export default function PollOptionCard({
             <p className="text-sm text-ink-muted italic mt-1.5">"{option.note}"</p>
           )}
 
-          {r.beli_url ? (
-            <div className="flex items-center gap-2 mt-1.5">
-              <a
-                href={r.beli_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark hover:underline"
-              >
-                View on Beli →
-              </a>
-              {(isOwner || option.suggested_by === userId) && (
+          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            {r.beli_url ? (
+              <>
+                <a
+                  href={r.beli_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-citrus-dark hover:underline"
+                >
+                  View on Beli →
+                </a>
                 <button
                   onClick={() => setShowBeliInput((v) => !v)}
                   className="text-xs text-ink-muted hover:text-ink transition-colors"
                 >
                   Edit
                 </button>
-              )}
-            </div>
-          ) : (isOwner || option.suggested_by === userId) && (
-            <button
-              onClick={() => setShowBeliInput((v) => !v)}
-              className="text-xs text-ink-muted hover:text-citrus-dark transition-colors mt-1.5"
+              </>
+            ) : (
+              <button
+                onClick={() => setShowBeliInput((v) => !v)}
+                className="text-xs text-ink-muted hover:text-citrus-dark transition-colors"
+              >
+                + Add Beli link
+              </button>
+            )}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}&query_place_id=${r.place_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted hover:text-ink hover:underline transition-colors"
             >
-              + Add Beli link
-            </button>
-          )}
+              Google Maps →
+            </a>
+          </div>
 
           {showBeliInput && (
             <div className="flex items-center gap-2 mt-2">

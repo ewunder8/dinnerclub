@@ -1,20 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
 
-type FeedEvent = {
-  type: "rsvp" | "vote" | "suggested" | "wishlist" | "rating";
-  userName: string;
+type MilestoneEvent = {
+  icon: string;
   label: string;
   timestamp: string;
-  link?: string;
-};
-
-const EVENT_CONFIG: Record<FeedEvent["type"], { icon: string; verb: string }> = {
-  rsvp:      { icon: "🙋", verb: "RSVP'd to" },
-  vote:      { icon: "🗳", verb: "voted on" },
-  suggested: { icon: "💡", verb: "suggested" },
-  wishlist:  { icon: "❤️", verb: "added to wishlist" },
-  rating:    { icon: "⭐", verb: "rated" },
 };
 
 function timeAgo(ts: string): string {
@@ -31,104 +20,72 @@ function timeAgo(ts: string): string {
 
 export default async function ActivityFeed({ clubId }: { clubId: string }) {
   const supabase = await createClient();
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
   const [{ data: dinners }, { data: members }] = await Promise.all([
     supabase
       .from("dinners")
-      .select("id, theme_cuisine, theme_neighborhood, winning_restaurant_place_id")
+      .select("id, status, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood")
       .eq("club_id", clubId)
-      .neq("status", "cancelled"),
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20),
     supabase
       .from("club_members")
-      .select("user_id, users ( name, email )")
-      .eq("club_id", clubId),
+      .select("user_id, joined_at, users ( name, email )")
+      .eq("club_id", clubId)
+      .gte("joined_at", since)
+      .order("joined_at", { ascending: false })
+      .limit(10),
   ]);
 
-  const dinnerIds = (dinners ?? []).map((d) => d.id);
-
-  const memberNameMap: Record<string, string> = {};
-  for (const m of (members as any[]) ?? []) {
-    memberNameMap[m.user_id] = (m.users?.name ?? m.users?.email?.split("@")[0]) ?? "Someone";
-  }
-
-  const [rsvpRes, voteRes, suggestRes, wishlistRes, ratingRes] = await Promise.all([
-    dinnerIds.length > 0
-      ? supabase.from("rsvps").select("user_id, dinner_id, created_at").in("dinner_id", dinnerIds).eq("status", "going").gte("created_at", since).order("created_at", { ascending: false }).limit(20)
-      : Promise.resolve({ data: [] as any[] }),
-    dinnerIds.length > 0
-      ? supabase.from("votes").select("user_id, dinner_id, created_at").in("dinner_id", dinnerIds).gte("created_at", since).order("created_at", { ascending: false }).limit(20)
-      : Promise.resolve({ data: [] as any[] }),
-    dinnerIds.length > 0
-      ? supabase.from("poll_options").select("suggested_by, dinner_id, place_id, created_at").in("dinner_id", dinnerIds).not("suggested_by", "is", null).gte("created_at", since).order("created_at", { ascending: false }).limit(20)
-      : Promise.resolve({ data: [] as any[] }),
-    supabase.from("club_wishlist").select("added_by, place_id, created_at").eq("club_id", clubId).gte("created_at", since).order("created_at", { ascending: false }).limit(20),
-    dinnerIds.length > 0
-      ? supabase.from("dinner_ratings").select("user_id, dinner_id, created_at").in("dinner_id", dinnerIds).gte("created_at", since).order("created_at", { ascending: false }).limit(20)
-      : Promise.resolve({ data: [] as any[] }),
-  ]);
-
-  // Collect all place_ids needed for restaurant names
-  const allPlaceIds = [
-    ...(dinners ?? []).map((d) => d.winning_restaurant_place_id),
-    ...(suggestRes.data ?? []).map((s: any) => s.place_id),
-    ...(wishlistRes.data ?? []).map((w: any) => w.place_id),
-  ].filter(Boolean) as string[];
+  // Fetch restaurant names for dinners with a winner
+  const placeIds = (dinners ?? [])
+    .map((d) => d.winning_restaurant_place_id)
+    .filter(Boolean) as string[];
 
   const restaurantNameMap: Record<string, string> = {};
-  if (allPlaceIds.length > 0) {
+  if (placeIds.length > 0) {
     const { data: restaurants } = await supabase
       .from("restaurant_cache")
       .select("place_id, name")
-      .in("place_id", allPlaceIds.filter((id, i) => allPlaceIds.indexOf(id) === i));
+      .in("place_id", placeIds);
     for (const r of restaurants ?? []) {
       restaurantNameMap[r.place_id] = r.name;
     }
   }
 
-  // Build dinner label + URL map
-  const dinnerMap: Record<string, { label: string; url: string }> = {};
+  const events: MilestoneEvent[] = [];
+
+  // Dinner milestones — one event per dinner at its most advanced state
   for (const d of dinners ?? []) {
-    const name = d.winning_restaurant_place_id ? restaurantNameMap[d.winning_restaurant_place_id] : null;
+    const restaurantName = d.winning_restaurant_place_id
+      ? restaurantNameMap[d.winning_restaurant_place_id]
+      : null;
     const theme = [d.theme_cuisine, d.theme_neighborhood].filter(Boolean).join(" · ");
-    const label = name ?? (theme || "a dinner");
-    dinnerMap[d.id] = { label, url: `/clubs/${clubId}/dinners/${d.id}` };
+
+    if (d.status === "completed" && restaurantName) {
+      events.push({ icon: "🍽️", label: `Had dinner at ${restaurantName}`, timestamp: d.created_at });
+    } else if (d.status === "confirmed" && restaurantName) {
+      events.push({ icon: "✅", label: `Reservation confirmed at ${restaurantName}`, timestamp: d.created_at });
+    } else if (d.winning_restaurant_place_id && restaurantName) {
+      events.push({ icon: "🏆", label: `Winner picked: ${restaurantName}`, timestamp: d.created_at });
+    } else {
+      events.push({ icon: "🍴", label: `Dinner poll started${theme ? ` · ${theme}` : ""}`, timestamp: d.created_at });
+    }
   }
 
-  // Merge all events
-  const events: FeedEvent[] = [];
-
-  for (const r of (rsvpRes.data as any[]) ?? []) {
-    const dinner = dinnerMap[r.dinner_id];
-    if (!dinner) continue;
-    events.push({ type: "rsvp", userName: memberNameMap[r.user_id] ?? "Someone", label: dinner.label, timestamp: r.created_at, link: dinner.url });
-  }
-  for (const v of (voteRes.data as any[]) ?? []) {
-    const dinner = dinnerMap[v.dinner_id];
-    if (!dinner) continue;
-    events.push({ type: "vote", userName: memberNameMap[v.user_id] ?? "Someone", label: dinner.label, timestamp: v.created_at, link: dinner.url });
-  }
-  for (const s of (suggestRes.data as any[]) ?? []) {
-    if (!s.suggested_by) continue;
-    const dinner = dinnerMap[s.dinner_id];
-    const restaurantName = s.place_id ? restaurantNameMap[s.place_id] : null;
-    const label = restaurantName
-      ? `${restaurantName} for ${dinner?.label ?? "a dinner"}`
-      : `a restaurant for ${dinner?.label ?? "a dinner"}`;
-    events.push({ type: "suggested", userName: memberNameMap[s.suggested_by] ?? "Someone", label, timestamp: s.created_at, link: dinner?.url });
-  }
-  for (const w of (wishlistRes.data as any[]) ?? []) {
-    const name = w.place_id ? restaurantNameMap[w.place_id] : null;
-    events.push({ type: "wishlist", userName: memberNameMap[w.added_by] ?? "Someone", label: name ?? "a restaurant", timestamp: w.created_at });
-  }
-  for (const r of (ratingRes.data as any[]) ?? []) {
-    const dinner = dinnerMap[r.dinner_id];
-    if (!dinner) continue;
-    events.push({ type: "rating", userName: memberNameMap[r.user_id] ?? "Someone", label: dinner.label, timestamp: r.created_at, link: dinner.url });
+  // Member joined milestones
+  for (const m of (members as any[]) ?? []) {
+    const name = (m.users?.name ?? m.users?.email?.split("@")[0]) ?? "Someone";
+    events.push({ icon: "👋", label: `${name} joined the club`, timestamp: m.joined_at });
   }
 
   events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  const feed = events.slice(0, 20);
+
+  const LIMIT = 5;
+  const feed = events.slice(0, LIMIT);
+  const hasMore = events.length > LIMIT;
 
   if (feed.length === 0) return null;
 
@@ -138,29 +95,19 @@ export default async function ActivityFeed({ clubId }: { clubId: string }) {
         <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Recent Activity</h3>
       </div>
       <div className="divide-y divide-black/5">
-        {feed.map((event, i) => {
-          const config = EVENT_CONFIG[event.type];
-          return (
-            <div key={i} className="flex items-start gap-3 px-5 py-3">
-              <span className="text-base mt-0.5 shrink-0">{config.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-ink leading-snug">
-                  <span className="font-semibold">{event.userName}</span>
-                  {" "}{config.verb}{" "}
-                  {event.link ? (
-                    <Link href={event.link} className="text-citrus-dark hover:underline font-medium">
-                      {event.label}
-                    </Link>
-                  ) : (
-                    <span className="font-medium">{event.label}</span>
-                  )}
-                </p>
-              </div>
-              <span className="text-xs text-ink-faint shrink-0 mt-0.5 whitespace-nowrap">{timeAgo(event.timestamp)}</span>
-            </div>
-          );
-        })}
+        {feed.map((event, i) => (
+          <div key={i} className="flex items-center gap-3 px-5 py-3">
+            <span className="text-base shrink-0">{event.icon}</span>
+            <p className="flex-1 text-sm text-ink leading-snug">{event.label}</p>
+            <span className="text-xs text-ink-faint shrink-0 whitespace-nowrap">{timeAgo(event.timestamp)}</span>
+          </div>
+        ))}
       </div>
+      {hasMore && (
+        <div className="px-5 py-3 border-t border-black/5">
+          <span className="text-xs text-ink-faint">See all activity in the club settings</span>
+        </div>
+      )}
     </section>
   );
 }
