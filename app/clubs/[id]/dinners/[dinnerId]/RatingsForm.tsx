@@ -137,6 +137,16 @@ export default function RatingsForm({
         {restaurant.address && (
           <p className="text-sm text-ink-muted mt-0.5">{restaurant.address.replace(/, USA$/, "")}</p>
         )}
+        {restaurant.beli_url && (
+          <a
+            href={restaurant.beli_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-citrus-dark border border-citrus/30 rounded-lg px-3 py-1.5 hover:bg-citrus/5 transition-colors"
+          >
+            Review on Beli →
+          </a>
+        )}
       </div>
 
       {/* Rating form or closed message */}
