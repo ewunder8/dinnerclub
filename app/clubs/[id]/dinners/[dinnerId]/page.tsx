@@ -25,6 +25,7 @@ import DinnerComments from "./DinnerComments";
 import type { DinnerComment } from "./DinnerComments";
 import SharePollButton from "./SharePollButton";
 import RefreshButton from "./RefreshButton";
+import EditDinnerDetails from "./EditDinnerDetails";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -628,6 +629,19 @@ export default async function DinnerPage({
           )}
           {pollCloseLabel && (
             <p className="text-xs text-ink-muted mt-1">Poll closes {pollCloseLabel}</p>
+          )}
+          {isOwner && (
+            <EditDinnerDetails
+              dinnerId={params.dinnerId}
+              initial={{
+                cuisine: dinner.theme_cuisine ?? null,
+                price: dinner.theme_price ?? null,
+                vibe: dinner.theme_vibe ?? null,
+                neighborhood: dinner.theme_neighborhood ?? null,
+                targetDate: dinner.target_date ?? null,
+                pollClosesAt: dinner.poll_closes_at ?? null,
+              }}
+            />
           )}
         </div>
 

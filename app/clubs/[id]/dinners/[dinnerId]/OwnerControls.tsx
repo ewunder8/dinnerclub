@@ -38,8 +38,7 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
       .update({ voting_open: false })
       .eq("id", dinnerId);
     if (updateError) { setError("Failed to close voting. Try again."); setLoading(false); return; }
-    router.refresh();
-    setLoading(false);
+    router.push(`/clubs/${clubId}/dinners/${dinnerId}`);
   };
 
   const handleCancel = async () => {

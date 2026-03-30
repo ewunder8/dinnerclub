@@ -199,11 +199,11 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
             </div>
           </section>
 
-          {/* ── Theme ── */}
+          {/* ── Dinner name / theme ── */}
           <section className="flex flex-col gap-4">
             <div>
               <h3 className="text-sm font-semibold text-ink mb-1">
-                Theme <span className="text-ink-muted font-normal">(optional)</span>
+                Dinner name or theme <span className="text-ink-muted font-normal">(optional)</span>
               </h3>
               <p className="text-xs text-ink-muted">
                 Guide your crew&apos;s suggestions with a cuisine, price range, or vibe.
@@ -213,7 +213,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
             {/* Cuisine */}
             <input
               type="text"
-              placeholder="Cuisine — e.g. Japanese, Italian, anything goes"
+              placeholder="e.g. Japanese, Italian, anything goes"
               value={cuisine}
               onChange={(e) => setCuisine(e.target.value)}
               maxLength={50}

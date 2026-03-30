@@ -13,6 +13,43 @@ function dinnerLabel(dinner: { theme_cuisine?: string | null; theme_neighborhood
 
 type Platform = NonNullable<Dinner["reservation_platform"]>;
 
+export async function updateDinnerDetails({
+  dinnerId,
+  cuisine,
+  price,
+  vibe,
+  neighborhood,
+  targetDate,
+  pollClosesAt,
+}: {
+  dinnerId: string;
+  cuisine: string | null;
+  price: number | null;
+  vibe: string | null;
+  neighborhood: string | null;
+  targetDate: string | null;
+  pollClosesAt: string | null;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("dinners")
+    .update({
+      theme_cuisine: cuisine || null,
+      theme_price: price,
+      theme_vibe: vibe || null,
+      theme_neighborhood: neighborhood || null,
+      target_date: targetDate ? new Date(targetDate).toISOString() : null,
+      poll_closes_at: pollClosesAt ? new Date(pollClosesAt).toISOString() : null,
+    })
+    .eq("id", dinnerId);
+
+  if (error) return { error: "Failed to update dinner." };
+  return {};
+}
+
 export async function confirmReservation({
   dinnerId,
   clubId,
