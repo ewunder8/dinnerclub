@@ -14,11 +14,12 @@ type WishlistItem = {
 type Props = {
   dinnerId: string;
   wishlist?: WishlistItem[];
+  clubCity?: string | null;
 };
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
+export default function SuggestRestaurant({ dinnerId, wishlist = [], clubCity }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
@@ -39,7 +40,8 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [] }: Props) {
       setSearching(true);
       setError(null);
       try {
-        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}`);
+        const cityParam = clubCity ? `&city=${encodeURIComponent(clubCity)}` : "";
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}${cityParam}`);
         const data = await res.json();
         setResults(data.places ?? []);
       } catch (e) {

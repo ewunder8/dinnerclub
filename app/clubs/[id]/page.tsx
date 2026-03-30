@@ -370,31 +370,7 @@ export default async function ClubPage({
           />
         </section>
 
-        {/* Activity Feed */}
-        <ActivityFeed clubId={params.id} />
-
-        {/* Club Stats */}
-        <ClubStatsCard stats={clubStats} />
-
-        {/* Wishlist */}
-        <WishlistSection
-          clubId={params.id}
-          userId={user.id}
-          isOwner={isOwner}
-          items={wishlistItems}
-        />
-
-        {/* Open Seats */}
-        {(club as any).open_seats_enabled !== false && (
-          <OpenSeatsSection
-            clubId={params.id}
-            userId={user.id}
-            clubCity={(club as any).city ?? null}
-            openSeats={openSeats}
-          />
-        )}
-
-        {/* Invite Friends — near the top of the social section */}
+        {/* Invite Friends */}
         {(isOwner || (club as any).members_can_invite) && (
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
             <div className="px-5 py-3 border-b border-black/5">
@@ -421,6 +397,31 @@ export default async function ClubPage({
               )}
             </div>
           </section>
+        )}
+
+        {/* Activity Feed */}
+        <ActivityFeed clubId={params.id} />
+
+        {/* Club Stats */}
+        <ClubStatsCard stats={clubStats} />
+
+        {/* Wishlist */}
+        <WishlistSection
+          clubId={params.id}
+          userId={user.id}
+          isOwner={isOwner}
+          items={wishlistItems}
+          clubCity={(club as any).city ?? null}
+        />
+
+        {/* Open Seats */}
+        {(club as any).open_seats_enabled !== false && (
+          <OpenSeatsSection
+            clubId={params.id}
+            userId={user.id}
+            clubCity={(club as any).city ?? null}
+            openSeats={openSeats}
+          />
         )}
 
         {/* Members */}

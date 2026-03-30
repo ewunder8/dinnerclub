@@ -113,7 +113,7 @@ export default async function DinnerPage({
         .eq("dinner_id", params.dinnerId),
       supabase
         .from("clubs")
-        .select("name")
+        .select("name, city")
         .eq("id", params.id)
         .single(),
       dinner.reserved_by
@@ -489,7 +489,7 @@ export default async function DinnerPage({
   }
 
   // ── Default: poll view ───────────────────────────────────────
-  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }, { data: memberProfiles }, { data: rawWishlist }] =
+  const [{ count: memberCount }, { data: rawOptions }, { data: rawVotes }, { data: memberProfiles }, { data: rawWishlist }, { data: clubData }] =
     await Promise.all([
       supabase
         .from("club_members")
@@ -512,6 +512,11 @@ export default async function DinnerPage({
         .from("club_wishlist")
         .select("place_id")
         .eq("club_id", params.id),
+      supabase
+        .from("clubs")
+        .select("city")
+        .eq("id", params.id)
+        .single(),
     ]);
 
   // Aggregate public dietary restrictions across all members
@@ -701,7 +706,7 @@ export default async function DinnerPage({
               </h3>
               <RefreshButton />
             </div>
-            <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} />
+            <SuggestRestaurant dinnerId={params.dinnerId} wishlist={wishlistForPoll} clubCity={(clubData as any)?.city ?? null} />
           </section>
         )}
 

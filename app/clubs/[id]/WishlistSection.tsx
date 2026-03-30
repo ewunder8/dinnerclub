@@ -22,11 +22,12 @@ type Props = {
   userId: string;
   isOwner: boolean;
   items: WishlistItem[];
+  clubCity?: string | null;
 };
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
+function AddForm({ clubId, clubCity, onAdded }: { clubId: string; clubCity?: string | null; onAdded: () => void }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -44,7 +45,8 @@ function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}`);
+        const cityParam = clubCity ? `&city=${encodeURIComponent(clubCity)}` : "";
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query.trim())}${cityParam}`);
         const data = await res.json();
         setResults(data.places ?? []);
       } catch {
@@ -172,7 +174,7 @@ function AddForm({ clubId, onAdded }: { clubId: string; onAdded: () => void }) {
   );
 }
 
-export default function WishlistSection({ clubId, userId, isOwner, items }: Props) {
+export default function WishlistSection({ clubId, userId, isOwner, items, clubCity }: Props) {
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -236,7 +238,7 @@ export default function WishlistSection({ clubId, userId, isOwner, items }: Prop
 
       {showAdd && (
         <div className="px-5 pb-5">
-          <AddForm clubId={clubId} onAdded={() => { setShowAdd(false); router.refresh(); }} />
+          <AddForm clubId={clubId} clubCity={clubCity} onAdded={() => { setShowAdd(false); router.refresh(); }} />
         </div>
       )}
     </section>
