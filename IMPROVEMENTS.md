@@ -177,8 +177,7 @@ Core workflow gaps
 
 - Reactions on dinner comments — A quick 👍 or 🔥 on a note without needing to post a full comment.
 - Post-dinner photos — A simple way to attach a photo to the rating, or a shared album for the dinner. Beli handles some of this but it's offsite.
-- **Member activity feed — Right now the club page is static. A lightweight "what happened recently" (who rated, who RSVPed, who suggested) would make
-  clubs feel alive.**
+- **Member activity feed — Right now the club page is static. A lightweight "what happened recently" (who rated, who RSVPed, who suggested) would makeclubs feel alive.**
 
   Restaurant discovery
 
@@ -198,7 +197,6 @@ Core workflow gaps
   Polish
 
 - Empty dashboard state — New users with no clubs see a blank page. An onboarding prompt to create or join a club would reduce drop-off.
-- Mobile share sheet for dinner details — The share button works but only for confirmed dinners. Sharing a poll link to recruit voters would be
-  useful.
+- Mobile share sheet for dinner details — The share button works but only for confirmed dinners. Sharing a poll link to recruit voters would be useful.
 - Pagination on the dinners list — Clubs with many dinners have no pagination; the list grows unbounded.
 

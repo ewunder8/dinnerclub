@@ -1,3 +1,6 @@
+# Root-level markdown files (local notes, prompts, docs)
+/*.md
+
 # Dependencies
 node_modules/
 .pnp
