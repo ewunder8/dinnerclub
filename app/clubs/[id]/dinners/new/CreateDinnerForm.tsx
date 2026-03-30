@@ -46,6 +46,8 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   const [minSuggestions, setMinSuggestions] = useState(2);
   const [maxSuggestions, setMaxSuggestions] = useState(8);
 
+  const [showVibeNeighborhood, setShowVibeNeighborhood] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -245,25 +247,35 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
               </div>
             </div>
 
-            {/* Vibe */}
-            <input
-              type="text"
-              placeholder="Vibe — e.g. Cozy, Lively, Special occasion"
-              value={vibe}
-              onChange={(e) => setVibe(e.target.value)}
-              maxLength={50}
-              className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
-            />
-
-            {/* Neighborhood */}
-            <input
-              type="text"
-              placeholder="Neighborhood — e.g. Lower East Side, Midtown"
-              value={neighborhood}
-              onChange={(e) => setNeighborhood(e.target.value)}
-              maxLength={60}
-              className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
-            />
+            {/* Vibe + Neighborhood — shown on demand */}
+            {showVibeNeighborhood ? (
+              <>
+                <input
+                  type="text"
+                  placeholder="Vibe — e.g. Cozy, Lively, Special occasion"
+                  value={vibe}
+                  onChange={(e) => setVibe(e.target.value)}
+                  maxLength={50}
+                  className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+                />
+                <input
+                  type="text"
+                  placeholder="Neighborhood — e.g. Lower East Side, Midtown"
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
+                  maxLength={60}
+                  className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+                />
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowVibeNeighborhood(true)}
+                className="text-xs text-ink-muted hover:text-ink transition-colors self-start"
+              >
+                + Add vibe / neighborhood
+              </button>
+            )}
           </section>
 
           {/* ── Suggestion settings ── */}
