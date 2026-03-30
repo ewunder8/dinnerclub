@@ -418,7 +418,7 @@ export default function OpenSeatsSection({ clubId, userId, clubCity, openSeats }
           <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
             Open Seats{activeSeats.length > 0 ? ` · ${activeSeats.length}` : ""}
           </h3>
-          <p className="text-xs text-ink-faint mt-0.5">Have a reservation with room to spare? Post it here and let a clubmate join you.</p>
+          <p className="text-xs text-ink-faint mt-0.5">Share spare seats from your own dinners, ticketed events, or reservations you can&apos;t fill.</p>
         </div>
         <button
           onClick={() => setShowPost((v) => !v)}
@@ -431,9 +431,13 @@ export default function OpenSeatsSection({ clubId, userId, clubCity, openSeats }
       {displaySeats.length === 0 && !showPost ? (
         <div className="px-5 py-10 text-center">
           <p className="text-3xl mb-3">🪑</p>
-          <p className="font-semibold text-ink text-sm mb-1">No open seats</p>
-          <p className="text-xs text-ink-muted mb-2">Have a reservation with room to spare? Post it here and let a clubmate join you.</p>
-          <p className="text-xs text-ink-faint max-w-xs mx-auto leading-relaxed">e.g. Galit, Saturday Jun 14 at 7pm — 2 seats available</p>
+          <p className="font-semibold text-ink text-sm mb-2">No open seats right now</p>
+          <div className="text-xs text-ink-muted max-w-xs mx-auto text-left flex flex-col gap-1.5 mb-3">
+            <p>🍽️ <span className="font-medium">Plans changed?</span> Two people cancelled on your dinner reservation — offer the seats here.</p>
+            <p>🎟️ <span className="font-medium">Ticketed event?</span> Can&apos;t make it — pass your spot to a clubmate instead of wasting it.</p>
+            <p>💰 <span className="font-medium">Deposit reservation?</span> Trade it to someone who can actually go.</p>
+          </div>
+          <p className="text-xs text-ink-faint max-w-xs mx-auto">e.g. Galit · Sat Jun 14 at 7pm · 2 seats</p>
         </div>
       ) : (
         <div className="divide-y divide-black/5">
