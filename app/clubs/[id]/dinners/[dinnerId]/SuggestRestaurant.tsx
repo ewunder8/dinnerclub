@@ -142,6 +142,7 @@ export default function SuggestRestaurant({ dinnerId, wishlist = [], clubCity }:
       return;
     }
 
+    setSubmitting(false);
     handleClear();
     router.refresh();
   };
