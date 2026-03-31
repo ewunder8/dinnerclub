@@ -30,9 +30,13 @@ type Props = {
 export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props) {
   const router = useRouter();
 
-  // Poll deadline
-  const [pollClosesAt, setPollClosesAt] = useState("");
-  const [targetDate, setTargetDate] = useState("");
+  // Date options (up to 3) for the availability poll
+  const [date1, setDate1] = useState("");
+  const [date2, setDate2] = useState("");
+  const [date3, setDate3] = useState("");
+  const date1Ref = useRef<HTMLInputElement>(null);
+  const date2Ref = useRef<HTMLInputElement>(null);
+  const date3Ref = useRef<HTMLInputElement>(null);
 
   // Theme (all optional)
   const [cuisine, setCuisine] = useState("");
@@ -51,22 +55,30 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const pollClosesRef = useRef<HTMLInputElement>(null);
-  const targetDateRef = useRef<HTMLInputElement>(null);
+  // Min date for date inputs — today
+  const today = new Date().toISOString().slice(0, 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!date1) {
+      setError("Pick at least one date option.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setError("Not authenticated."); setLoading(false); return; }
 
+    // Create dinner
     const { data: dinner, error: dinnerError } = await supabase
       .from("dinners")
       .insert({
         club_id: clubId,
-        poll_closes_at: pollClosesAt ? new Date(pollClosesAt).toISOString() : null,
-        target_date: targetDate ? new Date(targetDate).toISOString() : null,
+        created_by: user.id,
         theme_cuisine: cuisine.trim() || null,
         theme_price: price,
         theme_vibe: vibe.trim() || null,
@@ -74,7 +86,10 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
         suggestion_mode: suggestionMode,
         poll_min_options: minSuggestions,
         max_suggestions: maxSuggestions,
+        planning_stage: "date_voting",
         // Nullable fields required by Insert type
+        poll_closes_at: null,
+        target_date: null,
         winning_restaurant_place_id: null,
         reservation_datetime: null,
         party_size: null,
@@ -88,6 +103,36 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
 
     if (dinnerError || !dinner) {
       setError(dinnerError?.message || "Failed to create dinner");
+      setLoading(false);
+      return;
+    }
+
+    // Create availability poll linked to the dinner
+    const { data: poll, error: pollError } = await supabase
+      .from("availability_polls")
+      .insert({
+        club_id: clubId,
+        created_by: user.id,
+        title: "When works for dinner?",
+        dinner_id: dinner.id,
+      })
+      .select("id")
+      .single();
+
+    if (pollError || !poll) {
+      setError("Failed to create date poll.");
+      setLoading(false);
+      return;
+    }
+
+    // Insert date options
+    const validDates = [date1, date2, date3].filter(Boolean);
+    const { error: datesError } = await supabase
+      .from("availability_poll_dates")
+      .insert(validDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
+
+    if (datesError) {
+      setError("Failed to save date options.");
       setLoading(false);
       return;
     }
@@ -106,10 +151,62 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
     });
   };
 
-  // Min datetime for the poll close input — at least 1 hour from now
-  const minDatetime = new Date(Date.now() + 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
+  function DatePickerButton({
+    label,
+    value,
+    onChange,
+    inputRef,
+    required,
+  }: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    inputRef: React.RefObject<HTMLInputElement>;
+    required?: boolean;
+  }) {
+    const formatted = value
+      ? (() => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+            weekday: "short", month: "short", day: "numeric",
+          });
+        })()
+      : null;
+
+    return (
+      <div>
+        <p className="text-xs text-ink-muted mb-1.5">{label}</p>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.showPicker()}
+          className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
+        >
+          <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
+          <span className={formatted ? "text-ink text-sm" : "text-ink-faint text-sm"}>
+            {formatted ?? "Pick a date"}
+          </span>
+          {value && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange(""); }}
+              className="ml-auto text-ink-faint hover:text-ink-muted text-base leading-none"
+            >
+              ×
+            </button>
+          )}
+        </button>
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          min={today}
+          required={required}
+          className="sr-only"
+        />
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-snow">
@@ -130,73 +227,25 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
           </p>
           <h2 className="font-sans text-3xl font-bold text-ink">Start a dinner</h2>
           <p className="text-ink-muted text-sm mt-2">
-            Set a theme and let the crew suggest where to eat.
+            Propose some dates so the group can say when they're free.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-10">
 
-          {/* ── Poll deadline ── */}
-          <section className="flex flex-col gap-3">
+          {/* ── Date options ── */}
+          <section className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-semibold text-ink mb-1">
-                Poll closes <span className="text-ink-muted font-normal">(optional)</span>
-              </label>
-              <p className="text-xs text-ink-muted mb-3">
-                Voting auto-closes at this time. Leave blank to close manually.
+              <h3 className="text-sm font-semibold text-ink mb-1">
+                Proposed dates <span className="text-red-400">*</span>
+              </h3>
+              <p className="text-xs text-ink-muted">
+                Suggest up to 3 dates. The group votes, then you lock one in.
               </p>
-              <button
-                type="button"
-                onClick={() => pollClosesRef.current?.showPicker()}
-                className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
-              >
-                <Calendar className="w-5 h-5 text-ink-muted shrink-0" />
-                <span className={pollClosesAt ? "text-ink" : "text-ink-faint"}>
-                  {pollClosesAt
-                    ? new Date(pollClosesAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
-                    : "Pick a date & time"}
-                </span>
-              </button>
-              <input
-                ref={pollClosesRef}
-                type="datetime-local"
-                value={pollClosesAt}
-                onChange={(e) => setPollClosesAt(e.target.value)}
-                min={minDatetime}
-                className="sr-only"
-              />
             </div>
-          </section>
-
-          {/* ── Target date ── */}
-          <section className="flex flex-col gap-3">
-            <div>
-              <label className="block text-sm font-semibold text-ink mb-1">
-                When are you thinking? <span className="text-ink-muted font-normal">(optional)</span>
-              </label>
-              <p className="text-xs text-ink-muted mb-3">
-                A rough date and time so the group knows when to aim for.
-              </p>
-              <button
-                type="button"
-                onClick={() => targetDateRef.current?.showPicker()}
-                className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
-              >
-                <Calendar className="w-5 h-5 text-ink-muted shrink-0" />
-                <span className={targetDate ? "text-ink" : "text-ink-faint"}>
-                  {targetDate
-                    ? new Date(targetDate).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
-                    : "Pick a date & time"}
-                </span>
-              </button>
-              <input
-                ref={targetDateRef}
-                type="datetime-local"
-                value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                className="sr-only"
-              />
-            </div>
+            <DatePickerButton label="Option 1" value={date1} onChange={setDate1} inputRef={date1Ref} required />
+            <DatePickerButton label="Option 2 (optional)" value={date2} onChange={setDate2} inputRef={date2Ref} />
+            <DatePickerButton label="Option 3 (optional)" value={date3} onChange={setDate3} inputRef={date3Ref} />
           </section>
 
           {/* ── Dinner name / theme ── */}

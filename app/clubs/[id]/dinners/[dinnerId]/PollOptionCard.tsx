@@ -15,6 +15,7 @@ type Props = {
   isOwner: boolean;
   dinnerId: string;
   showRemove: boolean;
+  onLockRestaurant?: (placeId: string) => Promise<void>;
 };
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
@@ -27,6 +28,7 @@ export default function PollOptionCard({
   isOwner,
   dinnerId,
   showRemove,
+  onLockRestaurant,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -268,7 +270,17 @@ export default function PollOptionCard({
             </button>
           )}
 
-          {canPickWinner && (
+          {onLockRestaurant && isOwner && (
+            <button
+              onClick={async () => { setLoading(true); await onLockRestaurant(option.place_id); setLoading(false); }}
+              disabled={loading}
+              className="text-xs font-semibold text-green-600 border border-green-300 px-3 py-1.5 rounded-xl hover:bg-green-50 transition-colors disabled:opacity-40"
+            >
+              {loading ? "…" : "Pick this →"}
+            </button>
+          )}
+
+          {!onLockRestaurant && canPickWinner && (
             <button
               onClick={handlePickWinner}
               disabled={loading}

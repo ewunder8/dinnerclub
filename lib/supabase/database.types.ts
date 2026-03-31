@@ -61,11 +61,13 @@ export type Database = {
           created_by: string;
           title: string;
           status: "open" | "closed";
+          dinner_id: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["availability_polls"]["Row"], "id" | "created_at" | "title" | "status"> & {
+        Insert: Omit<Database["public"]["Tables"]["availability_polls"]["Row"], "id" | "created_at" | "title" | "status" | "dinner_id"> & {
           title?: string;
           status?: "open" | "closed";
+          dinner_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["availability_polls"]["Insert"]>;
         Relationships: [];
@@ -87,11 +89,15 @@ export type Database = {
           id: string;
           poll_id: string;
           user_id: string;
-          date_id: string;
+          date_id: string | null;
           available: "yes" | "maybe" | "no";
+          none_of_the_above: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["availability_responses"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["availability_responses"]["Row"], "id" | "created_at"> & {
+          date_id?: string | null;
+          none_of_the_above?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["availability_responses"]["Insert"]>;
         Relationships: [];
       };
@@ -236,17 +242,21 @@ export type Database = {
           ratings_open_until: string | null;
           // 007
           target_date: string | null;
+          // planning flow
+          planning_stage: "date_voting" | "restaurant_voting" | "winner";
+          created_by: string | null;
           created_at: string;
         };
         Insert: Omit<
           Database["public"]["Tables"]["dinners"]["Row"],
-          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode"
+          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode" | "planning_stage"
         > & {
           // Fields with DB defaults — optional on insert
           status?: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
           voting_open?: boolean;
           poll_min_options?: number;
           suggestion_mode?: "owner_only" | "members" | "hybrid";
+          planning_stage?: "date_voting" | "restaurant_voting" | "winner";
         };
         Update: Partial<Database["public"]["Tables"]["dinners"]["Insert"]>;
         Relationships: [

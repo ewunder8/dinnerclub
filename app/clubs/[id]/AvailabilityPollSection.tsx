@@ -195,6 +195,7 @@ function ActivePoll({
         user_id: userId,
         date_id: date.id,
         available: next,
+        none_of_the_above: false,
       });
     } else {
       // update

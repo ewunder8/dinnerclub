@@ -14,8 +14,8 @@ import RemoveMemberButton from "./RemoveMemberButton";
 import CoOwnerButton from "./CoOwnerButton";
 import WishlistSection from "./WishlistSection";
 import OpenSeatsSection from "./OpenSeatsSection";
-import AvailabilityPollSection from "./AvailabilityPollSection";
 import ClubStatsCard from "./ClubStatsCard";
+import ActiveDinnerCard from "./ActiveDinnerCard";
 import ActivityFeed from "./ActivityFeed";
 import DinnersList from "./DinnersList";
 
@@ -62,7 +62,7 @@ export default async function ClubPage({
   // Fetch dinners for this club
   const { data: dinners } = await supabase
     .from("dinners")
-    .select("id, status, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood, reservation_datetime")
+    .select("id, status, planning_stage, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood, reservation_datetime, target_date")
     .eq("club_id", params.id)
     .order("created_at", { ascending: false });
 
@@ -168,33 +168,6 @@ export default async function ClubPage({
       };
     })
     .filter(Boolean) as { id: string; restaurantName: string; reservationDatetime: string }[];
-
-  // Fetch active availability poll with dates, responses, and member names
-  const { data: rawPoll } = await supabase
-    .from("availability_polls")
-    .select(`
-      *,
-      availability_poll_dates ( id, proposed_date ),
-      availability_responses ( poll_id, user_id, date_id, available )
-    `)
-    .eq("club_id", params.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const availabilityPoll = rawPoll ? {
-    id: rawPoll.id,
-    club_id: rawPoll.club_id,
-    created_by: rawPoll.created_by,
-    title: rawPoll.title,
-    status: rawPoll.status as "open" | "closed",
-    dates: (rawPoll.availability_poll_dates ?? []) as unknown as { id: string; proposed_date: string }[],
-    responses: (rawPoll.availability_responses ?? []) as unknown as { poll_id: string; user_id: string; date_id: string; available: "yes" | "maybe" | "no" }[],
-    members: (club.club_members as any[]).map((m: any) => ({
-      user_id: m.users.id,
-      name: m.users.name || m.users.email?.split("@")[0] || "Member",
-    })),
-  } : null;
 
   // Fetch club stats data
   const dinnerIds = (dinners ?? []).map((d) => d.id);
@@ -333,12 +306,40 @@ export default async function ClubPage({
           )}
         </div>
 
-        {/* Find a Date */}
-        <AvailabilityPollSection
-          clubId={params.id}
-          userId={user.id}
-          poll={availabilityPoll}
-        />
+        {/* Active dinner — most recent non-completed dinner */}
+        {(() => {
+          const activeDinner = (dinners ?? []).find(
+            (d) => d.status !== "completed" && d.status !== "cancelled"
+          );
+          if (!activeDinner) return null;
+          const restaurantName = activeDinner.winning_restaurant_place_id
+            ? restaurantNameMap[activeDinner.winning_restaurant_place_id] ?? null
+            : null;
+          return (
+            <ActiveDinnerCard
+              dinner={activeDinner as any}
+              clubId={params.id}
+              restaurantName={restaurantName}
+            />
+          );
+        })()}
+
+        {/* Start a dinner CTA */}
+        <Link
+          href={`/clubs/${params.id}/dinners/new`}
+          className="group block border-2 border-dashed border-citrus-dark/40 bg-citrus/5 hover:bg-citrus/10 hover:border-citrus-dark/60 rounded-2xl px-6 py-7 transition-all"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-2xl mb-2">🍽️</p>
+              <p className="font-sans text-lg font-bold text-ink">Plan a dinner</p>
+              <p className="text-sm text-ink-muted mt-0.5">Propose dates, vote on restaurants, lock it in.</p>
+            </div>
+            <span className="shrink-0 bg-slate group-hover:bg-slate-light text-white font-bold text-sm px-5 py-3 rounded-xl transition-colors">
+              Start →
+            </span>
+          </div>
+        </Link>
 
         {/* Dinners */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
@@ -346,20 +347,12 @@ export default async function ClubPage({
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
               Dinners · {dinners?.length ?? 0}
             </h3>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/discover"
-                className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
-              >
-                Discover
-              </Link>
-              <Link
-                href={`/clubs/${params.id}/dinners/new`}
-                className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors"
-              >
-                + Start a dinner
-              </Link>
-            </div>
+            <Link
+              href="/discover"
+              className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
+            >
+              Discover
+            </Link>
           </div>
 
           <DinnersList

@@ -685,3 +685,111 @@ export async function sendInviteToClub({
 
   return send(to, `${inviterName} invited you to join ${clubName} on dinnerclub`, html);
 }
+
+export async function sendDateLocked({
+  to,
+  clubName,
+  dinnerName,
+  lockedDate,
+  dinnerUrl,
+  unsubscribeUrl,
+}: {
+  to: string;
+  clubName: string;
+  dinnerName: string;
+  lockedDate: string;
+  dinnerUrl: string;
+  unsubscribeUrl?: string;
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Date Locked — dinnerclub</title></head>
+<body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td align="center" style="padding-bottom:40px;">
+          <span style="font-family:Georgia,serif;font-size:30px;font-weight:700;color:#ffffff;letter-spacing:-1px;">dinner<span style="color:#c49a00;">club</span></span>
+        </td></tr>
+        <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
+          <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Date Locked</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Now pick a restaurant.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${clubName}</strong> is eating on <strong style="color:#ffffff;">${lockedDate}</strong>. Suggest a restaurant or vote on what's already there.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;"><tr><td style="padding:24px 28px;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Dinner</p>
+            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${dinnerName}</p>
+            <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Date</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${lockedDate}</p>
+          </td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
+            <a href="${dinnerUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">Suggest or vote →</a>
+          </td></tr></table>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">The best suggestion wins.</p>
+        </td></tr>
+        <tr><td align="center" style="padding-top:28px;">
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  return send(to, `${clubName} is eating on ${lockedDate} — vote on a restaurant`, html);
+}
+
+export async function sendRestaurantPicked({
+  to,
+  clubName,
+  dinnerName,
+  restaurantName,
+  lockedDate,
+  dinnerUrl,
+  unsubscribeUrl,
+}: {
+  to: string;
+  clubName: string;
+  dinnerName: string;
+  restaurantName: string;
+  lockedDate: string;
+  dinnerUrl: string;
+  unsubscribeUrl?: string;
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Restaurant Picked — dinnerclub</title></head>
+<body style="margin:0;padding:0;background-color:#2b3245;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;padding:48px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td align="center" style="padding-bottom:40px;">
+          <span style="font-family:Georgia,serif;font-size:30px;font-weight:700;color:#ffffff;letter-spacing:-1px;">dinner<span style="color:#c49a00;">club</span></span>
+        </td></tr>
+        <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
+          <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Restaurant Picked</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">We're going to ${restaurantName}.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${clubName}</strong> is eating at <strong style="color:#ffffff;">${restaurantName}</strong> on <strong style="color:#ffffff;">${lockedDate}</strong>. RSVP so whoever's booking knows the party size.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;"><tr><td style="padding:24px 28px;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Restaurant</p>
+            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${restaurantName}</p>
+            <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Date</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${lockedDate}</p>
+            <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Dinner</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${dinnerName}</p>
+          </td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
+            <a href="${dinnerUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">RSVP now →</a>
+          </td></tr></table>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-align:center;">Someone still needs to book the table.</p>
+        </td></tr>
+        <tr><td align="center" style="padding-top:28px;">
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#475569;">© 2026 dinnerclub · <a href="https://www.dinnerclub.app" style="color:#c49a00;text-decoration:none;">dinnerclub.app</a></p>
+          <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:11px;color:#475569;"><a href="${unsubscribeUrl ?? "#"}" style="color:#475569;text-decoration:underline;">Unsubscribe from this email</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  return send(to, `We're going to ${restaurantName} on ${lockedDate} — RSVP now`, html);
+}

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { sendReservationConfirmed, sendVotingOpen, sendRatingPrompt, sendDinnerCancelled } from "@/lib/email";
+import { sendReservationConfirmed, sendVotingOpen, sendRatingPrompt, sendDinnerCancelled, sendDateLocked, sendRestaurantPicked } from "@/lib/email";
 import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
 import type { Dinner } from "@/lib/supabase/database.types";
 
@@ -262,6 +262,319 @@ async function sendRatingPromptEmails({ dinnerId, clubId }: { dinnerId: string; 
       })
     )
   );
+}
+
+// ─── Planning flow actions ────────────────────────────────────
+
+export async function voteDate({
+  dinnerId,
+  pollId,
+  dateId,
+  available,
+}: {
+  dinnerId: string;
+  pollId: string;
+  dateId: string;
+  available: "yes" | "maybe" | "no";
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("planning_stage")
+    .eq("id", dinnerId)
+    .single();
+  if (dinner?.planning_stage !== "date_voting") return { error: "Date voting is not open." };
+
+  // Clear any none_of_the_above entry first
+  await supabase
+    .from("availability_responses")
+    .delete()
+    .eq("poll_id", pollId)
+    .eq("user_id", user.id)
+    .eq("none_of_the_above", true);
+
+  // Upsert this date response
+  const { error } = await supabase
+    .from("availability_responses")
+    .upsert(
+      { poll_id: pollId, user_id: user.id, date_id: dateId, available, none_of_the_above: false },
+      { onConflict: "poll_id,user_id,date_id" }
+    );
+
+  if (error) return { error: "Failed to save response." };
+  return {};
+}
+
+export async function noneOfTheAbove({
+  dinnerId,
+  pollId,
+}: {
+  dinnerId: string;
+  pollId: string;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("planning_stage")
+    .eq("id", dinnerId)
+    .single();
+  if (dinner?.planning_stage !== "date_voting") return { error: "Date voting is not open." };
+
+  // Delete all existing responses for this user + poll
+  await supabase
+    .from("availability_responses")
+    .delete()
+    .eq("poll_id", pollId)
+    .eq("user_id", user.id);
+
+  // Insert none_of_the_above row
+  const { error } = await supabase
+    .from("availability_responses")
+    .insert({ poll_id: pollId, user_id: user.id, date_id: null, available: "no", none_of_the_above: true });
+
+  if (error) return { error: "Failed to save response." };
+  return {};
+}
+
+export async function lockDate({
+  dinnerId,
+  clubId,
+  date,
+}: {
+  dinnerId: string;
+  clubId: string;
+  date: string;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, planning_stage")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can lock a date." };
+  if (dinner.planning_stage !== "date_voting") return { error: "Not in date voting stage." };
+
+  const { error: dinnerError } = await supabase
+    .from("dinners")
+    .update({ target_date: date, planning_stage: "restaurant_voting", voting_open: true })
+    .eq("id", dinnerId);
+  if (dinnerError) return { error: "Failed to lock date." };
+
+  await supabase
+    .from("availability_polls")
+    .update({ status: "closed" })
+    .eq("dinner_id", dinnerId);
+
+  sendDateLockedEmails({ dinnerId, clubId, date });
+
+  return {};
+}
+
+export async function lockRestaurant({
+  dinnerId,
+  clubId,
+  placeId,
+}: {
+  dinnerId: string;
+  clubId: string;
+  placeId: string;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, planning_stage")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can pick the restaurant." };
+  if (dinner.planning_stage !== "restaurant_voting") return { error: "Not in restaurant voting stage." };
+
+  const { error } = await supabase
+    .from("dinners")
+    .update({
+      winning_restaurant_place_id: placeId,
+      planning_stage: "winner",
+      voting_open: false,
+      status: "seeking_reservation",
+    })
+    .eq("id", dinnerId);
+  if (error) return { error: "Failed to lock restaurant." };
+
+  sendRestaurantPickedEmails({ dinnerId, clubId, placeId });
+
+  return {};
+}
+
+async function sendDateLockedEmails({ dinnerId, clubId, date }: { dinnerId: string; clubId: string; date: string }) {
+  const supabase = await createClient();
+
+  const [{ data: dinner }, { data: club }, { data: members }] = await Promise.all([
+    supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
+    supabase.from("clubs").select("name").eq("id", clubId).single(),
+    supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", clubId),
+  ]);
+
+  if (!dinner || !club || !members) return;
+
+  const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${clubId}/dinners/${dinnerId}`;
+  const dinnerName = dinnerLabel(dinner);
+  const lockedDate = new Date(date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  type MemberRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+  const eligibleMembers = (members as MemberRow[])
+    .filter((m) => m.users?.email_notifications?.voting_open !== false);
+
+  await Promise.allSettled(
+    eligibleMembers.map((m) =>
+      sendDateLocked({
+        to: m.users.email,
+        clubName: club.name,
+        dinnerName,
+        lockedDate,
+        dinnerUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(m.users.id, "voting_open"),
+      })
+    )
+  );
+}
+
+async function sendRestaurantPickedEmails({ dinnerId, clubId, placeId }: { dinnerId: string; clubId: string; placeId: string }) {
+  const supabase = await createClient();
+
+  const [{ data: dinner }, { data: club }, { data: members }, { data: restaurant }] = await Promise.all([
+    supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe, target_date").eq("id", dinnerId).single(),
+    supabase.from("clubs").select("name").eq("id", clubId).single(),
+    supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", clubId),
+    supabase.from("restaurant_cache").select("name").eq("place_id", placeId).single(),
+  ]);
+
+  if (!dinner || !club || !members || !restaurant) return;
+
+  const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${clubId}/dinners/${dinnerId}`;
+  const dinnerName = dinnerLabel(dinner);
+  const lockedDate = dinner.target_date
+    ? new Date(dinner.target_date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "TBD";
+
+  type MemberRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+  const eligibleMembers = (members as MemberRow[])
+    .filter((m) => m.users?.email_notifications?.restaurant_picked !== false);
+
+  await Promise.allSettled(
+    eligibleMembers.map((m) =>
+      sendRestaurantPicked({
+        to: m.users.email,
+        clubName: club.name,
+        dinnerName,
+        restaurantName: restaurant.name,
+        lockedDate,
+        dinnerUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(m.users.id, "restaurant_picked"),
+      })
+    )
+  );
+}
+
+
+export async function setWaitlisted({ dinnerId }: { dinnerId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("status")
+    .eq("id", dinnerId)
+    .single();
+  if (dinner?.status !== "seeking_reservation" && dinner?.status !== "waitlisted") {
+    return { error: "Dinner is not seeking a reservation." };
+  }
+
+  const [{ error: dinnerErr }, { error: attemptErr }] = await Promise.all([
+    supabase.from("dinners").update({ status: "waitlisted" }).eq("id", dinnerId),
+    supabase.from("reservation_attempts")
+      .update({ status: "waitlisted" })
+      .eq("dinner_id", dinnerId)
+      .eq("user_id", user.id),
+  ]);
+
+  if (dinnerErr || attemptErr) return { error: "Failed to update waitlist status." };
+  return {};
+}
+
+export async function giveUpWaitlist({ dinnerId }: { dinnerId: string }): Promise<{ error?: string; revertedToVoting?: boolean }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: myAttempt } = await supabase
+    .from("reservation_attempts")
+    .select("status")
+    .eq("dinner_id", dinnerId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (myAttempt?.status !== "waitlisted") return { error: "You are not on the waitlist." };
+
+  const { error: attemptErr } = await supabase
+    .from("reservation_attempts")
+    .update({ status: "abandoned" })
+    .eq("dinner_id", dinnerId)
+    .eq("user_id", user.id);
+  if (attemptErr) return { error: "Failed to give up waitlist." };
+
+  // Only revert dinner status if no one else is still waitlisted
+  const { data: remaining } = await supabase
+    .from("reservation_attempts")
+    .select("id")
+    .eq("dinner_id", dinnerId)
+    .eq("status", "waitlisted");
+
+  if (!remaining || remaining.length === 0) {
+    // No one left on the waitlist — go back to restaurant voting so the group can pick somewhere else
+    await supabase.from("dinners").update({
+      status: "seeking_reservation",
+      planning_stage: "restaurant_voting",
+      voting_open: true,
+      winning_restaurant_place_id: null,
+    }).eq("id", dinnerId);
+    return { revertedToVoting: true };
+  }
+
+  return {};
+}
+
+export async function rsvpDinner({
+  dinnerId,
+  status,
+}: {
+  dinnerId: string;
+  status: "going" | "not_going";
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("rsvps")
+    .upsert(
+      { dinner_id: dinnerId, user_id: user.id, status },
+      { onConflict: "dinner_id,user_id" }
+    );
+  if (error) return { error: "Failed to save RSVP." };
+  return {};
 }
 
 // ─── Cancel dinner ────────────────────────────────────────────

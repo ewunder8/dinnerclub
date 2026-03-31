@@ -11,7 +11,7 @@ import {
   canRemoveSuggestion,
 } from "@/lib/poll";
 import { isRatingWindowOpen } from "@/lib/countdown";
-import type { RestaurantCache, Vote, User, RSVP } from "@/lib/supabase/database.types";
+import type { RestaurantCache, Vote, User, RSVP, ReservationAttempt } from "@/lib/supabase/database.types";
 import SuggestRestaurant from "./SuggestRestaurant";
 import PollOptionCard from "./PollOptionCard";
 import OwnerControls from "./OwnerControls";
@@ -26,6 +26,7 @@ import type { DinnerComment } from "./DinnerComments";
 import SharePollButton from "./SharePollButton";
 import RefreshButton from "./RefreshButton";
 import EditDinnerDetails from "./EditDinnerDetails";
+import DinnerPlanningView from "./DinnerPlanningView";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -98,6 +99,126 @@ export default async function DinnerPage({
   if (dinner.voting_open && dinner.poll_closes_at && new Date(dinner.poll_closes_at) <= new Date()) {
     await supabase.from("dinners").update({ voting_open: false }).eq("id", dinner.id);
     dinner.voting_open = false;
+  }
+
+  // ── Planning flow (date voting → restaurant voting → winner) ──
+  const planningStage = dinner.planning_stage;
+  const isCreator = dinner.created_by === user.id;
+
+  const inPlanningFlow =
+    (planningStage === "date_voting" || planningStage === "restaurant_voting") ||
+    (planningStage === "winner" && dinner.status !== "confirmed" && dinner.status !== "completed");
+
+  if (inPlanningFlow) {
+    // Fetch availability poll linked to this dinner
+    const { data: availPoll } = await supabase
+      .from("availability_polls")
+      .select("*")
+      .eq("dinner_id", params.dinnerId)
+      .maybeSingle();
+
+    // Only enter planning flow if a linked poll exists (guards old dinners)
+    if (availPoll) {
+      const [
+        { data: pollDates },
+        { data: availResponses },
+        { data: clubMembers },
+        { count: memberCount },
+        { data: rawOptions },
+        { data: rawVotes },
+        { data: rawRsvps },
+        { data: rawAttempts },
+        { data: clubData },
+        { data: rawWishlist },
+      ] = await Promise.all([
+        supabase.from("availability_poll_dates").select("*").eq("poll_id", availPoll.id).order("proposed_date"),
+        supabase.from("availability_responses").select("*").eq("poll_id", availPoll.id),
+        supabase.from("club_members").select("user_id, users ( name, email, avatar_url )").eq("club_id", params.id),
+        supabase.from("club_members").select("*", { count: "exact", head: true }).eq("club_id", params.id),
+        supabase.from("poll_options").select("*").eq("dinner_id", params.dinnerId).is("removed_at", null),
+        supabase.from("votes").select("*").eq("dinner_id", params.dinnerId),
+        supabase.from("rsvps").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId),
+        supabase.from("reservation_attempts").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId).in("status", ["attempting", "waitlisted", "succeeded"]).order("created_at", { ascending: true }),
+        supabase.from("clubs").select("city").eq("id", params.id).single(),
+        supabase.from("club_wishlist").select("place_id").eq("club_id", params.id),
+      ]);
+
+      // Build restaurant map for poll options
+      const opts = rawOptions ?? [];
+      let restaurantMap: Record<string, RestaurantCache> = {};
+      if (opts.length > 0) {
+        const { data: restaurants } = await supabase
+          .from("restaurant_cache")
+          .select("*")
+          .in("place_id", opts.map((o) => o.place_id));
+        for (const r of restaurants ?? []) {
+          restaurantMap[r.place_id] = r as RestaurantCache;
+        }
+      }
+
+      const votesByOption: Record<string, Vote[]> = {};
+      for (const v of rawVotes ?? []) {
+        if (!votesByOption[v.option_id]) votesByOption[v.option_id] = [];
+        votesByOption[v.option_id].push(v as Vote);
+      }
+
+      const mergedOptions = opts
+        .filter((o) => restaurantMap[o.place_id])
+        .map((o) => ({ ...o, votes: votesByOption[o.id] ?? [], restaurant_cache: restaurantMap[o.place_id] }));
+
+      // Wishlist items not already in the poll
+      const pollPlaceIds = new Set(opts.map((o) => o.place_id));
+      const wishlistPlaceIds = (rawWishlist ?? []).map((w) => w.place_id).filter((id) => !pollPlaceIds.has(id));
+      let wishlistForPoll: { place_id: string; name: string; address: string | null }[] = [];
+      if (wishlistPlaceIds.length > 0) {
+        const { data: wRestaurants } = await supabase
+          .from("restaurant_cache")
+          .select("place_id, name, address")
+          .in("place_id", wishlistPlaceIds);
+        wishlistForPoll = (wRestaurants ?? []).map((r) => ({ place_id: r.place_id, name: r.name, address: r.address }));
+      }
+
+      // Winner restaurant for stage 3
+      let winnerRestaurant: RestaurantCache | null = null;
+      if (dinner.winning_restaurant_place_id) {
+        const { data: wr } = await supabase
+          .from("restaurant_cache")
+          .select("*")
+          .eq("place_id", dinner.winning_restaurant_place_id)
+          .single();
+        winnerRestaurant = (wr as RestaurantCache) ?? null;
+      }
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
+      return (
+        <main className="min-h-screen bg-snow">
+          <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+          <div className="max-w-2xl mx-auto px-6 py-10">
+            <DinnerPlanningView
+              dinner={dinner}
+              availPoll={availPoll}
+              pollDates={(pollDates ?? []) as { id: string; proposed_date: string }[]}
+              availResponses={(availResponses ?? []) as any[]}
+              clubMembers={(clubMembers ?? []) as any[]}
+              memberCount={memberCount ?? 0}
+              mergedOptions={mergedOptions as any[]}
+              rawVotes={(rawVotes ?? []) as Vote[]}
+              rawRsvps={(rawRsvps ?? []) as (RSVP & { users: User })[]}
+              rawAttempts={(rawAttempts ?? []) as (ReservationAttempt & { users: User })[]}
+              winnerRestaurant={winnerRestaurant}
+              userId={user.id}
+              clubId={params.id}
+              dinnerId={params.dinnerId}
+              isCreator={isCreator}
+              clubCity={(clubData as any)?.city ?? null}
+              wishlistForPoll={wishlistForPoll}
+              appUrl={appUrl}
+            />
+          </div>
+        </main>
+      );
+    }
   }
 
   // ── Confirmed: show countdown view ───────────────────────────
@@ -350,6 +471,7 @@ export default async function DinnerPage({
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
             topOptions={topOptions}
+            dinnerStatus="seeking_reservation"
           />
 
           {isOwner && (
@@ -476,9 +598,8 @@ export default async function DinnerPage({
             userId={user.id}
             attempts={(rawAttempts ?? []) as Parameters<typeof ReservationAttempts>[0]["attempts"]}
             topOptions={waitlistTopOptions}
+            dinnerStatus="waitlisted"
           />
-
-          {isOwner && <ConfirmReservationForm dinnerId={params.dinnerId} clubId={params.id} userId={user.id} topOptions={waitlistTopOptions} />}
           {isOwner && (
             <div className="flex justify-end">
               <CancelDinnerButton dinnerId={params.dinnerId} clubId={params.id} />

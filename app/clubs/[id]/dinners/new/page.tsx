@@ -28,11 +28,7 @@ export default async function NewDinnerPage({
     (m: { user_id: string; role: string }) => m.user_id === user.id
   );
 
-  // Must be a member — and only owners can start dinners
   if (!membership) notFound();
-  if (membership.role !== "owner") {
-    redirect(`/clubs/${params.id}`);
-  }
 
   return (
     <CreateDinnerForm
