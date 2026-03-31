@@ -51,7 +51,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Min date for date inputs — today
+  // For past-date validation
   const today = new Date().toISOString().slice(0, 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,6 +59,12 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
 
     if (!date1) {
       setError("Pick at least one date option.");
+      return;
+    }
+
+    const validDatesCheck = [date1, date2, date3].filter(Boolean);
+    if (validDatesCheck.some((d) => d < today)) {
+      setError("All dates must be today or in the future.");
       return;
     }
 
@@ -167,10 +173,18 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
             type="date"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            min={today}
             required={required}
             className="flex-1 bg-transparent text-ink text-sm outline-none min-w-0"
           />
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="text-ink-faint hover:text-ink-muted text-base leading-none shrink-0"
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
     );
