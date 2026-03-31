@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSuggestionModeLabel } from "@/lib/poll";
@@ -34,10 +34,6 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   const [date1, setDate1] = useState("");
   const [date2, setDate2] = useState("");
   const [date3, setDate3] = useState("");
-  const date1Ref = useRef<HTMLInputElement>(null);
-  const date2Ref = useRef<HTMLInputElement>(null);
-  const date3Ref = useRef<HTMLInputElement>(null);
-
   // Theme (all optional)
   const [cuisine, setCuisine] = useState("");
   const [price, setPrice] = useState<number | null>(null);
@@ -155,55 +151,27 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
     label,
     value,
     onChange,
-    inputRef,
     required,
   }: {
     label: string;
     value: string;
     onChange: (v: string) => void;
-    inputRef: React.RefObject<HTMLInputElement>;
     required?: boolean;
   }) {
-    const formatted = value
-      ? (() => {
-          const [y, m, d] = value.split("-").map(Number);
-          return new Date(y, m - 1, d).toLocaleDateString("en-US", {
-            weekday: "short", month: "short", day: "numeric",
-          });
-        })()
-      : null;
-
     return (
       <div>
         <p className="text-xs text-ink-muted mb-1.5">{label}</p>
-        <button
-          type="button"
-          onClick={() => inputRef.current?.showPicker()}
-          className="w-full flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-left hover:border-slate transition-colors"
-        >
+        <div className="flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3">
           <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
-          <span className={formatted ? "text-ink text-sm" : "text-ink-faint text-sm"}>
-            {formatted ?? "Pick a date"}
-          </span>
-          {value && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onChange(""); }}
-              className="ml-auto text-ink-faint hover:text-ink-muted text-base leading-none"
-            >
-              ×
-            </button>
-          )}
-        </button>
-        <input
-          ref={inputRef}
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          min={today}
-          required={required}
-          className="sr-only"
-        />
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            min={today}
+            required={required}
+            className="flex-1 bg-transparent text-ink text-sm outline-none min-w-0"
+          />
+        </div>
       </div>
     );
   }
@@ -243,9 +211,9 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
                 Suggest up to 3 dates. The group votes, then you lock one in.
               </p>
             </div>
-            <DatePickerButton label="Option 1" value={date1} onChange={setDate1} inputRef={date1Ref} required />
-            <DatePickerButton label="Option 2 (optional)" value={date2} onChange={setDate2} inputRef={date2Ref} />
-            <DatePickerButton label="Option 3 (optional)" value={date3} onChange={setDate3} inputRef={date3Ref} />
+            <DatePickerButton label="Option 1" value={date1} onChange={setDate1} required />
+            <DatePickerButton label="Option 2 (optional)" value={date2} onChange={setDate2} />
+            <DatePickerButton label="Option 3 (optional)" value={date3} onChange={setDate3} />
           </section>
 
           {/* ── Dinner name / theme ── */}
