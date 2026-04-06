@@ -30,10 +30,11 @@ type Props = {
 export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props) {
   const router = useRouter();
 
-  // Date options (up to 3) for the availability poll
+  // Date options
   const [date1, setDate1] = useState("");
   const [date2, setDate2] = useState("");
   const [date3, setDate3] = useState("");
+
   // Theme (all optional)
   const [cuisine, setCuisine] = useState("");
   const [price, setPrice] = useState<number | null>(null);
