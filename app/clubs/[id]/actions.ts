@@ -28,6 +28,37 @@ export async function emailInvite({
   await sendInviteToClub({ to, inviterName, clubName, inviteUrl });
 }
 
+export async function refreshInviteLink(clubId: string): Promise<{ token: string; expires_at: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { generateInviteToken, getInviteExpiry } = await import("@/lib/utils");
+
+  // Revoke all existing active links for this club
+  await supabase
+    .from("invite_links")
+    .update({ status: "revoked" })
+    .eq("club_id", clubId)
+    .eq("status", "active");
+
+  // Generate a fresh one
+  const token = generateInviteToken();
+  const expires_at = getInviteExpiry().toISOString();
+
+  const { error } = await supabase.from("invite_links").insert({
+    club_id: clubId,
+    created_by: user.id,
+    token,
+    expires_at,
+    status: "active",
+  });
+
+  if (error) throw new Error("Failed to generate invite link");
+
+  return { token, expires_at };
+}
+
 export async function updateMemberRole(clubId: string, targetUserId: string, newRole: "owner" | "member") {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

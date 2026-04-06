@@ -25,6 +25,7 @@ export default async function JoinCompletePage({
     redirect("/dashboard?error=invite_expired");
   }
 
+  if (!invite.club_id) redirect("/dashboard?error=invalid_invite");
   const clubId = invite.club_id;
 
   // Check if already a member

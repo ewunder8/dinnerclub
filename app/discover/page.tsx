@@ -99,7 +99,7 @@ export default async function DiscoverPage() {
           {pastDinners.map((dinner) => {
             const restaurant = restaurantMap[dinner.winning_restaurant_place_id!];
             const summary = summaryMap[dinner.id];
-            const club = clubMap[dinner.club_id];
+            const club = clubMap[dinner.club_id!];
             if (!restaurant) return null;
 
             const returnPct = summary ? wouldReturnPct(summary) : null;

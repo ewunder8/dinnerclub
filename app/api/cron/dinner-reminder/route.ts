@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       if (!dinner.winning_restaurant_place_id) return;
 
       const [{ data: members }, { data: restaurant }] = await Promise.all([
-        supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", dinner.club_id),
+        supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", dinner.club_id!),
         supabase.from("restaurant_cache").select("name, address").eq("place_id", dinner.winning_restaurant_place_id).single(),
       ]);
 

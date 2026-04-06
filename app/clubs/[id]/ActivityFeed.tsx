@@ -25,7 +25,7 @@ export default async function ActivityFeed({ clubId }: { clubId: string }) {
   const [{ data: dinners }, { data: members }] = await Promise.all([
     supabase
       .from("dinners")
-      .select("id, status, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood")
+      .select("id, status, created_at, winning_restaurant_place_id, title, theme_cuisine, theme_neighborhood")
       .eq("club_id", clubId)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
@@ -62,7 +62,7 @@ export default async function ActivityFeed({ clubId }: { clubId: string }) {
     const restaurantName = d.winning_restaurant_place_id
       ? restaurantNameMap[d.winning_restaurant_place_id]
       : null;
-    const theme = [d.theme_cuisine, d.theme_neighborhood].filter(Boolean).join(" · ");
+    const theme = (d as any).title || [d.theme_cuisine, d.theme_neighborhood].filter(Boolean).join(" · ");
 
     if (d.status === "completed" && restaurantName) {
       events.push({ icon: "🍽️", label: `Had dinner at ${restaurantName}`, timestamp: d.created_at });

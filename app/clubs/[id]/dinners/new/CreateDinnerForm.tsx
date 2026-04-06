@@ -22,9 +22,9 @@ const SUGGESTION_MODES: Dinner["suggestion_mode"][] = [
 ];
 
 type Props = {
-  clubId: string;
-  clubName: string;
-  clubEmoji: string | null;
+  clubId?: string | null;
+  clubName?: string | null;
+  clubEmoji?: string | null;
 };
 
 function DatePickerButton({
@@ -69,14 +69,15 @@ function DatePickerButton({
 
 export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props) {
   const router = useRouter();
+  const isOneOff = !clubId;
 
-  // Date options — uncontrolled to avoid iOS auto-selecting today on picker open
+  // Date refs — uncontrolled to avoid iOS auto-selecting today on picker open
   const date1Ref = useRef<HTMLInputElement>(null);
   const date2Ref = useRef<HTMLInputElement>(null);
   const date3Ref = useRef<HTMLInputElement>(null);
 
-  // Theme (all optional)
-  const [cuisine, setCuisine] = useState("");
+  // Dinner details
+  const [title, setTitle] = useState("");
   const [price, setPrice] = useState<number | null>(null);
   const [vibe, setVibe] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
@@ -88,28 +89,38 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   const [maxSuggestions, setMaxSuggestions] = useState(8);
 
   const [showVibeNeighborhood, setShowVibeNeighborhood] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // For past-date validation
   const today = new Date().toISOString().slice(0, 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const date1 = date1Ref.current?.value || "";
-    const date2 = date2Ref.current?.value || "";
-    const date3 = date3Ref.current?.value || "";
+    const date2 = isOneOff ? "" : (date2Ref.current?.value || "");
+    const date3 = isOneOff ? "" : (date3Ref.current?.value || "");
 
     if (!date1) {
       setError("Pick at least one date option.");
       return;
     }
 
-    const validDatesCheck = [date1, date2, date3].filter(Boolean);
-    if (validDatesCheck.some((d) => d < today)) {
-      setError("All dates must be today or in the future.");
+    if (isOneOff && date1 < today) {
+      setError("Date must be today or in the future.");
+      return;
+    }
+
+    if (!isOneOff) {
+      const validDatesCheck = [date1, date2, date3].filter(Boolean);
+      if (validDatesCheck.some((d) => d < today)) {
+        setError("All dates must be today or in the future.");
+        return;
+      }
+    }
+
+    if (isOneOff && !title.trim()) {
+      setError("Please give this dinner a title.");
       return;
     }
 
@@ -124,19 +135,21 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
     const { data: dinner, error: dinnerError } = await supabase
       .from("dinners")
       .insert({
-        club_id: clubId,
+        club_id: clubId ?? null,
         created_by: user.id,
-        theme_cuisine: cuisine.trim() || null,
+        title: title.trim() || null,
         theme_price: price,
         theme_vibe: vibe.trim() || null,
         theme_neighborhood: neighborhood.trim() || null,
         suggestion_mode: suggestionMode,
         poll_min_options: minSuggestions,
         max_suggestions: maxSuggestions,
-        planning_stage: "date_voting",
+        // One-off: skip date voting, set target_date directly
+        planning_stage: isOneOff ? "restaurant_voting" : "date_voting",
+        target_date: isOneOff ? new Date(date1).toISOString() : null,
+        voting_open: isOneOff ? true : false,
         // Nullable fields required by Insert type
         poll_closes_at: null,
-        target_date: null,
         winning_restaurant_place_id: null,
         reservation_datetime: null,
         party_size: null,
@@ -144,6 +157,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
         reservation_platform: null,
         reserved_by: null,
         ratings_open_until: null,
+        theme_cuisine: null,
       })
       .select()
       .single();
@@ -154,37 +168,54 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
       return;
     }
 
-    // Create availability poll linked to the dinner
-    const { data: poll, error: pollError } = await supabase
-      .from("availability_polls")
-      .insert({
-        club_id: clubId,
-        created_by: user.id,
-        title: "When works for dinner?",
+    if (!isOneOff) {
+      // Create availability poll linked to the dinner
+      const { data: poll, error: pollError } = await supabase
+        .from("availability_polls")
+        .insert({
+          club_id: clubId!,
+          created_by: user.id,
+          title: "When works for dinner?",
+          dinner_id: dinner.id,
+        })
+        .select("id")
+        .single();
+
+      if (pollError || !poll) {
+        setError("Failed to create date poll.");
+        setLoading(false);
+        return;
+      }
+
+      const validDates = [date1, date2, date3].filter(Boolean);
+      const { error: datesError } = await supabase
+        .from("availability_poll_dates")
+        .insert(validDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
+
+      if (datesError) {
+        setError("Failed to save date options.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/clubs/${clubId}/dinners/${dinner.id}`);
+    } else {
+      // One-off: generate invite link
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      await supabase.from("invite_links").insert({
+        club_id: null,
         dinner_id: dinner.id,
-      })
-      .select("id")
-      .single();
+        created_by: user.id,
+        token,
+        expires_at: expiresAt.toISOString(),
+        status: "active",
+      });
 
-    if (pollError || !poll) {
-      setError("Failed to create date poll.");
-      setLoading(false);
-      return;
+      router.push(`/dinners/${dinner.id}`);
     }
-
-    // Insert date options
-    const validDates = [date1, date2, date3].filter(Boolean);
-    const { error: datesError } = await supabase
-      .from("availability_poll_dates")
-      .insert(validDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
-
-    if (datesError) {
-      setError("Failed to save date options.");
-      setLoading(false);
-      return;
-    }
-
-    router.push(`/clubs/${clubId}/dinners/${dinner.id}`);
   };
 
   const stepMinSuggestions = (delta: number) => {
@@ -192,10 +223,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
   };
 
   const stepMaxSuggestions = (delta: number) => {
-    setMaxSuggestions((v) => {
-      const next = Math.max(minSuggestions, Math.min(20, v + delta));
-      return next;
-    });
+    setMaxSuggestions((v) => Math.max(minSuggestions, Math.min(20, v + delta)));
   };
 
   return (
@@ -212,64 +240,52 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
       <div className="max-w-lg mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-10">
-          <p className="text-ink-muted text-sm mb-1">
-            {clubEmoji} {clubName}
-          </p>
+          {!isOneOff && (
+            <p className="text-ink-muted text-sm mb-1">{clubEmoji} {clubName}</p>
+          )}
           <h2 className="font-sans text-3xl font-bold text-ink">Start a dinner</h2>
           <p className="text-ink-muted text-sm mt-2">
-            Propose some dates so the group can say when they're free.
+            {isOneOff
+              ? "Plan a one-off dinner and share the link with your guests."
+              : "Propose some dates so the group can say when they're free."}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-10">
 
-          {/* ── Date options ── */}
+          {/* ── Dinner title ── */}
           <section className="flex flex-col gap-4">
             <div>
               <h3 className="text-sm font-semibold text-ink mb-1">
-                Proposed dates <span className="text-red-400">*</span>
+                Dinner title {isOneOff
+                  ? <span className="text-red-400">*</span>
+                  : <span className="text-ink-muted font-normal">(optional)</span>}
               </h3>
               <p className="text-xs text-ink-muted">
-                Suggest up to 3 dates. The group votes, then you lock one in.
+                {isOneOff
+                  ? "Give your dinner a name — e.g. \"Eric's Birthday\" or \"Pre-wedding dinner\"."
+                  : "Give the dinner a name, theme, or cuisine — e.g. \"Date night\" or \"Japanese\"."}
               </p>
             </div>
-            <DatePickerButton label="Option 1" inputRef={date1Ref} required />
-            <DatePickerButton label="Option 2 (optional)" inputRef={date2Ref} />
-            <DatePickerButton label="Option 3 (optional)" inputRef={date3Ref} />
-          </section>
-
-          {/* ── Dinner name / theme ── */}
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-1">
-                Dinner name or theme <span className="text-ink-muted font-normal">(optional)</span>
-              </h3>
-              <p className="text-xs text-ink-muted">
-                Guide your crew&apos;s suggestions with a cuisine, price range, or vibe.
-              </p>
-            </div>
-
-            {/* Cuisine */}
             <input
               type="text"
-              placeholder="e.g. Japanese, Italian, anything goes"
-              value={cuisine}
-              onChange={(e) => setCuisine(e.target.value)}
-              maxLength={50}
+              placeholder={isOneOff ? "e.g. Eric's Birthday, Pre-wedding dinner" : "e.g. Date night, Japanese, anything goes"}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={60}
+              required={isOneOff}
               className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
             />
 
             {/* Price */}
             <div>
-              <p className="text-xs text-ink-muted mb-2">Price range</p>
+              <p className="text-xs text-ink-muted mb-2">Price range <span className="font-normal">(optional)</span></p>
               <div className="grid grid-cols-4 gap-2">
                 {PRICE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() =>
-                      setPrice(price === opt.value ? null : opt.value)
-                    }
+                    onClick={() => setPrice(price === opt.value ? null : opt.value)}
                     className={cn(
                       "flex flex-col items-center py-3 rounded-xl border text-sm font-bold transition-all",
                       price === opt.value
@@ -278,9 +294,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
                     )}
                   >
                     <span>{opt.label}</span>
-                    <span className="text-xs font-normal text-ink-muted mt-0.5">
-                      {opt.desc}
-                    </span>
+                    <span className="text-xs font-normal text-ink-muted mt-0.5">{opt.desc}</span>
                   </button>
                 ))}
               </div>
@@ -317,6 +331,27 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
             )}
           </section>
 
+          {/* ── Date ── */}
+          <section className="flex flex-col gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-ink mb-1">
+                {isOneOff ? "Dinner date" : "Proposed dates"} <span className="text-red-400">*</span>
+              </h3>
+              <p className="text-xs text-ink-muted">
+                {isOneOff
+                  ? "Set the date for this dinner."
+                  : "Suggest up to 3 dates. The group votes, then you lock one in."}
+              </p>
+            </div>
+            <DatePickerButton label={isOneOff ? "Date" : "Option 1"} inputRef={date1Ref} required />
+            {!isOneOff && (
+              <>
+                <DatePickerButton label="Option 2 (optional)" inputRef={date2Ref} />
+                <DatePickerButton label="Option 3 (optional)" inputRef={date3Ref} />
+              </>
+            )}
+          </section>
+
           {/* ── Suggestion settings ── */}
           <section className="flex flex-col gap-4">
             <div>
@@ -325,7 +360,6 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
               </h3>
             </div>
 
-            {/* Suggestion mode */}
             <div className="flex flex-col gap-2">
               {SUGGESTION_MODES.map((mode) => (
                 <button
@@ -339,75 +373,42 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
                       : "bg-white border-black/10 hover:border-slate/30"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "w-4 h-4 rounded-full border-2 shrink-0 transition-colors",
-                      suggestionMode === mode
-                        ? "border-citrus-dark bg-citrus-dark"
-                        : "border-black/20 bg-white"
-                    )}
-                  />
-                  <div>
-                    <p className={cn(
-                      "text-sm font-semibold",
-                      suggestionMode === mode ? "text-citrus-dark" : "text-ink"
-                    )}>
-                      {getSuggestionModeLabel(mode)}
-                    </p>
-                  </div>
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border-2 shrink-0 transition-colors",
+                    suggestionMode === mode
+                      ? "border-citrus-dark bg-citrus-dark"
+                      : "border-black/20 bg-white"
+                  )} />
+                  <p className={cn(
+                    "text-sm font-semibold",
+                    suggestionMode === mode ? "text-citrus-dark" : "text-ink"
+                  )}>
+                    {getSuggestionModeLabel(mode)}
+                  </p>
                 </button>
               ))}
             </div>
 
-            {/* Min / Max suggestions */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white border border-black/10 rounded-xl p-4">
                 <p className="text-xs text-ink-muted mb-3">Min to open voting</p>
                 <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => stepMinSuggestions(-1)}
-                    disabled={minSuggestions <= 1}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="font-bold text-lg text-ink">
-                    {minSuggestions}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => stepMinSuggestions(1)}
-                    disabled={minSuggestions >= maxSuggestions}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors"
-                  >
-                    +
-                  </button>
+                  <button type="button" onClick={() => stepMinSuggestions(-1)} disabled={minSuggestions <= 1}
+                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">−</button>
+                  <span className="font-bold text-lg text-ink">{minSuggestions}</span>
+                  <button type="button" onClick={() => stepMinSuggestions(1)} disabled={minSuggestions >= maxSuggestions}
+                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">+</button>
                 </div>
               </div>
 
               <div className="bg-white border border-black/10 rounded-xl p-4">
                 <p className="text-xs text-ink-muted mb-3">Max suggestions</p>
                 <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => stepMaxSuggestions(-1)}
-                    disabled={maxSuggestions <= minSuggestions}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="font-bold text-lg text-ink">
-                    {maxSuggestions}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => stepMaxSuggestions(1)}
-                    disabled={maxSuggestions >= 20}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors"
-                  >
-                    +
-                  </button>
+                  <button type="button" onClick={() => stepMaxSuggestions(-1)} disabled={maxSuggestions <= minSuggestions}
+                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">−</button>
+                  <span className="font-bold text-lg text-ink">{maxSuggestions}</span>
+                  <button type="button" onClick={() => stepMaxSuggestions(1)} disabled={maxSuggestions >= 20}
+                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">+</button>
                 </div>
               </div>
             </div>

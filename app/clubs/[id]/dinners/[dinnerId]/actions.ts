@@ -5,7 +5,8 @@ import { sendReservationConfirmed, sendVotingOpen, sendRatingPrompt, sendDinnerC
 import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
 import type { Dinner } from "@/lib/supabase/database.types";
 
-function dinnerLabel(dinner: { theme_cuisine?: string | null; theme_neighborhood?: string | null; theme_vibe?: string | null }) {
+function dinnerLabel(dinner: { title?: string | null; theme_cuisine?: string | null; theme_neighborhood?: string | null; theme_vibe?: string | null }) {
+  if (dinner.title) return dinner.title;
   return [dinner.theme_cuisine, dinner.theme_neighborhood, dinner.theme_vibe]
     .filter(Boolean)
     .join(" · ") || "Dinner poll";
@@ -172,7 +173,7 @@ async function sendVotingOpenEmails({ dinnerId, clubId }: { dinnerId: string; cl
   const supabase = await createClient();
 
   const [{ data: dinner }, { data: club }, { data: members }, { data: options }] = await Promise.all([
-    supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
+    supabase.from("dinners").select("title, theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
     supabase.from("clubs").select("name").eq("id", clubId).single(),
     supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", clubId),
     supabase.from("poll_options").select("id").eq("dinner_id", dinnerId).is("removed_at", null),
@@ -225,7 +226,7 @@ async function sendRatingPromptEmails({ dinnerId, clubId }: { dinnerId: string; 
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("winning_restaurant_place_id, reservation_datetime, theme_cuisine, theme_neighborhood, theme_vibe")
+    .select("winning_restaurant_place_id, reservation_datetime, title, theme_cuisine, theme_neighborhood, theme_vibe")
     .eq("id", dinnerId)
     .single();
 
@@ -422,7 +423,7 @@ async function sendDateLockedEmails({ dinnerId, clubId, date }: { dinnerId: stri
   const supabase = await createClient();
 
   const [{ data: dinner }, { data: club }, { data: members }] = await Promise.all([
-    supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
+    supabase.from("dinners").select("title, theme_cuisine, theme_neighborhood, theme_vibe").eq("id", dinnerId).single(),
     supabase.from("clubs").select("name").eq("id", clubId).single(),
     supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", clubId),
   ]);
@@ -455,7 +456,7 @@ async function sendRestaurantPickedEmails({ dinnerId, clubId, placeId }: { dinne
   const supabase = await createClient();
 
   const [{ data: dinner }, { data: club }, { data: members }, { data: restaurant }] = await Promise.all([
-    supabase.from("dinners").select("theme_cuisine, theme_neighborhood, theme_vibe, target_date").eq("id", dinnerId).single(),
+    supabase.from("dinners").select("title, theme_cuisine, theme_neighborhood, theme_vibe, target_date").eq("id", dinnerId).single(),
     supabase.from("clubs").select("name").eq("id", clubId).single(),
     supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", clubId),
     supabase.from("restaurant_cache").select("name").eq("place_id", placeId).single(),
@@ -586,7 +587,7 @@ export async function cancelDinner({ dinnerId, clubId }: { dinnerId: string; clu
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("theme_cuisine, theme_neighborhood, theme_vibe")
+    .select("title, theme_cuisine, theme_neighborhood, theme_vibe")
     .eq("id", dinnerId)
     .single();
 
@@ -609,7 +610,7 @@ async function sendCancellationEmails({
 }: {
   dinnerId: string;
   clubId: string;
-  dinner: { theme_cuisine?: string | null; theme_neighborhood?: string | null; theme_vibe?: string | null };
+  dinner: { title?: string | null; theme_cuisine?: string | null; theme_neighborhood?: string | null; theme_vibe?: string | null };
 }) {
   const supabase = await createClient();
 

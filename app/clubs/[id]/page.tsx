@@ -1,13 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { getInviteTimeRemaining } from "@/lib/utils";
 import { extractCuisineFromTypes } from "@/lib/places";
 import UserAvatar from "@/components/UserAvatar";
 import NavUser from "@/components/NavUser";
 import Link from "next/link";
 
 import InviteButton from "./InviteButton";
-import GenerateInviteButton from "./GenerateInviteButton";
 import EmailInviteForm from "./EmailInviteForm";
 import LeaveClubButton from "./LeaveClubButton";
 import RemoveMemberButton from "./RemoveMemberButton";
@@ -62,7 +60,7 @@ export default async function ClubPage({
   // Fetch dinners for this club
   const { data: dinners } = await supabase
     .from("dinners")
-    .select("id, status, planning_stage, created_at, winning_restaurant_place_id, theme_cuisine, theme_neighborhood, reservation_datetime, target_date")
+    .select("id, status, planning_stage, created_at, winning_restaurant_place_id, title, theme_cuisine, theme_neighborhood, reservation_datetime, target_date")
     .eq("club_id", params.id)
     .order("created_at", { ascending: false });
 
@@ -260,15 +258,30 @@ export default async function ClubPage({
 
   const clubStats = { mostDinnersAttended, topVoter, mostSuggestionsAccepted, cuisineBreakdown, avgRating, totalDinners: dinners?.length ?? 0 };
 
-  // Fetch active invite link
-  const { data: invite } = await supabase
+  // Fetch active, non-expired invite link — auto-generate one if none exists
+  let { data: invite } = await supabase
     .from("invite_links")
     .select("token, expires_at")
     .eq("club_id", params.id)
     .eq("status", "active")
+    .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  if (!invite) {
+    const { generateInviteToken, getInviteExpiry } = await import("@/lib/utils");
+    const token = generateInviteToken();
+    const expiresAt = getInviteExpiry().toISOString();
+    await supabase.from("invite_links").insert({
+      club_id: params.id,
+      created_by: user.id,
+      token,
+      expires_at: expiresAt,
+      status: "active",
+    });
+    invite = { token, expires_at: expiresAt };
+  }
 
   const members = club.club_members as {
     id: string;
@@ -370,24 +383,15 @@ export default async function ClubPage({
               <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
             </div>
             <div className="p-5">
-              {invite ? (
-                <>
-                  <p className="text-sm text-ink-muted mb-3">
-                    Anyone with this link can join · {getInviteTimeRemaining(invite.expires_at)}
-                  </p>
-                  <InviteButton token={invite.token} />
-                  <EmailInviteForm
-                    token={invite.token}
-                    clubName={club.name}
-                    inviterName={displayName}
-                  />
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-ink-muted mb-4">No active invite link.</p>
-                  <GenerateInviteButton clubId={params.id} />
-                </>
-              )}
+              <p className="text-sm text-ink-muted mb-3">
+                Anyone with this link can join.
+              </p>
+              <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
+              <EmailInviteForm
+                token={invite.token}
+                clubName={club.name}
+                inviterName={displayName}
+              />
             </div>
           </section>
         )}

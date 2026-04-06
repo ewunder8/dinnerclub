@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isInviteExpired, getInviteTimeRemaining } from "@/lib/utils";
+import { isInviteExpired, getInviteExpiryLabel } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 
 // This page is what people see when they click an invite link
@@ -45,7 +45,7 @@ export default async function JoinPage({
 
   const club = invite.clubs;
   const members = club?.club_members?.map((m: { users: { name: string } }) => m.users) || [];
-  const timeRemaining = getInviteTimeRemaining(invite.expires_at);
+  const expiryLabel = getInviteExpiryLabel(invite.expires_at);
 
   return (
     <main className="min-h-screen bg-slate flex flex-col items-center justify-center p-6">
@@ -104,7 +104,7 @@ export default async function JoinPage({
       </div>
 
       {/* Expiry */}
-      <p className="text-white/25 text-xs mt-6">⏱ {timeRemaining}</p>
+      <p className="text-white/25 text-xs mt-6">Valid until {expiryLabel}</p>
     </main>
   );
 }
@@ -124,7 +124,7 @@ function ExpiredInvite({ clubName }: { clubName?: string }) {
           This link has expired
         </h2>
         <p className="text-ink-muted text-sm leading-relaxed mb-6">
-          Invite links are valid for 7 days.
+          Invite links are valid for 30 days.
           {clubName && ` Ask a member of ${clubName} to send you a fresh one.`}
         </p>
         <a

@@ -7,6 +7,7 @@ type Dinner = {
   id: string;
   status: string;
   winning_restaurant_place_id: string | null;
+  title: string | null;
   theme_cuisine: string | null;
   theme_neighborhood: string | null;
   reservation_datetime: string | null;
@@ -76,7 +77,7 @@ export default function DinnersList({ dinners, clubId, restaurantNameMap, confir
         const restaurantName = dinner.winning_restaurant_place_id
           ? restaurantNameMap[dinner.winning_restaurant_place_id]
           : null;
-        const theme = [dinner.theme_cuisine, dinner.theme_neighborhood]
+        const theme = dinner.title ? [dinner.title] : [dinner.theme_cuisine, dinner.theme_neighborhood]
           .filter(Boolean)
           .join(" · ");
         const label = restaurantName ?? theme ?? "Dinner poll";

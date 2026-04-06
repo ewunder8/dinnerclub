@@ -14,10 +14,10 @@ export function generateInviteToken(): string {
   ).join("");
 }
 
-// Calculate invite link expiry (7 days from now)
+// Calculate invite link expiry (30 days from now)
 export function getInviteExpiry(): Date {
   const expiry = new Date();
-  expiry.setDate(expiry.getDate() + 7);
+  expiry.setDate(expiry.getDate() + 30);
   return expiry;
 }
 
@@ -26,16 +26,9 @@ export function isInviteExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date();
 }
 
-// Time remaining on invite as human-readable string
-export function getInviteTimeRemaining(expiresAt: string): string {
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return "Expired";
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-  if (days > 0) return `${days}d ${hours}h remaining`;
-  return `${hours}h remaining`;
+// Format invite expiry as a readable date: "Valid until May 5"
+export function getInviteExpiryLabel(expiresAt: string): string {
+  return new Date(expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
 // Format date for display

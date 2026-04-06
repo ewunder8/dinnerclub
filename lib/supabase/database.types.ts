@@ -185,7 +185,8 @@ export type Database = {
       invite_links: {
         Row: {
           id: string;
-          club_id: string;
+          club_id: string | null;
+          dinner_id: string | null;
           created_by: string;
           token: string;
           expires_at: string;
@@ -193,7 +194,9 @@ export type Database = {
           status: "active" | "expired" | "revoked";
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at" | "used_count">;
+        Insert: Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at" | "used_count" | "dinner_id"> & {
+          dinner_id?: string | null;
+        };
         Update: Partial<Omit<Database["public"]["Tables"]["invite_links"]["Row"], "id" | "created_at">>;
         Relationships: [
           {
@@ -216,10 +219,12 @@ export type Database = {
       // Migration 002: added theme_*, voting_open, poll_min_options
       // Migration 003: added suggestion_mode, max_suggestions
       // Migration 004: added ratings_open_until
+      // Migration 024: added title, made club_id nullable
       dinners: {
         Row: {
           id: string;
-          club_id: string;
+          club_id: string | null;
+          title: string | null;
           status: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
           poll_closes_at: string | null;
           winning_restaurant_place_id: string | null;

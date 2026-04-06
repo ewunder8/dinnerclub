@@ -50,11 +50,39 @@ export default async function DashboardPage() {
   const now = new Date().toISOString();
   const nowDate = new Date();
 
+  // One-off dinners: created by user OR user has an RSVP
+  const [{ data: rawOneOffCreated }, { data: rawOneOffRsvps }] = await Promise.all([
+    supabase
+      .from("dinners")
+      .select("id, title, status, target_date, planning_stage, winning_restaurant_place_id")
+      .is("club_id", null)
+      .eq("created_by", user.id)
+      .in("status", ["polling", "seeking_reservation", "waitlisted", "confirmed"])
+      .order("target_date", { ascending: true }),
+    supabase
+      .from("rsvps")
+      .select("dinner_id, dinners ( id, title, status, target_date, planning_stage, winning_restaurant_place_id, created_by )")
+      .eq("user_id", user.id)
+      .not("dinner_id", "is", null),
+  ]);
+
+  // Merge and deduplicate one-off dinners
+  type OneOffDinner = { id: string; title: string | null; status: string; target_date: string | null; planning_stage: string; winning_restaurant_place_id: string | null; created_by?: string | null };
+  const oneOffMap = new Map<string, OneOffDinner>();
+  for (const d of rawOneOffCreated ?? []) oneOffMap.set(d.id, d as OneOffDinner);
+  for (const r of rawOneOffRsvps ?? []) {
+    const d = r.dinners as OneOffDinner | null;
+    if (d && !oneOffMap.has(d.id) && ["polling", "seeking_reservation", "waitlisted", "confirmed"].includes(d.status)) {
+      oneOffMap.set(d.id, d);
+    }
+  }
+  const oneOffDinners = Array.from(oneOffMap.values());
+
   const [{ data: rawDinners }, { data: rawCompletedDinners }, { data: rawRecentCompleted }] = await Promise.all([
     clubIds.length > 0
       ? supabase
           .from("dinners")
-          .select("id, club_id, status, voting_open, theme_cuisine, theme_neighborhood, reservation_datetime, winning_restaurant_place_id, created_at")
+          .select("id, club_id, status, voting_open, title, theme_cuisine, theme_neighborhood, reservation_datetime, winning_restaurant_place_id, created_at")
           .in("club_id", clubIds)
           .in("status", ["confirmed", "polling", "seeking_reservation", "waitlisted"])
           .order("reservation_datetime", { ascending: true })
@@ -138,7 +166,7 @@ export default async function DashboardPage() {
   // Most recent completed dinner per club (for frequency nudge)
   const lastDinnerMap: Record<string, Date> = {};
   for (const d of rawRecentCompleted ?? []) {
-    if (!lastDinnerMap[d.club_id]) lastDinnerMap[d.club_id] = new Date(d.created_at);
+    if (d.club_id && !lastDinnerMap[d.club_id]) lastDinnerMap[d.club_id] = new Date(d.created_at);
   }
 
   function frequencyToDays(f: string): number | null {
@@ -217,10 +245,10 @@ export default async function DashboardPage() {
             </div>
             <div className="divide-y divide-citrus/10">
               {unratedDinners.map((dinner) => {
-                const club = clubMap[dinner.club_id];
+                const club = clubMap[dinner.club_id!];
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
                 return (
-                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id!}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-citrus/5 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -246,11 +274,11 @@ export default async function DashboardPage() {
             </div>
             <div className="divide-y divide-black/5">
               {upcoming.map((dinner) => {
-                const club = clubMap[dinner.club_id];
+                const club = clubMap[dinner.club_id!];
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
                 const countdown = getCountdown(dinner.reservation_datetime!);
                 return (
-                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id!}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -283,9 +311,9 @@ export default async function DashboardPage() {
             </div>
             <div className="divide-y divide-black/5">
               {polls.map((dinner) => {
-                const club = clubMap[dinner.club_id];
+                const club = clubMap[dinner.club_id!];
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
-                const themeLabel = [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
+                const themeLabel = dinner.title || [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
                 const dinnerLabel = restaurantName ?? (themeLabel || "Dinner poll");
                 const votingOpen = dinner.status === "polling" && dinner.voting_open;
                 const attempts = attemptsMap[dinner.id];
@@ -295,7 +323,7 @@ export default async function DashboardPage() {
                   ? `${attempts.attempting} trying`
                   : dinner.status === "waitlisted" ? "Waitlisted" : "Finding a table";
                 return (
-                  <Link key={dinner.id} href={`/clubs/${dinner.club_id}/dinners/${dinner.id}`}
+                  <Link key={dinner.id} href={`/clubs/${dinner.club_id!}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -324,23 +352,31 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Nothing active nudge ── */}
-        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && unratedDinners.length === 0 && (
+        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && unratedDinners.length === 0 && oneOffDinners.length === 0 && (
           <div className="bg-citrus/8 border border-citrus/20 rounded-2xl px-6 py-8 text-center">
             <p className="text-3xl mb-3">🍽️</p>
             <p className="font-semibold text-ink mb-1">Nothing cooking right now</p>
             <p className="text-ink-muted text-sm mb-5">
               No active polls or upcoming dinners. Time to plan the next one?
             </p>
-            {clubs.length === 1 ? (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              {clubs.length === 1 ? (
+                <Link
+                  href={`/clubs/${clubs[0].id}/dinners/new`}
+                  className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors text-sm"
+                >
+                  Start a club dinner →
+                </Link>
+              ) : (
+                <p className="text-xs text-ink-muted">Pick a club below to start a dinner.</p>
+              )}
               <Link
-                href={`/clubs/${clubs[0].id}/dinners/new`}
-                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors text-sm"
+                href="/dinners/new"
+                className="inline-block bg-white border border-black/10 text-ink font-bold py-3 px-6 rounded-xl hover:border-slate/30 transition-colors text-sm"
               >
-                Start a dinner →
+                One-off dinner →
               </Link>
-            ) : (
-              <p className="text-xs text-ink-muted">Pick a club below to start a dinner.</p>
-            )}
+            </div>
           </div>
         )}
 
@@ -364,6 +400,42 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
+        )}
+
+        {/* ── One-off dinners ── */}
+        {oneOffDinners.length > 0 && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
+            <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+              <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">One-off dinners</h2>
+              <Link href="/dinners/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
+                + New
+              </Link>
+            </div>
+            <div className="divide-y divide-black/5">
+              {oneOffDinners.map((dinner) => {
+                const dateLabel = dinner.target_date
+                  ? new Date(dinner.target_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : null;
+                const statusLabel = dinner.status === "confirmed" ? "Confirmed" :
+                  dinner.planning_stage === "restaurant_voting" ? "Picking restaurant" :
+                  dinner.planning_stage === "winner" ? "Finding table" : "Planning";
+                return (
+                  <Link key={dinner.id} href={`/dinners/${dinner.id}`}
+                    className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🍽️</span>
+                      <div>
+                        <p className="font-semibold text-ink text-sm">{dinner.title ?? "Dinner"}</p>
+                        {dateLabel && <p className="text-xs text-ink-muted mt-0.5">{dateLabel}</p>}
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-ink-muted shrink-0">{statusLabel}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* ── Your clubs ── */}
@@ -406,6 +478,20 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* ── Start a one-off dinner ── */}
+        <Link href="/dinners/new"
+          className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✨</span>
+            <div>
+              <p className="font-semibold text-ink text-sm">Start a one-off dinner</p>
+              <p className="text-xs text-ink-muted mt-0.5">Birthday, special occasion, one-time plans</p>
+            </div>
+          </div>
+          <span className="text-ink-faint text-sm">→</span>
+        </Link>
 
         {/* ── Discover ── */}
         <Link href="/discover"

@@ -19,6 +19,8 @@ export async function acceptInvite(inviteId: string) {
     throw new Error("This invite is no longer valid.");
   }
 
+  if (!invite.club_id) throw new Error("This is not a club invite.");
+
   const { data: existing } = await supabase
     .from("club_members")
     .select("id")

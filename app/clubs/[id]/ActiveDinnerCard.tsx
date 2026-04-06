@@ -5,6 +5,7 @@ type ActiveDinner = {
   status: string;
   planning_stage: string | null;
   winning_restaurant_place_id: string | null;
+  title: string | null;
   theme_cuisine: string | null;
   theme_neighborhood: string | null;
   reservation_datetime: string | null;
@@ -87,7 +88,7 @@ function getStageInfo(dinner: ActiveDinner, restaurantName: string | null): {
   }
 
   // Generic polling fallback
-  const theme = [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
+  const theme = dinner.title || [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
   return {
     emoji: "🍽️",
     label: theme || "Dinner poll",

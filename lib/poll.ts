@@ -243,9 +243,9 @@ export function getSuggestionModeLabel(
   mode: Dinner["suggestion_mode"]
 ): string {
   const labels: Record<Dinner["suggestion_mode"], string> = {
-    owner_only: "Owner picks the options",
+    owner_only: "I'll pick the options",
     members:    "Anyone can suggest",
-    hybrid:     "Owner seeds it, members can add more",
+    hybrid:     "I'll seed it, others can add more",
   };
   return labels[mode];
 }
