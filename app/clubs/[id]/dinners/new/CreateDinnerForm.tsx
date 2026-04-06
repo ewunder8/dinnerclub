@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSuggestionModeLabel } from "@/lib/poll";
@@ -27,13 +27,53 @@ type Props = {
   clubEmoji: string | null;
 };
 
+function DatePickerButton({
+  label,
+  inputRef,
+  required,
+}: {
+  label: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+  required?: boolean;
+}) {
+  const [hasValue, setHasValue] = useState(false);
+
+  return (
+    <div>
+      <p className="text-xs text-ink-muted mb-1.5">{label}</p>
+      <div className="flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3">
+        <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
+        <input
+          ref={inputRef}
+          type="date"
+          onChange={(e) => setHasValue(!!e.target.value)}
+          required={required}
+          className="flex-1 bg-transparent text-ink text-sm outline-none min-w-0"
+        />
+        {hasValue && (
+          <button
+            type="button"
+            onClick={() => {
+              if (inputRef.current) inputRef.current.value = "";
+              setHasValue(false);
+            }}
+            className="text-ink-faint hover:text-ink-muted text-base leading-none shrink-0"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props) {
   const router = useRouter();
 
-  // Date options
-  const [date1, setDate1] = useState("");
-  const [date2, setDate2] = useState("");
-  const [date3, setDate3] = useState("");
+  // Date options — uncontrolled to avoid iOS auto-selecting today on picker open
+  const date1Ref = useRef<HTMLInputElement>(null);
+  const date2Ref = useRef<HTMLInputElement>(null);
+  const date3Ref = useRef<HTMLInputElement>(null);
 
   // Theme (all optional)
   const [cuisine, setCuisine] = useState("");
@@ -57,6 +97,10 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const date1 = date1Ref.current?.value || "";
+    const date2 = date2Ref.current?.value || "";
+    const date3 = date3Ref.current?.value || "";
 
     if (!date1) {
       setError("Pick at least one date option.");
@@ -154,43 +198,6 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
     });
   };
 
-  function DatePickerButton({
-    label,
-    value,
-    onChange,
-    required,
-  }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    required?: boolean;
-  }) {
-    return (
-      <div>
-        <p className="text-xs text-ink-muted mb-1.5">{label}</p>
-        <div className="flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3">
-          <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
-          <input
-            type="date"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            required={required}
-            className="flex-1 bg-transparent text-ink text-sm outline-none min-w-0"
-          />
-          {value && (
-            <button
-              type="button"
-              onClick={() => onChange("")}
-              className="text-ink-faint hover:text-ink-muted text-base leading-none shrink-0"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <main className="min-h-screen bg-snow">
       {/* Nav */}
@@ -226,9 +233,9 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
                 Suggest up to 3 dates. The group votes, then you lock one in.
               </p>
             </div>
-            <DatePickerButton label="Option 1" value={date1} onChange={setDate1} required />
-            <DatePickerButton label="Option 2 (optional)" value={date2} onChange={setDate2} />
-            <DatePickerButton label="Option 3 (optional)" value={date3} onChange={setDate3} />
+            <DatePickerButton label="Option 1" inputRef={date1Ref} required />
+            <DatePickerButton label="Option 2 (optional)" inputRef={date2Ref} />
+            <DatePickerButton label="Option 3 (optional)" inputRef={date3Ref} />
           </section>
 
           {/* ── Dinner name / theme ── */}
