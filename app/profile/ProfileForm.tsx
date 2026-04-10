@@ -159,7 +159,7 @@ export default function ProfileForm({ user }: Props) {
       {/* City */}
       <div>
         <label className="block text-sm font-semibold text-ink mb-1">
-          City <span className="text-ink-muted font-normal">(optional)</span>
+          City
         </label>
         <input
           type="text"
