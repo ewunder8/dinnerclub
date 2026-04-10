@@ -507,6 +507,20 @@ export default async function DashboardPage() {
           <span className="text-ink-faint text-sm">→</span>
         </Link>
 
+        {/* ── Press ── */}
+        <Link href="/press"
+          className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📰</span>
+            <div>
+              <p className="font-semibold text-ink text-sm">From the Press</p>
+              <p className="text-xs text-ink-muted mt-0.5">Chicago dining, recently covered</p>
+            </div>
+          </div>
+          <span className="text-ink-faint text-sm">→</span>
+        </Link>
+
       </div>
     </main>
   );

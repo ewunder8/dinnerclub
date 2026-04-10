@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import NavUser from "@/components/NavUser";
 import { scoreToStars, wouldReturnPct } from "@/lib/countdown";
 import type { DinnerRatingSummary, RestaurantCache } from "@/lib/supabase/database.types";
-import EditorialFeed from "@/components/EditorialFeed";
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
@@ -52,7 +51,6 @@ export default async function DiscoverPage() {
               Once your club completes a dinner and rates it, you&apos;ll see it here.
             </p>
           </div>
-          <EditorialFeed />
         </div>
       </main>
     );
@@ -232,7 +230,6 @@ export default async function DiscoverPage() {
           })}
         </div>
 
-        <EditorialFeed />
       </div>
     </main>
   );
