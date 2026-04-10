@@ -76,6 +76,9 @@ function buildGcalUrl(restaurantName: string, reservationDatetime: string): stri
 }
 
 function PostForm({ clubId, clubCity, onPosted }: { clubId: string; clubCity: string | null; onPosted: () => void }) {
+  const _now = new Date();
+  const today = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
+
   const [restaurantName, setRestaurantName] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -199,6 +202,7 @@ function PostForm({ clubId, clubCity, onPosted }: { clubId: string; clubCity: st
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          min={today}
           className="flex-1 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors text-sm"
         />
         <input

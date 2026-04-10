@@ -75,6 +75,9 @@ function formatDate(dateStr: string) {
 }
 
 function CreatePollForm({ clubId, onCreated }: { clubId: string; onCreated: () => void }) {
+  const _now = new Date();
+  const today = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
+
   const [title, setTitle] = useState("When works for dinner?");
   const [dates, setDates] = useState<string[]>([""]);
   const [submitting, setSubmitting] = useState(false);
@@ -135,6 +138,7 @@ function CreatePollForm({ clubId, onCreated }: { clubId: string; onCreated: () =
             type="date"
             value={d}
             onChange={(e) => updateDate(i, e.target.value)}
+            min={today}
             className="flex-1 bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink focus:outline-none focus:border-slate transition-colors text-sm"
           />
           {dates.length > 1 && (
