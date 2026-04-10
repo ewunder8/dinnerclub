@@ -8,7 +8,7 @@ const SOURCE_META: Record<
   { label: string; badgeClass: string }
 > = {
   eater: {
-    label: "Eater Chicago",
+    label: "Eater",
     badgeClass: "bg-red-600 text-white",
   },
   chicagomag: {
@@ -18,6 +18,10 @@ const SOURCE_META: Record<
   blockclub: {
     label: "Block Club Eats",
     badgeClass: "bg-emerald-700 text-white",
+  },
+  resy: {
+    label: "Resy",
+    badgeClass: "bg-red-800 text-white",
   },
 };
 
@@ -52,13 +56,13 @@ function SkeletonCard() {
 
 const PAGE_SIZE = 10;
 
-export default function EditorialFeed() {
+export default function EditorialFeed({ city }: { city: string }) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
-    fetch("/api/editorial")
+    fetch(`/api/editorial?city=${encodeURIComponent(city)}`)
       .then((r) => r.json())
       .then((data) => {
         setArticles(data.articles ?? []);

@@ -7,6 +7,7 @@ import NavUser from "@/components/NavUser";
 import InstallBanner from "@/components/InstallBanner";
 import AcceptInviteButton from "./AcceptInviteButton";
 import Link from "next/link";
+import { isSupportedCity } from "@/lib/editorial";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
   const clubs = (memberships ?? []).map((m) => m.clubs as {
     id: string; name: string; emoji: string | null; city: string | null; frequency: string | null;
   });
+  const hasEditorialCity = clubs.some((c) => isSupportedCity(c.city));
 
   const memberClubIds = new Set(clubs.map((c) => c.id));
 
@@ -508,18 +510,20 @@ export default async function DashboardPage() {
         </Link>
 
         {/* ── Press ── */}
-        <Link href="/press"
-          className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📰</span>
-            <div>
-              <p className="font-semibold text-ink text-sm">From the Press</p>
-              <p className="text-xs text-ink-muted mt-0.5">Chicago dining, recently covered</p>
+        {hasEditorialCity && (
+          <Link href="/press"
+            className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📰</span>
+              <div>
+                <p className="font-semibold text-ink text-sm">From the Press</p>
+                <p className="text-xs text-ink-muted mt-0.5">Local dining, recently covered</p>
+              </div>
             </div>
-          </div>
-          <span className="text-ink-faint text-sm">→</span>
-        </Link>
+            <span className="text-ink-faint text-sm">→</span>
+          </Link>
+        )}
 
       </div>
     </main>

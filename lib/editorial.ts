@@ -6,24 +6,90 @@ export type Article = {
   excerpt: string;
   imageUrl: string | null;
   publishedAt: string; // ISO string for serialization
-  source: "eater" | "chicagomag" | "blockclub";
+  source: "eater" | "chicagomag" | "blockclub" | "resy";
 };
 
-const SOURCES = [
-  {
-    key: "eater" as const,
-    url: "https://chicago.eater.com/rss/index.xml",
-  },
-  {
-    key: "chicagomag" as const,
-    url: "https://chicagomag.com/dining-drinking/feed",
-  },
-  {
-    // /category/restaurants-bars/ scopes to Block Club Eats content
-    key: "blockclub" as const,
-    url: "https://blockclubchicago.org/category/restaurants-bars/feed/",
-  },
-];
+// Canonical city keys (lowercase). Club city field should match one of these.
+export const SUPPORTED_CITIES = [
+  "chicago",
+  "los angeles",
+  "new york",
+  "san francisco",
+  "miami",
+  "austin",
+  "seattle",
+  "boston",
+  "washington dc",
+  "dallas",
+  "denver",
+  "las vegas",
+  "new orleans",
+  "philadelphia",
+  "atlanta",
+  "houston",
+  "nashville",
+  "portland",
+  "minneapolis",
+] as const;
+
+export type SupportedCity = (typeof SUPPORTED_CITIES)[number];
+
+// Common aliases that should map to a canonical key
+const CITY_ALIASES: Record<string, SupportedCity> = {
+  "la":              "los angeles",
+  "nyc":             "new york",
+  "new york city":   "new york",
+  "sf":              "san francisco",
+  "dc":              "washington dc",
+  "washington":      "washington dc",
+  "washington, dc":  "washington dc",
+  "washington, d.c.": "washington dc",
+  "nola":            "new orleans",
+  "philly":          "philadelphia",
+  "pdx":             "portland",
+  "portland, or":    "portland",
+};
+
+export function normalizeCityKey(city: string | null | undefined): SupportedCity | null {
+  if (!city) return null;
+  const lower = city.toLowerCase().trim();
+  if (CITY_ALIASES[lower]) return CITY_ALIASES[lower];
+  if ((SUPPORTED_CITIES as readonly string[]).includes(lower)) return lower as SupportedCity;
+  return null;
+}
+
+export function isSupportedCity(city: string | null | undefined): boolean {
+  return normalizeCityKey(city) !== null;
+}
+
+type Source = { key: Article["source"]; url: string };
+
+const SOURCES_BY_CITY: Record<SupportedCity, Source[]> = {
+  chicago: [
+    { key: "eater",      url: "https://chicago.eater.com/rss/index.xml" },
+    { key: "chicagomag", url: "https://chicagomag.com/dining-drinking/feed" },
+    { key: "blockclub",  url: "https://blockclubchicago.org/category/restaurants-bars/feed/" },
+    { key: "resy",       url: "https://blog.resy.com/city/chicago/feed/" },
+  ],
+  "los angeles":   [{ key: "eater", url: "https://la.eater.com/rss/index.xml" }],
+  "new york":      [{ key: "eater", url: "https://ny.eater.com/rss/index.xml" }],
+  "san francisco": [{ key: "eater", url: "https://sf.eater.com/rss/index.xml" }],
+  "miami":         [{ key: "eater", url: "https://miami.eater.com/rss/index.xml" }],
+  "austin":        [{ key: "eater", url: "https://austin.eater.com/rss/index.xml" }],
+  "seattle":       [{ key: "eater", url: "https://seattle.eater.com/rss/index.xml" }],
+  "boston":        [{ key: "eater", url: "https://boston.eater.com/rss/index.xml" }],
+  "washington dc": [{ key: "eater", url: "https://dc.eater.com/rss/index.xml" }],
+  "dallas":        [{ key: "eater", url: "https://dallas.eater.com/rss/index.xml" }],
+  "denver":        [{ key: "eater", url: "https://denver.eater.com/rss/index.xml" }],
+  "las vegas":     [{ key: "eater", url: "https://vegas.eater.com/rss/index.xml" }],
+  "new orleans":   [{ key: "eater", url: "https://nola.eater.com/rss/index.xml" }],
+  "philadelphia":  [{ key: "eater", url: "https://philly.eater.com/rss/index.xml" }],
+  "atlanta":       [{ key: "eater", url: "https://atlanta.eater.com/rss/index.xml" }],
+  "houston":       [{ key: "eater", url: "https://houston.eater.com/rss/index.xml" }],
+  "nashville":     [{ key: "eater", url: "https://nashville.eater.com/rss/index.xml" }],
+  "portland":      [{ key: "eater", url: "https://pdx.eater.com/rss/index.xml" }],
+  "minneapolis":   [{ key: "eater", url: "https://minneapolis.eater.com/rss/index.xml" }],
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parser = new Parser<Record<string, any>, Record<string, any>>({
@@ -35,7 +101,7 @@ const parser = new Parser<Record<string, any>, Record<string, any>>({
   },
 });
 
-async function fetchFeed(source: (typeof SOURCES)[number]): Promise<Article[]> {
+async function fetchFeed(source: Source): Promise<Article[]> {
   try {
     const feed = await parser.parseURL(source.url);
     return (feed.items ?? [])
@@ -67,26 +133,25 @@ async function fetchFeed(source: (typeof SOURCES)[number]): Promise<Article[]> {
       })
       .filter((a) => a.title && a.url);
   } catch {
-    // Gracefully skip failed feeds
     return [];
   }
 }
 
 type CacheEntry = { articles: Article[]; fetchedAt: number };
-let cache: CacheEntry | null = null;
+const cache = new Map<SupportedCity, CacheEntry>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-export async function getEditorialArticles(): Promise<Article[]> {
+export async function getEditorialArticles(city: SupportedCity): Promise<Article[]> {
   const now = Date.now();
-  if (cache && now - cache.fetchedAt < CACHE_TTL) {
-    return cache.articles;
-  }
+  const cached = cache.get(city);
+  if (cached && now - cached.fetchedAt < CACHE_TTL) return cached.articles;
 
-  const results = await Promise.allSettled(SOURCES.map(fetchFeed));
+  const sources = SOURCES_BY_CITY[city] ?? [];
+  const results = await Promise.allSettled(sources.map(fetchFeed));
   const articles = results
     .flatMap((r) => (r.status === "fulfilled" ? r.value : []))
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
-  cache = { articles, fetchedAt: now };
+  cache.set(city, { articles, fetchedAt: now });
   return articles;
 }
