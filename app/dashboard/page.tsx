@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/auth/login");
 
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from("users").select("name, avatar_url").eq("id", user.id).maybeSingle(),
+    supabase.from("users").select("name, avatar_url, city").eq("id", user.id).maybeSingle(),
     supabase
       .from("club_members")
       .select("club_id, role, clubs ( id, name, emoji, city, frequency )")
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   const clubs = (memberships ?? []).map((m) => m.clubs as {
     id: string; name: string; emoji: string | null; city: string | null; frequency: string | null;
   });
-  const hasEditorialCity = clubs.some((c) => isSupportedCity(c.city));
+  const hasEditorialCity = isSupportedCity(profile?.city);
 
   const memberClubIds = new Set(clubs.map((c) => c.id));
 
@@ -441,23 +441,14 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Your clubs ── */}
-        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
-          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-            <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Your clubs</h2>
-            <Link href="/clubs/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
-              + New club
-            </Link>
-          </div>
-
-          {clubs.length === 0 ? (
-            <div className="px-5 py-6 text-center">
-              <Link href="/clubs/new"
-                className="inline-block bg-slate text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-light transition-colors text-sm"
-              >
+        {clubs.length > 0 && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
+            <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+              <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Your clubs</h2>
+              <Link href="/clubs/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
                 + New club
               </Link>
             </div>
-          ) : (
             <div className="divide-y divide-black/5">
               {clubs.map((club) => (
                 <Link key={club.id} href={`/clubs/${club.id}`}
@@ -478,8 +469,8 @@ export default async function DashboardPage() {
                 </Link>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* ── Start a one-off dinner ── */}
         <Link href="/dinners/new"

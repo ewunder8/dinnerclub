@@ -65,13 +65,14 @@ export default function OnboardingForm({
 
       <div>
         <label className="block text-sm font-semibold text-ink mb-1">
-          City <span className="text-ink-muted font-normal">(optional)</span>
+          City <span className="text-citrus-dark">*</span>
         </label>
         <input
           type="text"
           placeholder="e.g. New York"
           value={city}
           onChange={(e) => setCity(e.target.value)}
+          required
           className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
         />
       </div>
@@ -80,7 +81,7 @@ export default function OnboardingForm({
 
       <button
         type="submit"
-        disabled={loading || !name.trim()}
+        disabled={loading || !name.trim() || !city.trim()}
         className="w-full py-3 bg-slate text-white font-bold rounded-xl hover:bg-slate-light transition-colors disabled:opacity-50 mt-2"
       >
         {loading ? "Saving..." : "Let's eat →"}
