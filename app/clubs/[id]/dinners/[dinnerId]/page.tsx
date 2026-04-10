@@ -107,7 +107,7 @@ export default async function DinnerPage({
 
   const inPlanningFlow =
     (planningStage === "date_voting" || planningStage === "restaurant_voting") ||
-    (planningStage === "winner" && dinner.status !== "confirmed" && dinner.status !== "completed");
+    (planningStage === "winner" && dinner.status !== "completed" && !(dinner.status === "confirmed" && dinner.reservation_datetime));
 
   if (inPlanningFlow) {
     // Fetch availability poll linked to this dinner

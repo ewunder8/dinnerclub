@@ -9,6 +9,27 @@ const PRICE_MAP: Record<string, number> = {
   PRICE_LEVEL_VERY_EXPENSIVE: 4,
 };
 
+// Module-level cache: city name → {lat, lng}
+const cityCoordCache = new Map<string, { lat: number; lng: number }>();
+
+async function getCityCoords(city: string): Promise<{ lat: number; lng: number } | null> {
+  const key = city.toLowerCase();
+  if (cityCoordCache.has(key)) return cityCoordCache.get(key)!;
+
+  try {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const loc = data.results?.[0]?.geometry?.location;
+    if (!loc) return null;
+    const coords = { lat: loc.lat, lng: loc.lng };
+    cityCoordCache.set(key, coords);
+    return coords;
+  } catch {
+    return null;
+  }
+}
+
 // Normalised shape returned to the client
 export type PlaceSearchResult = {
   place_id: string;
@@ -34,9 +55,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const coords = city ? await getCityCoords(city) : null;
     const searchQuery = city ? `${q.trim()} in ${city}` : q.trim();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any[] = await searchRestaurantsByText(searchQuery);
+    const raw: any[] = await searchRestaurantsByText(searchQuery, coords ?? undefined);
 
     const places: PlaceSearchResult[] = raw.map((p) => ({
       place_id:    p.id,

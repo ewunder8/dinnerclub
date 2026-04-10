@@ -118,7 +118,7 @@ export default async function OneOffDinnerPage({
 
   const inPlanningFlow =
     planningStage === "restaurant_voting" ||
-    (planningStage === "winner" && dinner.status !== "confirmed" && dinner.status !== "completed");
+    (planningStage === "winner" && dinner.status !== "completed" && !(dinner.status === "confirmed" && dinner.reservation_datetime));
 
   if (inPlanningFlow) {
     const [
