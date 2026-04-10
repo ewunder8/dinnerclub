@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { generateInviteToken, getInviteExpiry } from "@/lib/utils";
+import { SUPPORTED_CITIES } from "@/lib/editorial";
 
 const FOOD_EMOJIS = [
   "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
@@ -150,8 +151,14 @@ export default function CreateClubPage() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               maxLength={50}
+              list="city-suggestions"
               className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
             />
+            <datalist id="city-suggestions">
+              {SUPPORTED_CITIES.map((c) => (
+                <option key={c} value={c.replace(/\b\w/g, (l) => l.toUpperCase())} />
+              ))}
+            </datalist>
           </div>
 
           {/* Preview */}
