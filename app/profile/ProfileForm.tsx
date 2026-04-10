@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import UserAvatar from "@/components/UserAvatar";
 import type { User } from "@/lib/supabase/database.types";
 import { toast } from "sonner";
+import { SUPPORTED_CITIES } from "@/lib/editorial";
 
 type Props = {
   user: User;
@@ -167,8 +168,14 @@ export default function ProfileForm({ user }: Props) {
           onChange={(e) => setCity(e.target.value)}
           placeholder="e.g. Chicago"
           maxLength={60}
+          list="city-suggestions"
           className="w-full border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface transition-colors"
         />
+        <datalist id="city-suggestions">
+          {SUPPORTED_CITIES.map((c) => (
+            <option key={c} value={c.replace(/\b\w/g, (l) => l.toUpperCase())} />
+          ))}
+        </datalist>
       </div>
 
       {/* Beli */}

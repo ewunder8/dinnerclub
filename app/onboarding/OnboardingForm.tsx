@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { SUPPORTED_CITIES } from "@/lib/editorial";
 
 export default function OnboardingForm({
   userId,
@@ -73,8 +74,14 @@ export default function OnboardingForm({
           value={city}
           onChange={(e) => setCity(e.target.value)}
           required
+          list="city-suggestions"
           className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
         />
+        <datalist id="city-suggestions">
+          {SUPPORTED_CITIES.map((c) => (
+            <option key={c} value={c.replace(/\b\w/g, (l) => l.toUpperCase())} />
+          ))}
+        </datalist>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
