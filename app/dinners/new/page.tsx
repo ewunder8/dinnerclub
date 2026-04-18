@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import CreateDinnerForm from "@/app/clubs/[id]/dinners/new/CreateDinnerForm";
 
 export default async function NewOneOffDinnerPage() {
   const supabase = await createClient();
@@ -8,5 +7,6 @@ export default async function NewOneOffDinnerPage() {
 
   if (!user) redirect("/auth/login");
 
-  return <CreateDinnerForm />;
+  // One-off dinners are no longer supported — redirect to dashboard
+  redirect("/");
 }

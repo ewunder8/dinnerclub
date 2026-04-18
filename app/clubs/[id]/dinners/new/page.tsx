@@ -28,6 +28,7 @@ export default async function NewDinnerPage({
     (m: { user_id: string; role: string }) => m.user_id === user.id
   );
 
+  // Any club member can create a dinner
   if (!membership) notFound();
 
   return (
@@ -35,6 +36,7 @@ export default async function NewDinnerPage({
       clubId={club.id}
       clubName={club.name}
       clubEmoji={club.emoji}
+      clubCity={club.city}
     />
   );
 }

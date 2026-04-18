@@ -1,153 +1,419 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getSuggestionModeLabel } from "@/lib/poll";
 import { cn } from "@/lib/utils";
-import { Calendar } from "lucide-react";
-import type { Dinner } from "@/lib/supabase/database.types";
+import { Search, Check, X } from "lucide-react";
 
-const PRICE_OPTIONS = [
-  { value: 1, label: "$",    desc: "Cheap eats" },
-  { value: 2, label: "$$",   desc: "Mid-range" },
-  { value: 3, label: "$$$",  desc: "Upscale" },
-  { value: 4, label: "$$$$", desc: "Splurge" },
-];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const SUGGESTION_MODES: Dinner["suggestion_mode"][] = [
-  "members",
-  "owner_only",
-  "hybrid",
-];
-
-type Props = {
-  clubId?: string | null;
-  clubName?: string | null;
-  clubEmoji?: string | null;
+type SeededRestaurant = {
+  place_id: string;
+  name: string;
+  address: string | null;
+  price_level: number | null;
 };
 
-function DatePickerButton({
-  label,
-  value,
-  onChange,
-  required,
-  min,
+type SearchResult = {
+  place_id: string;
+  name: string;
+  address: string | null;
+  price_level: number | null;
+  rating: number | null;
+};
+
+type Props = {
+  clubId: string;
+  clubName: string | null;
+  clubEmoji: string | null;
+  clubCity: string | null;
+};
+
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function getToday(): string {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+}
+
+function isoDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// ─── StepDots ─────────────────────────────────────────────────────────────────
+
+function StepDots({ step }: { step: 1 | 2 | 3 }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-3">
+      {([1, 2, 3] as const).map((s) => (
+        <div
+          key={s}
+          className={cn(
+            "rounded-full transition-all",
+            step === s
+              ? "w-5 h-2 bg-slate"
+              : s < step
+              ? "w-2 h-2 bg-slate/40"
+              : "w-2 h-2 bg-black/15"
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── CalendarMonth ────────────────────────────────────────────────────────────
+
+function CalendarMonth({
+  year,
+  month,
+  selected,
+  onToggle,
+  minDate,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  required?: boolean;
-  min?: string;
+  year: number;
+  month: number; // 1-indexed
+  selected: string[];
+  onToggle: (date: string) => void;
+  minDate: string;
 }) {
+  const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const firstDow = new Date(year, month - 1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const cells: (string | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => isoDate(year, month, i + 1)),
+  ];
+
   return (
     <div>
-      <p className="text-xs text-ink-muted mb-1.5">{label}</p>
-      <div className="flex items-center gap-3 bg-surface border border-slate/20 rounded-xl px-4 py-3">
-        <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          min={min}
-          className="flex-1 bg-transparent text-ink text-sm outline-none min-w-0"
-        />
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="text-ink-faint hover:text-ink-muted text-base leading-none shrink-0"
-          >
-            ×
-          </button>
-        )}
+      <p className="text-sm font-semibold text-ink text-center mb-3">{monthLabel}</p>
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {DAY_LABELS.map((d) => (
+          <div key={d} className="text-center text-xs text-ink-faint font-medium py-1">
+            {d}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((date, i) => {
+          if (!date) return <div key={`blank-${i}`} />;
+          const isPast = date < minDate;
+          const isSelected = selected.includes(date);
+          const atLimit = selected.length >= 3 && !isSelected;
+          const disabled = isPast || atLimit;
+          return (
+            <button
+              key={date}
+              type="button"
+              onClick={() => !disabled && onToggle(date)}
+              disabled={disabled}
+              className={cn(
+                "aspect-square w-full rounded-lg text-sm font-medium transition-all",
+                isSelected
+                  ? "bg-slate text-white font-bold"
+                  : isPast
+                  ? "text-ink-faint cursor-not-allowed"
+                  : atLimit
+                  ? "text-ink-faint opacity-40 cursor-not-allowed"
+                  : "text-ink hover:bg-black/5"
+              )}
+            >
+              {new Date(date + "T12:00:00").getDate()}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props) {
+// ─── RestaurantCard ───────────────────────────────────────────────────────────
+
+function RestaurantCard({
+  restaurant,
+  selected,
+  onToggle,
+}: {
+  restaurant: SeededRestaurant;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={cn(
+        "w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all",
+        selected
+          ? "bg-citrus/10 border-citrus-dark"
+          : "bg-white border-black/10 hover:border-slate/30"
+      )}
+    >
+      <div
+        className={cn(
+          "mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+          selected ? "border-citrus-dark bg-citrus-dark" : "border-black/20"
+        )}
+      >
+        {selected && <Check className="w-3 h-3 text-white" />}
+      </div>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "text-sm font-semibold leading-snug",
+            selected ? "text-citrus-dark" : "text-ink"
+          )}
+        >
+          {restaurant.name}
+        </p>
+        {restaurant.address && (
+          <p className="text-xs text-ink-muted mt-0.5 truncate">{restaurant.address}</p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+
+function Nav({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
-  const isOneOff = !clubId;
+  return (
+    <nav className="bg-slate px-6 py-4 flex items-center">
+      <div className="flex-1">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="text-white/60 hover:text-white transition-colors text-2xl font-light"
+          >
+            ‹
+          </button>
+        )}
+      </div>
+      <h1 className="font-sans text-base font-bold text-white">New dinner</h1>
+      <div className="flex-1" />
+    </nav>
+  );
+}
 
-  // Date state — controlled inputs
-  const [date1, setDate1] = useState("");
-  const [date2, setDate2] = useState("");
-  const [date3, setDate3] = useState("");
+// ─── Main component ───────────────────────────────────────────────────────────
 
-  // Dinner details
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState<number | null>(null);
-  const [vibe, setVibe] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
+export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity }: Props) {
+  const router = useRouter();
 
-  // Suggestion settings
-  const [suggestionMode, setSuggestionMode] =
-    useState<Dinner["suggestion_mode"]>("members");
-  const [minSuggestions, setMinSuggestions] = useState(2);
-  const [maxSuggestions, setMaxSuggestions] = useState(8);
-
-  const [showVibeNeighborhood, setShowVibeNeighborhood] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const _now = new Date();
-  const today = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
+  // Step 1: date selection
+  const today = getToday();
+  const now = new Date();
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Calendar months: current + next
+  const cy = now.getFullYear();
+  const cm = now.getMonth() + 1;
+  const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const ny = nextMonthDate.getFullYear();
+  const nm = nextMonthDate.getMonth() + 1;
 
-    if (!date1) {
-      setError("Pick at least one date option.");
-      return;
+  // Step 2: restaurant suggestions
+  const [suggestions, setSuggestions] = useState<SeededRestaurant[]>([]);
+  const [selectedRestaurants, setSelectedRestaurants] = useState<SeededRestaurant[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  // Step 3: created dinner data for the confirmation preview
+  const [createdDinnerId, setCreatedDinnerId] = useState<string | null>(null);
+  const [confirmedDates, setConfirmedDates] = useState<string[]>([]);
+  const [confirmedRestaurants, setConfirmedRestaurants] = useState<SeededRestaurant[]>([]);
+
+  // ── Load suggestions when entering Step 2 ──────────────────────
+
+  useEffect(() => {
+    if (step !== 2) return;
+    loadSuggestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  async function loadSuggestions() {
+    const supabase = createClient();
+
+    // Get wishlist place_ids for this club
+    const { data: wishlistRows } = await supabase
+      .from("club_wishlist")
+      .select("place_id")
+      .eq("club_id", clubId)
+      .limit(10);
+
+    const wishlistIds = (wishlistRows ?? []).map((r) => r.place_id);
+
+    // Exclude place_ids already used as poll_options in this club's dinners
+    let usedIds: Set<string> = new Set();
+    if (wishlistIds.length > 0) {
+      const { data: usedOptions } = await supabase
+        .from("poll_options")
+        .select("place_id, dinners!inner(club_id)")
+        .eq("dinners.club_id", clubId)
+        .is("removed_at", null);
+      usedIds = new Set((usedOptions ?? []).map((o) => o.place_id));
     }
 
-    if (isOneOff && date1 < today) {
-      setError("Date must be today or in the future.");
-      return;
+    const freshIds = wishlistIds.filter((id) => !usedIds.has(id)).slice(0, 3);
+
+    let found: SeededRestaurant[] = [];
+
+    if (freshIds.length > 0) {
+      const { data: cached } = await supabase
+        .from("restaurant_cache")
+        .select("place_id, name, address, price_level")
+        .in("place_id", freshIds);
+      found = (cached ?? []).map((r) => ({
+        place_id: r.place_id,
+        name: r.name,
+        address: r.address,
+        price_level: r.price_level,
+      }));
     }
 
-    if (!isOneOff) {
-      const validDatesCheck = [date1, date2, date3].filter(Boolean);
-      if (validDatesCheck.some((d) => d < today)) {
-        setError("All dates must be today or in the future.");
-        return;
+    // Fill remaining slots with nearby Places results
+    if (found.length < 3 && clubCity) {
+      try {
+        const params = new URLSearchParams({ q: "restaurant", city: clubCity });
+        const res = await fetch(`/api/places/search?${params}`);
+        const json = await res.json();
+        const existing = new Set(found.map((r) => r.place_id));
+        const extras: SeededRestaurant[] = (json.places ?? [])
+          .filter((p: SearchResult) => !existing.has(p.place_id) && !usedIds.has(p.place_id))
+          .slice(0, 3 - found.length)
+          .map((p: SearchResult) => ({
+            place_id: p.place_id,
+            name: p.name,
+            address: p.address,
+            price_level: p.price_level,
+          }));
+        found = [...found, ...extras];
+      } catch {
+        // non-fatal
       }
     }
 
-    if (isOneOff && !title.trim()) {
-      setError("Please give this dinner a title.");
+    setSuggestions(found);
+  }
+
+  // ── Debounced restaurant search ────────────────────────────────
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
       return;
     }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const params = new URLSearchParams({ q: searchQuery });
+        if (clubCity) params.set("city", clubCity);
+        const res = await fetch(`/api/places/search?${params}`);
+        const json = await res.json();
+        setSearchResults(json.places ?? []);
+      } catch {
+        // non-fatal
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery, clubCity]);
 
+  // ── Toggle helpers ─────────────────────────────────────────────
+
+  function toggleDate(date: string) {
+    setSelectedDates((prev) => {
+      if (prev.includes(date)) return prev.filter((d) => d !== date);
+      if (prev.length >= 3) return prev;
+      return [...prev, date].sort();
+    });
+  }
+
+  function toggleRestaurant(r: SeededRestaurant) {
+    setSelectedRestaurants((prev) => {
+      const exists = prev.find((x) => x.place_id === r.place_id);
+      return exists
+        ? prev.filter((x) => x.place_id !== r.place_id)
+        : [...prev, r];
+    });
+  }
+
+  function selectFromSearch(r: SearchResult) {
+    const sr: SeededRestaurant = {
+      place_id: r.place_id,
+      name: r.name,
+      address: r.address,
+      price_level: r.price_level,
+    };
+    setSuggestions((prev) =>
+      prev.find((x) => x.place_id === r.place_id) ? prev : [...prev, sr]
+    );
+    setSelectedRestaurants((prev) =>
+      prev.find((x) => x.place_id === r.place_id) ? prev : [...prev, sr]
+    );
+    setSearchQuery("");
+    setSearchResults([]);
+  }
+
+  // ── Submit (fires between Step 2 and Step 3) ───────────────────
+
+  async function handleSubmit() {
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Not authenticated."); setLoading(false); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Not authenticated.");
+      setLoading(false);
+      return;
+    }
 
-    // Create dinner
+    // Auto-generate title from the earliest selected date
+    const [y, m] = selectedDates[0].split("-").map(Number);
+    const title = `Dinner · ${new Date(y, m - 1, 1).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })}`;
+
+    // 1. Create the dinner row
     const { data: dinner, error: dinnerError } = await supabase
       .from("dinners")
       .insert({
-        club_id: clubId ?? null,
+        club_id: clubId,
         created_by: user.id,
-        title: title.trim() || null,
-        theme_price: price,
-        theme_vibe: vibe.trim() || null,
-        theme_neighborhood: neighborhood.trim() || null,
-        suggestion_mode: suggestionMode,
-        poll_min_options: minSuggestions,
-        max_suggestions: maxSuggestions,
-        // One-off: skip date voting, set target_date directly
-        planning_stage: isOneOff ? "restaurant_voting" : "date_voting",
-        target_date: isOneOff ? new Date(date1).toISOString() : null,
-        voting_open: isOneOff ? true : false,
-        // Nullable fields required by Insert type
+        title,
+        planning_stage: "date_voting",
+        voting_open: false,
+        target_date: null,
         poll_closes_at: null,
         winning_restaurant_place_id: null,
+        max_suggestions: null,
         reservation_datetime: null,
         party_size: null,
         confirmation_number: null,
@@ -155,296 +421,322 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji }: Props)
         reserved_by: null,
         ratings_open_until: null,
         theme_cuisine: null,
+        theme_price: null,
+        theme_vibe: null,
+        theme_neighborhood: null,
       })
       .select()
       .single();
 
     if (dinnerError || !dinner) {
-      setError(dinnerError?.message || "Failed to create dinner");
+      setError(dinnerError?.message ?? "Failed to create dinner.");
       setLoading(false);
       return;
     }
 
-    if (!isOneOff) {
-      // Create availability poll linked to the dinner
-      const { data: poll, error: pollError } = await supabase
-        .from("availability_polls")
-        .insert({
-          club_id: clubId!,
-          created_by: user.id,
-          title: "When works for dinner?",
-          dinner_id: dinner.id,
-        })
-        .select("id")
-        .single();
-
-      if (pollError || !poll) {
-        setError("Failed to create date poll.");
-        setLoading(false);
-        return;
-      }
-
-      const validDates = [date1, date2, date3].filter(Boolean);
-      const { error: datesError } = await supabase
-        .from("availability_poll_dates")
-        .insert(validDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
-
-      if (datesError) {
-        setError("Failed to save date options.");
-        setLoading(false);
-        return;
-      }
-
-      router.push(`/clubs/${clubId}/dinners/${dinner.id}`);
-    } else {
-      // One-off: generate invite link
-      const token = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
-
-      await supabase.from("invite_links").insert({
-        club_id: null,
-        dinner_id: dinner.id,
+    // 2. Create availability poll linked to the dinner
+    const { data: poll, error: pollError } = await supabase
+      .from("availability_polls")
+      .insert({
+        club_id: clubId,
         created_by: user.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-        status: "active",
-      });
+        title: "When works for dinner?",
+        dinner_id: dinner.id,
+      })
+      .select("id")
+      .single();
 
-      router.push(`/dinners/${dinner.id}`);
+    if (pollError || !poll) {
+      setError("Failed to create date poll.");
+      setLoading(false);
+      return;
     }
-  };
 
-  const stepMinSuggestions = (delta: number) => {
-    setMinSuggestions((v) => Math.max(1, Math.min(maxSuggestions, v + delta)));
-  };
+    // 3. Create availability_poll_dates (up to 3)
+    const { error: datesError } = await supabase
+      .from("availability_poll_dates")
+      .insert(selectedDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
 
-  const stepMaxSuggestions = (delta: number) => {
-    setMaxSuggestions((v) => Math.max(minSuggestions, Math.min(20, v + delta)));
-  };
+    if (datesError) {
+      setError("Failed to save date options.");
+      setLoading(false);
+      return;
+    }
 
-  return (
-    <main className="min-h-screen bg-snow">
-      {/* Nav */}
-      <nav className="bg-slate px-6 py-4 flex items-center">
-        <div className="flex-1">
-          <button onClick={() => router.back()} className="text-white/60 hover:text-white transition-colors text-2xl font-light">‹</button>
-        </div>
-        <h1 className="font-sans text-base font-bold text-white">New dinner</h1>
-        <div className="flex-1" />
-      </nav>
+    // 4. Seed restaurant poll_options (if any were selected)
+    if (selectedRestaurants.length > 0) {
+      // Ensure restaurants are in cache (ignoreDuplicates = no-op for existing rows)
+      for (const r of selectedRestaurants) {
+        await supabase
+          .from("restaurant_cache")
+          .upsert(
+            {
+              place_id: r.place_id,
+              name: r.name,
+              address: r.address,
+              lat: null,
+              lng: null,
+              phone: null,
+              website: null,
+              price_level: r.price_level,
+              rating: null,
+              reservation_url: null,
+              reservation_platform: null,
+              photo_urls: null,
+              hours: null,
+              beli_url: null,
+              types: null,
+              cached_at: new Date().toISOString(),
+            },
+            { onConflict: "place_id", ignoreDuplicates: true }
+          );
+      }
 
-      <div className="max-w-lg mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-10">
-          {!isOneOff && (
-            <p className="text-ink-muted text-sm mb-1">{clubEmoji} {clubName}</p>
-          )}
-          <h2 className="font-sans text-3xl font-bold text-ink">Start a dinner</h2>
-          <p className="text-ink-muted text-sm mt-2">
-            {isOneOff
-              ? "Plan a one-off dinner and share the link with your guests."
-              : "Propose some dates so the group can say when they're free."}
-          </p>
-        </div>
+      const { error: optionsError } = await supabase.from("poll_options").insert(
+        selectedRestaurants.map((r) => ({
+          dinner_id: dinner.id,
+          place_id: r.place_id,
+          suggested_by: user.id,
+          note: null,
+          removed_by: null,
+          removed_at: null,
+        }))
+      );
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+      if (optionsError) {
+        setError("Failed to seed restaurant suggestions.");
+        setLoading(false);
+        return;
+      }
+    }
 
-          {/* ── Dinner title ── */}
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-1">
-                Dinner title {isOneOff
-                  ? <span className="text-red-400">*</span>
-                  : <span className="text-ink-muted font-normal">(optional)</span>}
-              </h3>
-              <p className="text-xs text-ink-muted">
-                {isOneOff
-                  ? "Give your dinner a name — e.g. \"Eric's Birthday\" or \"Pre-wedding dinner\"."
-                  : "Give the dinner a name, theme, or cuisine — e.g. \"Date night\" or \"Japanese\"."}
-              </p>
-            </div>
-            <input
-              type="text"
-              placeholder={isOneOff ? "e.g. Eric's Birthday, Pre-wedding dinner" : "e.g. Date night, Japanese, anything goes"}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={60}
-              required={isOneOff}
-              className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+    // TODO: send email — notify club members that a dinner poll is open
+
+    setCreatedDinnerId(dinner.id);
+    setConfirmedDates(selectedDates);
+    setConfirmedRestaurants(selectedRestaurants);
+    setLoading(false);
+    setStep(3);
+  }
+
+  // ── Step 1: Pick nights ────────────────────────────────────────
+
+  if (step === 1) {
+    return (
+      <main className="min-h-screen bg-snow">
+        <Nav onBack={() => router.back()} />
+        <div className="max-w-lg mx-auto px-6 py-8">
+          <StepDots step={1} />
+
+          <div className="mt-4 mb-6">
+            <p className="text-ink-muted text-sm mb-1">
+              {clubEmoji} {clubName}
+            </p>
+            <h2 className="font-sans text-2xl font-bold text-ink">When should we eat?</h2>
+            <p className="text-ink-muted text-sm mt-1">
+              Pick up to 3 nights. The club will vote.
+            </p>
+          </div>
+
+          {/* Inline calendar */}
+          <div className="bg-white border border-black/8 rounded-2xl p-5 mb-5 flex flex-col gap-8">
+            <CalendarMonth
+              year={cy}
+              month={cm}
+              selected={selectedDates}
+              onToggle={toggleDate}
+              minDate={today}
             />
+            <div className="border-t border-black/5" />
+            <CalendarMonth
+              year={ny}
+              month={nm}
+              selected={selectedDates}
+              onToggle={toggleDate}
+              minDate={today}
+            />
+          </div>
 
-            {/* Price */}
-            <div>
-              <p className="text-xs text-ink-muted mb-2">Price range <span className="font-normal">(optional)</span></p>
-              <div className="grid grid-cols-4 gap-2">
-                {PRICE_OPTIONS.map((opt) => (
+          {/* Selected date chips */}
+          {selectedDates.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-5">
+              {selectedDates.map((d) => (
+                <div
+                  key={d}
+                  className="flex items-center gap-1.5 bg-slate text-white text-sm font-medium px-3 py-1.5 rounded-full"
+                >
+                  <span>{formatDate(d)}</span>
                   <button
-                    key={opt.value}
                     type="button"
-                    onClick={() => setPrice(price === opt.value ? null : opt.value)}
-                    className={cn(
-                      "flex flex-col items-center py-3 rounded-xl border text-sm font-bold transition-all",
-                      price === opt.value
-                        ? "bg-citrus/10 border-citrus-dark text-citrus-dark"
-                        : "bg-white border-black/10 text-ink hover:border-slate/30"
-                    )}
+                    onClick={() => toggleDate(d)}
+                    className="text-white/70 hover:text-white transition-colors"
                   >
-                    <span>{opt.label}</span>
-                    <span className="text-xs font-normal text-ink-muted mt-0.5">{opt.desc}</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+          <button
+            type="button"
+            disabled={selectedDates.length === 0}
+            onClick={() => {
+              if (!selectedDates.length) {
+                setError("Pick at least one date.");
+                return;
+              }
+              setError(null);
+              setStep(2);
+            }}
+            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Send date poll to club →
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Step 2: Seed a restaurant ──────────────────────────────────
+
+  if (step === 2) {
+    return (
+      <main className="min-h-screen bg-snow">
+        <Nav onBack={() => setStep(1)} />
+        <div className="max-w-lg mx-auto px-6 py-8">
+          <StepDots step={2} />
+
+          <div className="mt-4 mb-6">
+            <h2 className="font-sans text-2xl font-bold text-ink">Add a restaurant idea</h2>
+            <p className="text-ink-muted text-sm mt-1">
+              Optional — your crew can add more during voting.
+            </p>
+          </div>
+
+          {/* Pre-populated suggestion cards */}
+          {suggestions.length > 0 && (
+            <div className="flex flex-col gap-2 mb-4">
+              {suggestions.map((r) => (
+                <RestaurantCard
+                  key={r.place_id}
+                  restaurant={r}
+                  selected={!!selectedRestaurants.find((x) => x.place_id === r.place_id)}
+                  onToggle={() => toggleRestaurant(r)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Restaurant search */}
+          <div className="relative mb-2">
+            <div className="flex items-center gap-3 bg-white border border-black/10 rounded-xl px-4 py-3">
+              <Search className="w-4 h-4 text-ink-muted shrink-0" />
+              <input
+                type="text"
+                placeholder="Search restaurants..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-ink text-sm outline-none placeholder-ink-faint"
+              />
+              {searching && (
+                <div className="w-4 h-4 border-2 border-ink-muted/30 border-t-ink-muted rounded-full animate-spin shrink-0" />
+              )}
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden z-10">
+                {searchResults.slice(0, 5).map((r) => (
+                  <button
+                    key={r.place_id}
+                    type="button"
+                    onClick={() => selectFromSearch(r)}
+                    className="w-full flex flex-col px-4 py-3 text-left hover:bg-black/5 transition-colors border-b border-black/5 last:border-0"
+                  >
+                    <span className="text-sm font-semibold text-ink">{r.name}</span>
+                    {r.address && (
+                      <span className="text-xs text-ink-muted mt-0.5">{r.address}</span>
+                    )}
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Vibe + Neighborhood — shown on demand */}
-            {showVibeNeighborhood ? (
-              <>
-                <input
-                  type="text"
-                  placeholder="Vibe — e.g. Cozy, Lively, Special occasion"
-                  value={vibe}
-                  onChange={(e) => setVibe(e.target.value)}
-                  maxLength={50}
-                  className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
-                />
-                <input
-                  type="text"
-                  placeholder="Neighborhood — e.g. Lower East Side, Midtown"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                  maxLength={60}
-                  className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => { setShowVibeNeighborhood(false); setVibe(""); setNeighborhood(""); }}
-                  className="text-xs text-ink-faint hover:text-ink-muted transition-colors self-start"
-                >
-                  − Remove vibe / neighborhood
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowVibeNeighborhood(true)}
-                className="text-xs text-ink-muted hover:text-ink transition-colors self-start"
-              >
-                + Add vibe / neighborhood
-              </button>
             )}
-          </section>
+          </div>
 
-          {/* ── Date ── */}
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-1">
-                {isOneOff ? "Dinner date" : "Proposed dates"} <span className="text-red-400">*</span>
-              </h3>
-              <p className="text-xs text-ink-muted">
-                {isOneOff
-                  ? "Set the date for this dinner."
-                  : "Suggest up to 3 dates. The group votes, then you lock one in."}
+          {error && <p className="text-red-500 text-sm mb-4 mt-4">{error}</p>}
+
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creating…" : "Start the poll →"}
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Step 3: Confirmation ───────────────────────────────────────
+
+  return (
+    <main className="min-h-screen bg-snow">
+      <Nav />
+      <div className="max-w-lg mx-auto px-6 py-8">
+        <StepDots step={3} />
+
+        <div className="mt-4 mb-8 text-center">
+          <div className="text-5xl mb-4">🎉</div>
+          <h2 className="font-sans text-2xl font-bold text-ink">Dinner poll is live</h2>
+          <p className="text-ink-muted text-sm mt-1">Your club has been notified.</p>
+        </div>
+
+        {/* Read-only preview */}
+        <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
+          <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
+            Date options
+          </p>
+          <div className="flex flex-col gap-3 mb-1">
+            {confirmedDates.map((d) => (
+              <div key={d} className="flex items-center gap-3">
+                <span className="text-sm text-ink w-36 shrink-0">{formatDate(d)}</span>
+                <div className="flex-1 bg-black/5 rounded-full h-1.5" />
+                <span className="text-xs text-ink-faint w-6 text-right">0%</span>
+              </div>
+            ))}
+          </div>
+
+          {confirmedRestaurants.length > 0 && (
+            <>
+              <div className="border-t border-black/5 my-4" />
+              <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
+                Restaurant ideas
               </p>
-            </div>
-            <DatePickerButton
-              label={isOneOff ? "Date" : "Option 1"}
-              value={date1}
-              onChange={setDate1}
-              required
-              min={today}
-            />
-            {!isOneOff && (
-              <>
-                <DatePickerButton
-                  label="Option 2 (optional)"
-                  value={date2}
-                  onChange={setDate2}
-                  min={today}
-                />
-                <DatePickerButton
-                  label="Option 3 (optional)"
-                  value={date3}
-                  onChange={setDate3}
-                  min={today}
-                />
-              </>
-            )}
-          </section>
-
-          {/* ── Suggestion settings ── */}
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-1">
-                Who can suggest restaurants?
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {SUGGESTION_MODES.map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setSuggestionMode(mode)}
-                  className={cn(
-                    "flex items-center gap-3 w-full px-4 py-3.5 rounded-xl border text-left transition-all",
-                    suggestionMode === mode
-                      ? "bg-citrus/10 border-citrus-dark"
-                      : "bg-white border-black/10 hover:border-slate/30"
-                  )}
-                >
-                  <div className={cn(
-                    "w-4 h-4 rounded-full border-2 shrink-0 transition-colors",
-                    suggestionMode === mode
-                      ? "border-citrus-dark bg-citrus-dark"
-                      : "border-black/20 bg-white"
-                  )} />
-                  <p className={cn(
-                    "text-sm font-semibold",
-                    suggestionMode === mode ? "text-citrus-dark" : "text-ink"
-                  )}>
-                    {getSuggestionModeLabel(mode)}
-                  </p>
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white border border-black/10 rounded-xl p-4">
-                <p className="text-xs text-ink-muted mb-3">Min to open voting</p>
-                <div className="flex items-center justify-between">
-                  <button type="button" onClick={() => stepMinSuggestions(-1)} disabled={minSuggestions <= 1}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">−</button>
-                  <span className="font-bold text-lg text-ink">{minSuggestions}</span>
-                  <button type="button" onClick={() => stepMinSuggestions(1)} disabled={minSuggestions >= maxSuggestions}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">+</button>
-                </div>
+              <div className="flex flex-col gap-3">
+                {confirmedRestaurants.map((r) => (
+                  <div key={r.place_id} className="flex items-center gap-3">
+                    <span className="text-sm text-ink truncate flex-1">{r.name}</span>
+                    <div className="w-16 bg-black/5 rounded-full h-1.5" />
+                    <span className="text-xs text-ink-faint w-6 text-right">0%</span>
+                  </div>
+                ))}
               </div>
+            </>
+          )}
+        </div>
 
-              <div className="bg-white border border-black/10 rounded-xl p-4">
-                <p className="text-xs text-ink-muted mb-3">Max suggestions</p>
-                <div className="flex items-center justify-between">
-                  <button type="button" onClick={() => stepMaxSuggestions(-1)} disabled={maxSuggestions <= minSuggestions}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">−</button>
-                  <span className="font-bold text-lg text-ink">{maxSuggestions}</span>
-                  <button type="button" onClick={() => stepMaxSuggestions(1)} disabled={maxSuggestions >= 20}
-                    className="w-8 h-8 rounded-lg bg-black/5 text-ink font-bold hover:bg-black/10 disabled:opacity-30 transition-colors">+</button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {loading ? "Creating…" : "Start the dinner →"}
-          </button>
-
-        </form>
+        <button
+          type="button"
+          onClick={() => router.push(`/clubs/${clubId}/dinners/${createdDinnerId}`)}
+          className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
+        >
+          View dinner →
+        </button>
       </div>
     </main>
   );
