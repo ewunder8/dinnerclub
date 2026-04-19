@@ -206,31 +206,29 @@ export default function DateVotingPanel({
         );
       })}
 
-      {/* None of the above */}
-      <div className="border-t border-black/5 pt-4">
-        <button
-          onClick={handleNone}
-          disabled={loadingNone || iSaidNone}
-          className={`w-full text-sm font-semibold py-3 rounded-xl border transition-colors ${
-            iSaidNone
-              ? "bg-red-50 text-red-500 border-red-200"
-              : "border-black/10 text-ink-muted hover:bg-black/5"
-          }`}
-        >
-          {loadingNone ? "…" : iSaidNone ? "✗ Can't make any of these" : "None of these work for me"}
-        </button>
+      {/* Can't make any of these */}
+      <button
+        onClick={handleNone}
+        disabled={loadingNone || iSaidNone}
+        className={`w-full text-sm font-semibold py-3.5 rounded-xl transition-colors ${
+          iSaidNone
+            ? "bg-red-100 text-red-600 cursor-default"
+            : "bg-red-500 hover:bg-red-600 text-white"
+        } disabled:opacity-60`}
+      >
+        {loadingNone ? "…" : iSaidNone ? "✗ You can't make any of these" : "Can't make any of these"}
+      </button>
 
-        {noneMembers.length > 0 && (
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-ink-muted">Can't make it:</span>
-            {noneMembers.map((m) => (
-              <span key={m.user_id} className="text-xs font-semibold text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">
-                {memberName(m)}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {noneMembers.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-ink-muted">Can't make it:</span>
+          {noneMembers.map((m) => (
+            <span key={m.user_id} className="text-xs font-semibold text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">
+              {memberName(m)}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

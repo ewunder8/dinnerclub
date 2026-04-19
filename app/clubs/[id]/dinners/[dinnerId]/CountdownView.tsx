@@ -11,10 +11,8 @@ import {
 } from "@/lib/countdown";
 import {
   getReservationShareText,
-  shareViaNative,
-  shareViaWhatsApp,
-  copyToClipboard,
 } from "@/lib/sharing";
+import ShareActions from "@/components/ShareActions";
 import { getPlatformName, getReservationURL } from "@/lib/reservations";
 import {
   buildDinnerCalendarEvent,
@@ -47,9 +45,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
-  const [shareOpen, setShareOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const countdown = getCountdown(dinner.reservation_datetime!);
   const styles = URGENCY_STYLES[countdown.urgency];
@@ -71,24 +67,8 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     setRsvpLoading(false);
   };
 
-  const shareText = getReservationShareText({
-    restaurantName: restaurant.name,
-    datetime: dinner.reservation_datetime!,
-    partySize: dinner.party_size ?? goingRsvps.length,
-    confirmationNumber: dinner.confirmation_number,
-    url: typeof window !== "undefined" ? window.location.href : undefined,
-  });
-
-  const handleShare = async () => {
-    const shared = await shareViaNative({ title: "Dinner details", text: shareText });
-    if (!shared) setShareOpen(true);
-  };
-
-  const handleCopy = async () => {
-    await copyToClipboard(shareText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const shareMessage = `We're going to ${restaurant.name}! RSVP for ${clubName} 🎉`;
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const reservationUrl =
     dinner.reservation_platform && dinner.reservation_platform !== "other"
@@ -261,30 +241,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
       {/* Action buttons */}
       <div className="flex flex-col gap-3">
         {/* Share */}
-        <div>
-          <button
-            onClick={handleShare}
-            className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors text-sm"
-          >
-            Share dinner details
-          </button>
-          {shareOpen && (
-            <div className="mt-2 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
-              <button
-                onClick={() => { shareViaWhatsApp(shareText); setShareOpen(false); }}
-                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
-              >
-                WhatsApp
-              </button>
-              <button
-                onClick={handleCopy}
-                className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
-              >
-                {copied ? "Copied!" : "Copy to clipboard"}
-              </button>
-            </div>
-          )}
-        </div>
+        <ShareActions message={shareMessage} url={shareUrl} />
 
         {/* Add to Calendar */}
         <div>

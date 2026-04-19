@@ -16,7 +16,8 @@ import type {
 import DateVotingPanel from "./DateVotingPanel";
 import RestaurantVotingPanel from "./RestaurantVotingPanel";
 import RsvpPanel from "./RsvpPanel";
-import ShareButton from "./ShareButton";
+import ShareActions from "@/components/ShareActions";
+import { extractCuisineFromTypes } from "@/lib/places";
 
 type PollDate = { id: string; proposed_date: string };
 
@@ -199,6 +200,7 @@ export default function DinnerPlanningView({
   const rsvpMembers = clubMembers.map((m) => ({
     userId: m.user_id,
     name: m.users?.name || m.users?.email?.split("@")[0] || "Member",
+    avatarUrl: m.users?.avatar_url ?? null,
     status: rsvpByUser.get(m.user_id) ?? null,
   }));
 
@@ -206,15 +208,7 @@ export default function DinnerPlanningView({
     ? [{ place_id: winnerRestaurant.place_id, name: winnerRestaurant.name }]
     : [];
 
-  // Share messages per stage
   const goingCount = rsvpMembers.filter((m) => m.status === "going").length;
-  const shareMessages: Record<typeof stage, string> = {
-    date_voting: "Hey! Vote on dates for our next dinner 🍽",
-    restaurant_voting: "Vote on where we're eating! 🍽",
-    winner: winnerRestaurant && dinner.target_date
-      ? `Dinner is sorted! We're going to ${winnerRestaurant.name} on ${formatDateLong(dinner.target_date)}${goingCount > 0 ? ` — ${goingCount} ${goingCount === 1 ? "person" : "people"} going so far` : ""}. RSVP here 🎉`
-      : "Our next dinner is sorted — RSVP here! 🎉",
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -245,6 +239,11 @@ export default function DinnerPlanningView({
             userId={userId}
             isCreator={isCreator}
             memberCount={memberCount}
+          />
+
+          <ShareActions
+            message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
+            url={dinnerUrl}
           />
         </>
       )}
@@ -286,52 +285,65 @@ export default function DinnerPlanningView({
             voterCount={voterCount}
             memberCount={memberCount}
           />
+
+          <ShareActions
+            message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
+            url={dinnerUrl}
+          />
         </>
       )}
 
       {/* ── Stage 3: Winner + RSVP ───────────────────────────── */}
       {stage === "winner" && (
         <>
-          <div>
-            <h2 className="font-sans text-2xl font-bold text-ink mb-1">We're going!</h2>
-            {dinner.target_date && (
-              <p className="text-ink-muted text-sm mt-1">
-                {formatDateLong(dinner.target_date)}
-              </p>
-            )}
-          </div>
-
-          {winnerRestaurant && (
-            <div className="bg-white border border-black/8 rounded-2xl p-5">
-              <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">
-                Where we're eating
-              </p>
-              <p className="font-sans text-xl font-bold text-ink">{winnerRestaurant.name}</p>
-              {winnerRestaurant.address && (
-                <p className="text-sm text-ink-muted mt-1">{winnerRestaurant.address}</p>
-              )}
-              <div className="flex items-center gap-3 mt-3 flex-wrap">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winnerRestaurant.name)}&query_place_id=${winnerRestaurant.place_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-semibold text-ink-muted hover:text-ink border border-black/10 rounded-lg px-3 py-1.5 transition-colors"
-                >
-                  Google Maps →
-                </a>
-                {winnerRestaurant.beli_url && (
+          {/* Excitement header */}
+          <div className="bg-citrus/10 border border-citrus/20 rounded-2xl px-5 py-5">
+            <p className="text-xs font-bold text-citrus-dark uppercase tracking-widest mb-2">Restaurant chosen 🎉</p>
+            {winnerRestaurant ? (
+              <>
+                <p className="font-sans text-2xl font-bold text-ink">{winnerRestaurant.name}</p>
+                {(() => {
+                  const cuisine = extractCuisineFromTypes(winnerRestaurant.types ?? null);
+                  return cuisine ? (
+                    <p className="text-sm text-ink-muted mt-0.5">{cuisine}</p>
+                  ) : null;
+                })()}
+                {winnerRestaurant.address && (
+                  <p className="text-sm text-ink-muted mt-0.5">{winnerRestaurant.address}</p>
+                )}
+                {dinner.target_date && (
+                  <p className="text-sm font-semibold text-ink mt-2">📅 {formatDateLong(dinner.target_date)}</p>
+                )}
+                <div className="flex items-center gap-2 mt-4 flex-wrap">
                   <a
-                    href={winnerRestaurant.beli_url}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winnerRestaurant.name)}&query_place_id=${winnerRestaurant.place_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-semibold text-citrus-dark border border-citrus/30 rounded-lg px-3 py-1.5 hover:bg-citrus/5 transition-colors"
+                    className="text-xs font-semibold text-ink border border-black/15 bg-white rounded-lg px-3 py-2 hover:bg-black/5 transition-colors"
                   >
-                    Beli →
+                    Google Maps →
                   </a>
+                  {winnerRestaurant.beli_url && (
+                    <a
+                      href={winnerRestaurant.beli_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-citrus-dark border border-citrus/30 bg-white rounded-lg px-3 py-2 hover:bg-citrus/5 transition-colors"
+                    >
+                      Beli →
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="font-sans text-2xl font-bold text-ink">We're going!</h2>
+                {dinner.target_date && (
+                  <p className="text-sm font-semibold text-ink mt-1">📅 {formatDateLong(dinner.target_date)}</p>
                 )}
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
 
           <RsvpPanel
             dinnerId={dinnerId}
@@ -343,15 +355,17 @@ export default function DinnerPlanningView({
             topOptions={topWinnerOption}
             dinnerStatus={dinner.status}
           />
+
+          <ShareActions
+            message={
+              winnerRestaurant
+                ? `We're going to ${winnerRestaurant.name}! RSVP for ${dinner.title ?? "our next dinner"} 🎉`
+                : `RSVP for ${dinner.title ?? "our next dinner"} 🎉`
+            }
+            url={dinnerUrl}
+          />
         </>
       )}
-
-      {/* Share button */}
-      <ShareButton
-        label={stage === "date_voting" ? "Share date poll" : stage === "restaurant_voting" ? "Share restaurant poll" : "Share dinner"}
-        message={shareMessages[stage]}
-        url={dinnerUrl}
-      />
     </div>
   );
 }

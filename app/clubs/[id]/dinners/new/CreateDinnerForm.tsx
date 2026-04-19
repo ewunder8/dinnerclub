@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Search, Check, X } from "lucide-react";
-import ShareButton from "../[dinnerId]/ShareButton";
+import ShareActions from "@/components/ShareActions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -762,8 +762,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
           )}
         </div>
 
-        <ShareButton
-          label="Share with group chat"
+        <ShareActions
           message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
           url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
         />

@@ -620,7 +620,7 @@ export async function sendSeatRequestResponse({
   </table>
 </body>
 </html>`;
-  return send(to, confirmed ? `Seat confirmed at ${restaurantName} 🎉` : `Seat request at ${restaurantName}`, html);
+  return send(to, confirmed ? `Seat confirmed at ${restaurantName} 🎉` : `No luck — seat taken at ${restaurantName}`, html);
 }
 
 export async function sendDinnerCancelled({

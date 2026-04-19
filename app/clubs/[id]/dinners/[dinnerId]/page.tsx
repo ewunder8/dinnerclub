@@ -23,7 +23,7 @@ import CancelDinnerButton from "./CancelDinnerButton";
 import MarkCompletedButton from "./MarkCompletedButton";
 import DinnerComments from "./DinnerComments";
 import type { DinnerComment } from "./DinnerComments";
-import SharePollButton from "./SharePollButton";
+import ShareActions from "@/components/ShareActions";
 import RefreshButton from "./RefreshButton";
 import EditDinnerDetails from "./EditDinnerDetails";
 import DinnerPlanningView from "./DinnerPlanningView";
@@ -857,7 +857,10 @@ export default async function DinnerPage({
         )}
 
         {/* Share poll */}
-        <SharePollButton dinnerLabel={themeSummary ?? "our next dinner"} />
+        <ShareActions
+          message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/clubs/${params.id}/dinners/${params.dinnerId}`}
+        />
 
       </div>
     </main>

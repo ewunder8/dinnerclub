@@ -25,6 +25,7 @@ export async function emailInvite({
     .update({ invited_email: to.toLowerCase().trim() })
     .eq("token", token);
 
+  // TODO: in-app notification — notify the invitee inside the app when they next log in
   await sendInviteToClub({ to, inviterName, clubName, inviteUrl });
 }
 

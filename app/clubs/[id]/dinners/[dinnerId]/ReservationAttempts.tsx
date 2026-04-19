@@ -128,11 +128,11 @@ export default function ReservationAttempts({ dinnerId, clubId, userId, attempts
       {!isSucceeded && (
         <div className="bg-white border border-black/8 rounded-2xl p-5">
           <h3 className="font-semibold text-sm text-ink-muted uppercase tracking-wide mb-4">
-            Trying to get a table · {activeAttempts.length}
+            {activeAttempts.length === 0 ? "Who's booking?" : `Trying to get a table · ${activeAttempts.length}`}
           </h3>
 
           {activeAttempts.length === 0 ? (
-            <p className="text-sm text-ink-muted">No one&apos;s on it yet — be the first!</p>
+            <p className="text-sm text-ink-muted">No one has claimed this yet.</p>
           ) : (
             <div className="flex flex-col gap-2 mb-4">
               {activeAttempts.map((a) => (
@@ -158,13 +158,15 @@ export default function ReservationAttempts({ dinnerId, clubId, userId, attempts
                 onClick={handleToggleAttempt}
                 disabled={loading}
                 className={cn(
-                  "flex-1 py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-40",
+                  "flex-1 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40",
                   isAttempting
                     ? "bg-black/5 text-ink hover:bg-black/10"
+                    : activeAttempts.length === 0
+                    ? "bg-citrus text-slate hover:bg-citrus/90"
                     : "bg-slate text-white hover:bg-slate-light"
                 )}
               >
-                {loading ? "…" : isAttempting ? "Never mind" : "I'll try to get a table"}
+                {loading ? "…" : isAttempting ? "Never mind" : activeAttempts.length === 0 ? "Claim the reservation →" : "I'll also try"}
               </button>
             )}
 

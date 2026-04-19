@@ -218,6 +218,7 @@ export async function markCompleted({ dinnerId, clubId }: { dinnerId: string; cl
 
   if (updateError) throw new Error(updateError.message);
 
+  // TODO: cron — ideally fire rating prompt email 2 hours after dinner, not at mark-completed time
   sendRatingPromptEmails({ dinnerId, clubId });
 }
 
