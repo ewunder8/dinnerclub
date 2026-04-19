@@ -209,6 +209,7 @@ export default async function OneOffDinnerPage({
             isCreator={isCreator}
             clubCity={null}
             wishlistForPoll={[]}
+            dietaryRestrictions={[]}
             appUrl={appUrl}
           />
         </div>
