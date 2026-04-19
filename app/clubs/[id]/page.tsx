@@ -197,6 +197,9 @@ export default async function ClubPage({
     users: { id: string; name: string; email: string; avatar_url: string | null; beli_username: string | null };
   }[];
 
+  const hasCompletedDinner = (dinners ?? []).some((d) => d.status === "completed");
+  const isNewClub = members.length === 1 && !hasCompletedDinner;
+
   return (
     <main className="min-h-screen bg-snow">
       {/* Nav */}
@@ -227,106 +230,159 @@ export default async function ClubPage({
           )}
         </div>
 
-        {/* Active dinner — most recent non-completed dinner */}
-        {(() => {
-          const activeDinner = (dinners ?? []).find(
-            (d) => d.status !== "completed" && d.status !== "cancelled"
-          );
-          if (!activeDinner) return null;
-          const restaurantName = activeDinner.winning_restaurant_place_id
-            ? restaurantNameMap[activeDinner.winning_restaurant_place_id] ?? null
-            : null;
-          return (
-            <ActiveDinnerCard
-              dinner={activeDinner as any}
-              clubId={params.id}
-              restaurantName={restaurantName}
-            />
-          );
-        })()}
-
-        {/* Start a dinner CTA */}
-        <Link
-          href={`/clubs/${params.id}/dinners/new`}
-          className="group block border-2 border-dashed border-citrus-dark/40 bg-citrus/5 hover:bg-citrus/10 hover:border-citrus-dark/60 rounded-2xl px-6 py-7 transition-all"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-2xl mb-2">🍽️</p>
-              <p className="font-sans text-lg font-bold text-ink">Plan a dinner</p>
-              <p className="text-sm text-ink-muted mt-0.5">Propose dates, vote on restaurants, lock it in.</p>
-            </div>
-            <span className="shrink-0 bg-slate group-hover:bg-slate-light text-white font-bold text-sm px-5 py-3 rounded-xl transition-colors">
-              Start →
-            </span>
-          </div>
-        </Link>
-
-        {/* Wishlist */}
-        <WishlistSection
-          clubId={params.id}
-          userId={user.id}
-          isOwner={isOwner}
-          items={wishlistItems}
-          clubCity={(club as any).city ?? null}
-        />
-
-        {/* Dinners */}
-        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
-              Dinners · {dinners?.length ?? 0}
-            </h3>
+        {isNewClub ? (
+          <>
+            {/* New club: plan dinner first */}
             <Link
-              href="/discover"
-              className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
+              href={`/clubs/${params.id}/dinners/new`}
+              className="group block bg-slate hover:bg-slate-light rounded-2xl px-6 py-8 transition-all"
             >
-              Discover
-            </Link>
-          </div>
-
-          <DinnersList
-            dinners={dinners ?? []}
-            clubId={params.id}
-            restaurantNameMap={restaurantNameMap}
-            confirmedSeats={confirmedSeats}
-          />
-        </section>
-
-        {/* Invite Friends */}
-        {(isOwner || (club as any).members_can_invite) && (
-          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-black/5">
-              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
-            </div>
-            <div className="p-5">
-              <p className="text-sm text-ink-muted mb-3">
-                Anyone with this link can join.
+              <p className="text-4xl mb-4">🍽️</p>
+              <h3 className="font-sans text-2xl font-bold text-white mb-2">
+                Plan your first dinner
+              </h3>
+              <p className="text-white/70 text-sm mb-6">
+                Pick some dates, let everyone vote on a restaurant, then lock in the reservation.
               </p>
-              <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
-              <EmailInviteForm
-                token={invite.token}
-                clubName={club.name}
-                inviterName={displayName}
+              <span className="inline-block bg-citrus text-slate font-bold text-sm px-6 py-3 rounded-xl group-hover:bg-citrus/90 transition-colors">
+                Let's go →
+              </span>
+            </Link>
+
+            {/* Invite friends — second priority for new clubs */}
+            {(isOwner || (club as any).members_can_invite) && (
+              <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-black/5">
+                  <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-ink-muted mb-3">
+                    Anyone with this link can join.
+                  </p>
+                  <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
+                  <EmailInviteForm
+                    token={invite.token}
+                    clubName={club.name}
+                    inviterName={displayName}
+                  />
+                </div>
+              </section>
+            )}
+
+            {/* Wishlist — third */}
+            <WishlistSection
+              clubId={params.id}
+              userId={user.id}
+              isOwner={isOwner}
+              items={wishlistItems}
+              clubCity={(club as any).city ?? null}
+            />
+          </>
+        ) : (
+          <>
+            {/* Established club: active dinner, then plan CTA, then full content */}
+
+            {/* Active dinner — most recent non-completed dinner */}
+            {(() => {
+              const activeDinner = (dinners ?? []).find(
+                (d) => d.status !== "completed" && d.status !== "cancelled"
+              );
+              if (!activeDinner) return null;
+              const restaurantName = activeDinner.winning_restaurant_place_id
+                ? restaurantNameMap[activeDinner.winning_restaurant_place_id] ?? null
+                : null;
+              return (
+                <ActiveDinnerCard
+                  dinner={activeDinner as any}
+                  clubId={params.id}
+                  restaurantName={restaurantName}
+                />
+              );
+            })()}
+
+            {/* Plan a dinner CTA */}
+            <Link
+              href={`/clubs/${params.id}/dinners/new`}
+              className="group block border-2 border-dashed border-citrus-dark/40 bg-citrus/5 hover:bg-citrus/10 hover:border-citrus-dark/60 rounded-2xl px-6 py-7 transition-all"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-2xl mb-2">🍽️</p>
+                  <p className="font-sans text-lg font-bold text-ink">Plan a dinner</p>
+                  <p className="text-sm text-ink-muted mt-0.5">Propose dates, vote on restaurants, lock it in.</p>
+                </div>
+                <span className="shrink-0 bg-slate group-hover:bg-slate-light text-white font-bold text-sm px-5 py-3 rounded-xl transition-colors">
+                  Start →
+                </span>
+              </div>
+            </Link>
+
+            {/* Wishlist */}
+            <WishlistSection
+              clubId={params.id}
+              userId={user.id}
+              isOwner={isOwner}
+              items={wishlistItems}
+              clubCity={(club as any).city ?? null}
+            />
+
+            {/* Dinners */}
+            <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+                  Dinners · {dinners?.length ?? 0}
+                </h3>
+                <Link
+                  href="/discover"
+                  className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
+                >
+                  Discover
+                </Link>
+              </div>
+              <DinnersList
+                dinners={dinners ?? []}
+                clubId={params.id}
+                restaurantNameMap={restaurantNameMap}
+                confirmedSeats={confirmedSeats}
               />
-            </div>
-          </section>
+            </section>
+
+            {/* Invite Friends */}
+            {(isOwner || (club as any).members_can_invite) && (
+              <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-black/5">
+                  <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite friends</h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-ink-muted mb-3">
+                    Anyone with this link can join.
+                  </p>
+                  <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
+                  <EmailInviteForm
+                    token={invite.token}
+                    clubName={club.name}
+                    inviterName={displayName}
+                  />
+                </div>
+              </section>
+            )}
+
+            {/* Activity Feed */}
+            <ActivityFeed clubId={params.id} />
+
+            {/* Open Seats */}
+            {(club as any).open_seats_enabled !== false && (
+              <OpenSeatsSection
+                clubId={params.id}
+                userId={user.id}
+                clubCity={(club as any).city ?? null}
+                openSeats={openSeats}
+              />
+            )}
+          </>
         )}
 
-        {/* Activity Feed */}
-        <ActivityFeed clubId={params.id} />
-
-        {/* Open Seats */}
-        {(club as any).open_seats_enabled !== false && (
-          <OpenSeatsSection
-            clubId={params.id}
-            userId={user.id}
-            clubCity={(club as any).city ?? null}
-            openSeats={openSeats}
-          />
-        )}
-
-        {/* Members */}
+        {/* Members — always shown */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
