@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import NavUser from "@/components/NavUser";
 import { scoreToStars, wouldReturnPct } from "@/lib/countdown";
+import { extractCuisineFromTypes } from "@/lib/places";
 import type { DinnerRatingSummary, RestaurantCache } from "@/lib/supabase/database.types";
+import ClubStatsCard from "@/app/clubs/[id]/ClubStatsCard";
+
+const STATS_THRESHOLD = 3;
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
@@ -78,6 +82,112 @@ export default async function DiscoverPage() {
     (rawRestaurants ?? []).map((r) => [r.place_id, r as RestaurantCache])
   );
 
+  // ── Per-club stats (unlocks after STATS_THRESHOLD completed dinners) ──
+  const dinnersByClub: Record<string, typeof pastDinners> = {};
+  for (const d of pastDinners) {
+    if (!d.club_id) continue;
+    if (!dinnersByClub[d.club_id]) dinnersByClub[d.club_id] = [];
+    dinnersByClub[d.club_id].push(d);
+  }
+  const qualifyingClubIds = Object.keys(dinnersByClub).filter(
+    (id) => dinnersByClub[id].length >= STATS_THRESHOLD
+  );
+  const qualifyingDinnerIds = qualifyingClubIds.flatMap((id) =>
+    dinnersByClub[id].map((d) => d.id)
+  );
+
+  type ClubStatsMap = Record<string, {
+    mostDinnersAttended: { name: string; count: number } | null;
+    topVoter: { name: string; count: number } | null;
+    mostSuggestionsAccepted: { name: string; count: number } | null;
+    cuisineBreakdown: { cuisine: string; count: number }[];
+    avgRating: number | null;
+    totalDinners: number;
+  }>;
+
+  let clubStatsMap: ClubStatsMap = {};
+
+  if (qualifyingClubIds.length > 0) {
+    const [
+      { data: rsvpData },
+      { data: voteData },
+      { data: pollOptionData },
+      { data: memberData },
+    ] = await Promise.all([
+      supabase.from("rsvps").select("user_id, dinner_id").in("dinner_id", qualifyingDinnerIds).eq("status", "going"),
+      supabase.from("votes").select("user_id, dinner_id").in("dinner_id", qualifyingDinnerIds),
+      supabase.from("poll_options").select("dinner_id, place_id, suggested_by").in("dinner_id", qualifyingDinnerIds),
+      supabase.from("club_members").select("club_id, user_id, users(id, name, email)").in("club_id", qualifyingClubIds),
+    ]);
+
+    // Build member name lookup per club
+    const memberNames: Record<string, Record<string, string>> = {};
+    for (const m of (memberData ?? []) as { club_id: string; user_id: string; users: { id: string; name: string | null; email: string } }[]) {
+      if (!memberNames[m.club_id]) memberNames[m.club_id] = {};
+      memberNames[m.club_id][m.user_id] = m.users.name || m.users.email.split("@")[0] || "Member";
+    }
+
+    for (const clubId of qualifyingClubIds) {
+      const clubDinners = dinnersByClub[clubId];
+      const clubDinnerIds = new Set(clubDinners.map((d) => d.id));
+      const names = memberNames[clubId] ?? {};
+
+      // Most dinners attended
+      const attendanceCounts: Record<string, number> = {};
+      for (const r of rsvpData ?? []) {
+        if (!clubDinnerIds.has(r.dinner_id)) continue;
+        attendanceCounts[r.user_id] = (attendanceCounts[r.user_id] ?? 0) + 1;
+      }
+      const topAttendee = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0];
+
+      // Top voter
+      const voteCounts: Record<string, number> = {};
+      for (const v of voteData ?? []) {
+        if (!v.dinner_id || !clubDinnerIds.has(v.dinner_id)) continue;
+        voteCounts[v.user_id] = (voteCounts[v.user_id] ?? 0) + 1;
+      }
+      const topVoterEntry = Object.entries(voteCounts).sort((a, b) => b[1] - a[1])[0];
+
+      // Most suggestions accepted
+      const winnerKeys = new Set(
+        clubDinners
+          .filter((d) => d.winning_restaurant_place_id)
+          .map((d) => `${d.id}:${d.winning_restaurant_place_id}`)
+      );
+      const suggestionCounts: Record<string, number> = {};
+      for (const opt of pollOptionData ?? []) {
+        if (!clubDinnerIds.has(opt.dinner_id)) continue;
+        if (opt.suggested_by && winnerKeys.has(`${opt.dinner_id}:${opt.place_id}`)) {
+          suggestionCounts[opt.suggested_by] = (suggestionCounts[opt.suggested_by] ?? 0) + 1;
+        }
+      }
+      const topSuggester = Object.entries(suggestionCounts).sort((a, b) => b[1] - a[1])[0];
+
+      // Cuisine breakdown
+      const cuisineCounts: Record<string, number> = {};
+      for (const d of clubDinners) {
+        if (!d.winning_restaurant_place_id) continue;
+        const restaurant = restaurantMap[d.winning_restaurant_place_id];
+        const cuisine = extractCuisineFromTypes(restaurant?.types ?? null);
+        if (cuisine) cuisineCounts[cuisine] = (cuisineCounts[cuisine] ?? 0) + 1;
+      }
+
+      // Avg rating from already-fetched summaries
+      const ratingVals = clubDinners
+        .map((d) => summaryMap[d.id]?.avg_overall)
+        .filter((v): v is number => v != null);
+
+      clubStatsMap[clubId] = {
+        mostDinnersAttended: topAttendee ? { name: names[topAttendee[0]] ?? "Member", count: topAttendee[1] } : null,
+        topVoter: topVoterEntry ? { name: names[topVoterEntry[0]] ?? "Member", count: topVoterEntry[1] } : null,
+        mostSuggestionsAccepted: topSuggester ? { name: names[topSuggester[0]] ?? "Member", count: topSuggester[1] } : null,
+        cuisineBreakdown: Object.entries(cuisineCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([cuisine, count]) => ({ cuisine, count })),
+        avgRating: ratingVals.length > 0 ? ratingVals.reduce((a, b) => a + b, 0) / ratingVals.length : null,
+        totalDinners: clubDinners.length,
+      };
+    }
+  }
+
   return (
     <main className="min-h-screen bg-snow">
       <Nav name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
@@ -92,6 +202,25 @@ export default async function DiscoverPage() {
             {pastDinners.length} {pastDinners.length === 1 ? "dinner" : "dinners"}
           </span>
         </div>
+
+        {/* Club stats — one card per qualifying club */}
+        {qualifyingClubIds.length > 0 && (
+          <div className="flex flex-col gap-4 mb-2">
+            {qualifyingClubIds.map((clubId) => {
+              const club = clubMap[clubId];
+              return (
+                <div key={clubId}>
+                  {qualifyingClubIds.length > 1 && club && (
+                    <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2 px-1">
+                      {club.emoji} {club.name}
+                    </p>
+                  )}
+                  <ClubStatsCard stats={clubStatsMap[clubId]} />
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 mb-4">
           {pastDinners.map((dinner) => {

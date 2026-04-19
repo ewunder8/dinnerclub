@@ -12,7 +12,6 @@ import RemoveMemberButton from "./RemoveMemberButton";
 import CoOwnerButton from "./CoOwnerButton";
 import WishlistSection from "./WishlistSection";
 import OpenSeatsSection from "./OpenSeatsSection";
-import ClubStatsCard from "./ClubStatsCard";
 import ActiveDinnerCard from "./ActiveDinnerCard";
 import ActivityFeed from "./ActivityFeed";
 import DinnersList from "./DinnersList";
@@ -167,97 +166,6 @@ export default async function ClubPage({
     })
     .filter(Boolean) as { id: string; restaurantName: string; reservationDatetime: string }[];
 
-  // Fetch club stats data
-  const dinnerIds = (dinners ?? []).map((d) => d.id);
-  const [
-    { data: rsvpData },
-    { data: voteData },
-    { data: pollOptionData },
-    { data: ratingData },
-  ] = await Promise.all([
-    dinnerIds.length > 0
-      ? supabase.from("rsvps").select("user_id, dinner_id").in("dinner_id", dinnerIds).eq("status", "going")
-      : Promise.resolve({ data: [] as { user_id: string; dinner_id: string }[] }),
-    dinnerIds.length > 0
-      ? supabase.from("votes").select("user_id, dinner_id").in("dinner_id", dinnerIds)
-      : Promise.resolve({ data: [] as { user_id: string; dinner_id: string }[] }),
-    dinnerIds.length > 0
-      ? supabase.from("poll_options").select("dinner_id, place_id, suggested_by").in("dinner_id", dinnerIds)
-      : Promise.resolve({ data: [] as { dinner_id: string; place_id: string; suggested_by: string | null }[] }),
-    dinnerIds.length > 0
-      ? supabase.from("dinner_rating_summaries").select("dinner_id, avg_overall").in("dinner_id", dinnerIds)
-      : Promise.resolve({ data: [] as { dinner_id: string; avg_overall: number | null }[] }),
-  ]);
-
-  // Build member name lookup from club_members
-  const memberNameMap: Record<string, string> = {};
-  for (const m of club.club_members as { users: { id: string; name: string | null; email: string } }[]) {
-    memberNameMap[m.users.id] = m.users.name || m.users.email.split("@")[0] || "Member";
-  }
-
-  // Most dinners attended
-  const attendanceCounts: Record<string, number> = {};
-  for (const r of rsvpData ?? []) {
-    attendanceCounts[r.user_id] = (attendanceCounts[r.user_id] ?? 0) + 1;
-  }
-  const topAttendeeEntry = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0];
-  const mostDinnersAttended = topAttendeeEntry
-    ? { name: memberNameMap[topAttendeeEntry[0]] ?? "Member", count: topAttendeeEntry[1] }
-    : null;
-
-  // Top voter
-  const voteCounts: Record<string, number> = {};
-  for (const v of voteData ?? []) {
-    voteCounts[v.user_id] = (voteCounts[v.user_id] ?? 0) + 1;
-  }
-  const topVoterEntry = Object.entries(voteCounts).sort((a, b) => b[1] - a[1])[0];
-  const topVoter = topVoterEntry
-    ? { name: memberNameMap[topVoterEntry[0]] ?? "Member", count: topVoterEntry[1] }
-    : null;
-
-  // Most suggestions accepted (poll option whose place_id matches the dinner's winner)
-  const winnerKeys = new Set(
-    (dinners ?? [])
-      .filter((d) => d.winning_restaurant_place_id)
-      .map((d) => `${d.id}:${d.winning_restaurant_place_id}`)
-  );
-  const suggestionCounts: Record<string, number> = {};
-  for (const opt of pollOptionData ?? []) {
-    if (opt.suggested_by && winnerKeys.has(`${opt.dinner_id}:${opt.place_id}`)) {
-      suggestionCounts[opt.suggested_by] = (suggestionCounts[opt.suggested_by] ?? 0) + 1;
-    }
-  }
-  const topSuggesterEntry = Object.entries(suggestionCounts).sort((a, b) => b[1] - a[1])[0];
-  const mostSuggestionsAccepted = topSuggesterEntry
-    ? { name: memberNameMap[topSuggesterEntry[0]] ?? "Member", count: topSuggesterEntry[1] }
-    : null;
-
-  // Cuisine breakdown from winning restaurant types (actual cuisine eaten)
-  const cuisineCounts: Record<string, number> = {};
-  for (const d of dinners ?? []) {
-    if (!d.winning_restaurant_place_id) continue;
-    const types = restaurantTypesMap[d.winning_restaurant_place_id];
-    const cuisine = extractCuisineFromTypes(types);
-    if (cuisine) {
-      cuisineCounts[cuisine] = (cuisineCounts[cuisine] ?? 0) + 1;
-    }
-  }
-  const cuisineBreakdown = Object.entries(cuisineCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([cuisine, count]) => ({ cuisine, count }));
-
-  // Avg rating
-  const ratingValues = (ratingData ?? [])
-    .map((r) => r.avg_overall)
-    .filter((v): v is number => v !== null);
-  const avgRating =
-    ratingValues.length > 0
-      ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
-      : null;
-
-  const clubStats = { mostDinnersAttended, topVoter, mostSuggestionsAccepted, cuisineBreakdown, avgRating, totalDinners: dinners?.length ?? 0 };
-
   // Fetch active, non-expired invite link — auto-generate one if none exists
   let { data: invite } = await supabase
     .from("invite_links")
@@ -407,9 +315,6 @@ export default async function ClubPage({
 
         {/* Activity Feed */}
         <ActivityFeed clubId={params.id} />
-
-        {/* Club Stats */}
-        <ClubStatsCard stats={clubStats} />
 
         {/* Open Seats */}
         {(club as any).open_seats_enabled !== false && (
