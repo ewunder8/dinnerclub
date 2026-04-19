@@ -84,7 +84,7 @@ export default async function DashboardPage() {
     clubIds.length > 0
       ? supabase
           .from("dinners")
-          .select("id, club_id, status, voting_open, title, theme_cuisine, theme_neighborhood, reservation_datetime, winning_restaurant_place_id, created_at")
+          .select("id, club_id, status, voting_open, planning_stage, title, theme_cuisine, theme_neighborhood, reservation_datetime, winning_restaurant_place_id, created_at")
           .in("club_id", clubIds)
           .in("status", ["confirmed", "polling", "seeking_reservation", "waitlisted"])
           .order("reservation_datetime", { ascending: true })
@@ -317,13 +317,15 @@ export default async function DashboardPage() {
                 const restaurantName = dinner.winning_restaurant_place_id ? restaurantMap[dinner.winning_restaurant_place_id] : null;
                 const themeLabel = dinner.title || [dinner.theme_cuisine, dinner.theme_neighborhood].filter(Boolean).join(" · ");
                 const dinnerLabel = restaurantName ?? (themeLabel || "Dinner poll");
-                const votingOpen = dinner.status === "polling" && dinner.voting_open;
+                const stage = dinner.planning_stage;
                 const attempts = attemptsMap[dinner.id];
-                const seekingLabel = attempts?.succeeded
-                  ? "Table booked ✓"
-                  : attempts?.attempting
-                  ? `${attempts.attempting} trying`
-                  : dinner.status === "waitlisted" ? "Waitlisted" : "Finding a table";
+                const statusLabel =
+                  stage === "date_voting" ? "Picking a date" :
+                  stage === "restaurant_voting" ? (dinner.voting_open ? "Vote now!" : "Picking restaurant") :
+                  attempts?.succeeded ? "Table booked ✓" :
+                  attempts?.attempting ? `${attempts.attempting} trying` :
+                  dinner.status === "waitlisted" ? "Waitlisted" : "Finding a table";
+                const isVoteNow = stage === "restaurant_voting" && dinner.voting_open;
                 return (
                   <Link key={dinner.id} href={`/clubs/${dinner.club_id!}/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
@@ -336,7 +338,7 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full shrink-0 ${
-                      votingOpen
+                      isVoteNow
                         ? "text-citrus-dark bg-citrus/10"
                         : attempts?.succeeded
                         ? "text-green-700 bg-green-100"
@@ -344,7 +346,7 @@ export default async function DashboardPage() {
                         ? "text-slate bg-slate/10"
                         : "text-ink-muted bg-black/5"
                     }`}>
-                      {votingOpen ? "Vote now!" : seekingLabel}
+                      {statusLabel}
                     </span>
                   </Link>
                 );
