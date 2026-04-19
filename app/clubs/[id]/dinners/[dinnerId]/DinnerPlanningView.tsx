@@ -66,6 +66,7 @@ type Props = {
   isCreator: boolean;
   clubCity: string | null;
   wishlistForPoll: { place_id: string; name: string; address: string | null }[];
+  dietaryRestrictions: string[];
   appUrl: string;
 };
 
@@ -170,6 +171,7 @@ export default function DinnerPlanningView({
   isCreator,
   clubCity,
   wishlistForPoll,
+  dietaryRestrictions,
   appUrl,
 }: Props) {
   const stage = dinner.planning_stage as "date_voting" | "restaurant_voting" | "winner";
@@ -261,6 +263,13 @@ export default function DinnerPlanningView({
               Suggest and vote on restaurants. The organizer will pick the winner.
             </p>
           </div>
+
+          {dietaryRestrictions.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+              <p className="text-xs font-semibold text-amber-700 mb-1">Group dietary needs</p>
+              <p className="text-sm text-amber-800">{dietaryRestrictions.join(" · ")}</p>
+            </div>
+          )}
 
           <RestaurantVotingPanel
             dinnerId={dinnerId}

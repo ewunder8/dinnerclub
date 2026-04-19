@@ -133,7 +133,7 @@ export default async function DinnerPage({
       ] = await Promise.all([
         supabase.from("availability_poll_dates").select("*").eq("poll_id", availPoll.id).order("proposed_date"),
         supabase.from("availability_responses").select("*").eq("poll_id", availPoll.id),
-        supabase.from("club_members").select("user_id, users ( name, email, avatar_url )").eq("club_id", params.id),
+        supabase.from("club_members").select("user_id, users ( name, email, avatar_url, dietary_restrictions, dietary_public )").eq("club_id", params.id),
         supabase.from("club_members").select("*", { count: "exact", head: true }).eq("club_id", params.id),
         supabase.from("poll_options").select("*").eq("dinner_id", params.dinnerId).is("removed_at", null),
         supabase.from("votes").select("*").eq("dinner_id", params.dinnerId),
@@ -189,6 +189,16 @@ export default async function DinnerPage({
         winnerRestaurant = (wr as RestaurantCache) ?? null;
       }
 
+      // Aggregate public dietary restrictions across club members
+      const dietarySet = new Set<string>();
+      for (const m of clubMembers ?? []) {
+        const u = (m as any).users;
+        if (u?.dietary_public && Array.isArray(u.dietary_restrictions)) {
+          for (const r of u.dietary_restrictions) dietarySet.add(r);
+        }
+      }
+      const dietaryRestrictions = Array.from(dietarySet);
+
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
       return (
@@ -213,6 +223,7 @@ export default async function DinnerPage({
               isCreator={isCreator}
               clubCity={(clubData as any)?.city ?? null}
               wishlistForPoll={wishlistForPoll}
+              dietaryRestrictions={dietaryRestrictions}
               appUrl={appUrl}
             />
           </div>
