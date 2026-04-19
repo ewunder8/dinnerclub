@@ -93,10 +93,6 @@ function CalendarMonth({
   const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const firstDow = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
-  const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
 
   const cells: (string | null)[] = [
     ...Array(firstDow).fill(null),
@@ -105,7 +101,6 @@ function CalendarMonth({
 
   return (
     <div>
-      <p className="text-sm font-semibold text-ink text-center mb-3">{monthLabel}</p>
       <div className="grid grid-cols-7 gap-1 mb-1">
         {DAY_LABELS.map((d) => (
           <div key={d} className="text-center text-xs text-ink-faint font-medium py-1">
@@ -229,12 +224,19 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
   const now = new Date();
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
 
-  // Calendar months: current + next
-  const cy = now.getFullYear();
-  const cm = now.getMonth() + 1;
-  const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const ny = nextMonthDate.getFullYear();
-  const nm = nextMonthDate.getMonth() + 1;
+  // Paginated calendar
+  const [calYear, setCalYear] = useState(now.getFullYear());
+  const [calMonth, setCalMonth] = useState(now.getMonth() + 1); // 1-indexed
+
+  function prevMonth() {
+    if (calMonth === 1) { setCalYear(y => y - 1); setCalMonth(12); }
+    else setCalMonth(m => m - 1);
+  }
+  function nextMonth() {
+    if (calMonth === 12) { setCalYear(y => y + 1); setCalMonth(1); }
+    else setCalMonth(m => m + 1);
+  }
+  const isPrevDisabled = calYear === now.getFullYear() && calMonth === now.getMonth() + 1;
 
   // Step 2: restaurant suggestions
   const [suggestions, setSuggestions] = useState<SeededRestaurant[]>([]);
@@ -544,20 +546,31 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
             </p>
           </div>
 
-          {/* Inline calendar */}
-          <div className="bg-white border border-black/8 rounded-2xl p-5 mb-5 flex flex-col gap-8">
+          {/* Paginated calendar */}
+          <div className="bg-white border border-black/8 rounded-2xl p-5 mb-5">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={prevMonth}
+                disabled={isPrevDisabled}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-muted hover:bg-black/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ‹
+              </button>
+              <span className="text-sm font-semibold text-ink">
+                {new Date(calYear, calMonth - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </span>
+              <button
+                type="button"
+                onClick={nextMonth}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-muted hover:bg-black/5 transition-colors"
+              >
+                ›
+              </button>
+            </div>
             <CalendarMonth
-              year={cy}
-              month={cm}
-              selected={selectedDates}
-              onToggle={toggleDate}
-              minDate={today}
-              maxDates={maxDates}
-            />
-            <div className="border-t border-black/5" />
-            <CalendarMonth
-              year={ny}
-              month={nm}
+              year={calYear}
+              month={calMonth}
               selected={selectedDates}
               onToggle={toggleDate}
               minDate={today}
