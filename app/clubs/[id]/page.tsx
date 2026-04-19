@@ -354,6 +354,15 @@ export default async function ClubPage({
           </div>
         </Link>
 
+        {/* Wishlist */}
+        <WishlistSection
+          clubId={params.id}
+          userId={user.id}
+          isOwner={isOwner}
+          items={wishlistItems}
+          clubCity={(club as any).city ?? null}
+        />
+
         {/* Dinners */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
@@ -401,15 +410,6 @@ export default async function ClubPage({
 
         {/* Club Stats */}
         <ClubStatsCard stats={clubStats} />
-
-        {/* Wishlist */}
-        <WishlistSection
-          clubId={params.id}
-          userId={user.id}
-          isOwner={isOwner}
-          items={wishlistItems}
-          clubCity={(club as any).city ?? null}
-        />
 
         {/* Open Seats */}
         {(club as any).open_seats_enabled !== false && (

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Search, Check, X } from "lucide-react";
+import ShareButton from "../[dinnerId]/ShareButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -235,6 +236,8 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
 
   // Step 2: restaurant suggestions
   const [suggestions, setSuggestions] = useState<SeededRestaurant[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsFetched, setSuggestionsFetched] = useState(false);
   const [selectedRestaurants, setSelectedRestaurants] = useState<SeededRestaurant[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -248,12 +251,13 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
   // ── Load suggestions when entering Step 2 ──────────────────────
 
   useEffect(() => {
-    if (step !== 2) return;
+    if (step !== 2 || suggestionsFetched) return;
     loadSuggestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   async function loadSuggestions() {
+    setSuggestionsLoading(true);
     const supabase = createClient();
 
     // Get wishlist place_ids for this club
@@ -293,29 +297,10 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       }));
     }
 
-    // Fill remaining slots with nearby Places results
-    if (found.length < 3 && clubCity) {
-      try {
-        const params = new URLSearchParams({ q: "restaurant", city: clubCity });
-        const res = await fetch(`/api/places/search?${params}`);
-        const json = await res.json();
-        const existing = new Set(found.map((r) => r.place_id));
-        const extras: SeededRestaurant[] = (json.places ?? [])
-          .filter((p: SearchResult) => !existing.has(p.place_id) && !usedIds.has(p.place_id))
-          .slice(0, 3 - found.length)
-          .map((p: SearchResult) => ({
-            place_id: p.place_id,
-            name: p.name,
-            address: p.address,
-            price_level: p.price_level,
-          }));
-        found = [...found, ...extras];
-      } catch {
-        // non-fatal
-      }
-    }
-
+    // Only show wishlist items — no generic Places API fallback
     setSuggestions(found);
+    setSuggestionsFetched(true);
+    setSuggestionsLoading(false);
   }
 
   // ── Debounced restaurant search ────────────────────────────────
@@ -410,10 +395,12 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
         title,
         planning_stage: "date_voting",
         voting_open: false,
+        suggestion_mode: "members",
+        poll_min_options: 2,
+        max_suggestions: null,
         target_date: null,
         poll_closes_at: null,
         winning_restaurant_place_id: null,
-        max_suggestions: null,
         reservation_datetime: null,
         party_size: null,
         confirmation_number: null,
@@ -447,6 +434,8 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       .single();
 
     if (pollError || !poll) {
+      // Clean up the orphaned dinner row
+      await supabase.from("dinners").delete().eq("id", dinner.id);
       setError("Failed to create date poll.");
       setLoading(false);
       return;
@@ -617,7 +606,13 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
           </div>
 
           {/* Pre-populated suggestion cards */}
-          {suggestions.length > 0 && (
+          {suggestionsLoading ? (
+            <div className="flex flex-col gap-2 mb-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-16 bg-black/5 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : suggestions.length > 0 ? (
             <div className="flex flex-col gap-2 mb-4">
               {suggestions.map((r) => (
                 <RestaurantCard
@@ -628,7 +623,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
                 />
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Restaurant search */}
           <div className="relative mb-2">
@@ -693,7 +688,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
         <div className="mt-4 mb-8 text-center">
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="font-sans text-2xl font-bold text-ink">Dinner poll is live</h2>
-          <p className="text-ink-muted text-sm mt-1">Your club has been notified.</p>
+          <p className="text-ink-muted text-sm mt-1">Share it with your group so they can vote on dates.</p>
         </div>
 
         {/* Read-only preview */}
@@ -730,10 +725,16 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
           )}
         </div>
 
+        <ShareButton
+          label="Share with group chat"
+          message={`Hey! Vote on dates for our next dinner 🍽`}
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}/clubs/${clubId}/dinners/${createdDinnerId}`}
+        />
+
         <button
           type="button"
           onClick={() => router.push(`/clubs/${clubId}/dinners/${createdDinnerId}`)}
-          className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
+          className="w-full mt-3 bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
         >
           View dinner →
         </button>
