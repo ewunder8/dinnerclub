@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { generateInviteToken, getInviteExpiry } from "@/lib/utils";
 import { SUPPORTED_CITIES } from "@/lib/editorial";
-
-const FOOD_EMOJIS = [
-  "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
-  "🥗", "🍔", "🍝", "🥟", "🦞", "🍗",
-  "🥘", "🍛", "🍲", "🫕", "🥙", "🌯",
-  "🍤", "🥂", "🍷", "🫙", "🥩", "🍖",
-];
+import { FOOD_EMOJIS } from "@/lib/emojis";
 
 export default function CreateClubPage() {
   const router = useRouter();

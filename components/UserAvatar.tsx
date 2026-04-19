@@ -13,17 +13,27 @@ const sizes = {
   lg: "w-16 h-16 text-2xl",
 };
 
+const emojiTextSize = { sm: "text-sm", md: "text-base", lg: "text-2xl" };
+
 export default function UserAvatar({ name, email, avatarUrl, size = "md" }: Props) {
   const initials = getInitials(name || email || "?");
   const sizeClass = sizes[size];
 
   if (avatarUrl) {
+    if (avatarUrl.startsWith("http")) {
+      return (
+        <img
+          src={avatarUrl}
+          alt={name || email || "Avatar"}
+          className={`${sizeClass} rounded-full object-cover shrink-0`}
+        />
+      );
+    }
+    // Emoji avatar
     return (
-      <img
-        src={avatarUrl}
-        alt={name || email || "Avatar"}
-        className={`${sizeClass} rounded-full object-cover shrink-0`}
-      />
+      <div className={`${sizeClass} rounded-full bg-citrus-dark flex items-center justify-center shrink-0`}>
+        <span className={`${emojiTextSize[size]} leading-none`}>{avatarUrl}</span>
+      </div>
     );
   }
 

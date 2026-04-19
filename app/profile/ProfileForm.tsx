@@ -7,6 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import type { User } from "@/lib/supabase/database.types";
 import { toast } from "sonner";
 import { SUPPORTED_CITIES } from "@/lib/editorial";
+import { FOOD_EMOJIS } from "@/lib/emojis";
 
 type Props = {
   user: User;
@@ -89,7 +90,7 @@ export default function ProfileForm({ user }: Props) {
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("users")
-      .update({ name: name.trim(), city: city.trim() || null, beli_username: beliUsername.trim() || null, dietary_restrictions: dietary, dietary_public: dietaryPublic, email_notifications: emailNotifs })
+      .update({ name: name.trim(), city: city.trim() || null, beli_username: beliUsername.trim() || null, dietary_restrictions: dietary, dietary_public: dietaryPublic, email_notifications: emailNotifs, avatar_url: avatarUrl })
       .eq("id", user.id);
 
     if (updateError) {
@@ -138,6 +139,32 @@ export default function ProfileForm({ user }: Props) {
           >
             {avatarLoading ? "Uploading…" : "Change photo"}
           </button>
+        </div>
+      </div>
+
+      {/* Emoji avatar picker */}
+      <div>
+        <label className="block text-sm font-semibold text-ink mb-2">
+          Or pick an emoji
+        </label>
+        <div className="grid grid-cols-8 gap-2">
+          {FOOD_EMOJIS.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => {
+                const next = avatarUrl === e ? null : e;
+                setAvatarUrl(next);
+              }}
+              className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                avatarUrl === e
+                  ? "bg-citrus/15 ring-2 ring-citrus-dark scale-110"
+                  : "bg-white border border-black/8 hover:border-slate/30"
+              }`}
+            >
+              {e}
+            </button>
+          ))}
         </div>
       </div>
 

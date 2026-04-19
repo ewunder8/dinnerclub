@@ -4,13 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-
-const FOOD_EMOJIS = [
-  "🍜", "🍣", "🍕", "🥩", "🌮", "🍱",
-  "🥗", "🍔", "🍝", "🥟", "🦞", "🍗",
-  "🥘", "🍛", "🍲", "🫕", "🥙", "🌯",
-  "🍤", "🥂", "🍷", "🧆", "🥞", "🍖",
-];
+import { FOOD_EMOJIS } from "@/lib/emojis";
 
 export default function EditClubForm({
   clubId,

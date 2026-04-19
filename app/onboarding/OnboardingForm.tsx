@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { SUPPORTED_CITIES } from "@/lib/editorial";
+import { FOOD_EMOJIS } from "@/lib/emojis";
 
 export default function OnboardingForm({
   userId,
@@ -19,6 +20,7 @@ export default function OnboardingForm({
 }) {
   const [name, setName] = useState(googleName ?? "");
   const [city, setCity] = useState("");
+  const [emojiAvatar, setEmojiAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export default function OnboardingForm({
       email,
       name: name.trim(),
       city: city.trim() || null,
-      avatar_url: googleAvatarUrl,
+      avatar_url: emojiAvatar ?? googleAvatarUrl,
       beli_connected: false,
       email_notifications: { reservation_confirmed: true, dinner_reminder: true, voting_open: true, rating_prompt: true, open_seat_posted: true, open_seat_update: true, dinner_cancelled: true },
     });
@@ -83,6 +85,45 @@ export default function OnboardingForm({
           ))}
         </datalist>
       </div>
+
+      {/* Emoji avatar — shown when no Google photo, or as an override */}
+      {!googleAvatarUrl || emojiAvatar ? (
+        <div>
+          <label className="block text-sm font-semibold text-ink mb-2">
+            Pick a profile emoji <span className="text-ink-muted font-normal">(optional)</span>
+          </label>
+          <div className="grid grid-cols-8 gap-2">
+            {FOOD_EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setEmojiAvatar(emojiAvatar === e ? null : e)}
+                className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                  emojiAvatar === e
+                    ? "bg-citrus/15 ring-2 ring-citrus-dark scale-110"
+                    : "bg-white border border-black/8 hover:border-slate/30"
+                }`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-xs text-ink-muted mb-2">Profile photo from Google</p>
+          <div className="flex items-center gap-3">
+            <img src={googleAvatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <button
+              type="button"
+              onClick={() => setEmojiAvatar(FOOD_EMOJIS[0])}
+              className="text-xs text-citrus-dark font-semibold hover:underline"
+            >
+              Use an emoji instead
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
