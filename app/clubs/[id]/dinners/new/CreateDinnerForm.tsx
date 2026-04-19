@@ -25,10 +25,10 @@ type SearchResult = {
 };
 
 type Props = {
-  clubId: string;
-  clubName: string | null;
-  clubEmoji: string | null;
-  clubCity: string | null;
+  clubId: string | null;
+  clubName?: string | null;
+  clubEmoji?: string | null;
+  clubCity?: string | null;
 };
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -81,12 +81,14 @@ function CalendarMonth({
   selected,
   onToggle,
   minDate,
+  maxDates = 3,
 }: {
   year: number;
   month: number; // 1-indexed
   selected: string[];
   onToggle: (date: string) => void;
   minDate: string;
+  maxDates?: number;
 }) {
   const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const firstDow = new Date(year, month - 1, 1).getDay();
@@ -116,7 +118,7 @@ function CalendarMonth({
           if (!date) return <div key={`blank-${i}`} />;
           const isPast = date < minDate;
           const isSelected = selected.includes(date);
-          const atLimit = selected.length >= 3 && !isSelected;
+          const atLimit = selected.length >= maxDates && !isSelected;
           const disabled = isPast || atLimit;
           return (
             <button
@@ -257,6 +259,12 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
   }, [step]);
 
   async function loadSuggestions() {
+    if (!clubId) {
+      // One-off dinner: no wishlist
+      setSuggestionsFetched(true);
+      setSuggestionsLoading(false);
+      return;
+    }
     setSuggestionsLoading(true);
     const supabase = createClient();
 
@@ -329,10 +337,12 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
 
   // ── Toggle helpers ─────────────────────────────────────────────
 
+  const maxDates = clubId ? 3 : 1;
+
   function toggleDate(date: string) {
     setSelectedDates((prev) => {
       if (prev.includes(date)) return prev.filter((d) => d !== date);
-      if (prev.length >= 3) return prev;
+      if (prev.length >= maxDates) return clubId ? prev : [date]; // one-off: replace selection
       return [...prev, date].sort();
     });
   }
@@ -386,19 +396,22 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       year: "numeric",
     })}`;
 
+    const isOneOff = !clubId;
+
     // 1. Create the dinner row
     const { data: dinner, error: dinnerError } = await supabase
       .from("dinners")
       .insert({
-        club_id: clubId,
+        club_id: clubId ?? null,
         created_by: user.id,
         title,
-        planning_stage: "date_voting",
+        // One-off: date is known upfront, go straight to restaurant voting
+        planning_stage: isOneOff ? "restaurant_voting" : "date_voting",
+        target_date: isOneOff ? `${selectedDates[0]}T18:00:00.000Z` : null,
         voting_open: false,
         suggestion_mode: "members",
         poll_min_options: 2,
         max_suggestions: null,
-        target_date: null,
         poll_closes_at: null,
         winning_restaurant_place_id: null,
         reservation_datetime: null,
@@ -421,35 +434,37 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       return;
     }
 
-    // 2. Create availability poll linked to the dinner
-    const { data: poll, error: pollError } = await supabase
-      .from("availability_polls")
-      .insert({
-        club_id: clubId,
-        created_by: user.id,
-        title: "When works for dinner?",
-        dinner_id: dinner.id,
-      })
-      .select("id")
-      .single();
+    if (!isOneOff) {
+      // 2. Create availability poll linked to the dinner
+      const { data: poll, error: pollError } = await supabase
+        .from("availability_polls")
+        .insert({
+          club_id: clubId,
+          created_by: user.id,
+          title: "When works for dinner?",
+          dinner_id: dinner.id,
+        })
+        .select("id")
+        .single();
 
-    if (pollError || !poll) {
-      // Clean up the orphaned dinner row
-      await supabase.from("dinners").delete().eq("id", dinner.id);
-      setError("Failed to create date poll.");
-      setLoading(false);
-      return;
-    }
+      if (pollError || !poll) {
+        // Clean up the orphaned dinner row
+        await supabase.from("dinners").delete().eq("id", dinner.id);
+        setError("Failed to create date poll.");
+        setLoading(false);
+        return;
+      }
 
-    // 3. Create availability_poll_dates (up to 3)
-    const { error: datesError } = await supabase
-      .from("availability_poll_dates")
-      .insert(selectedDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
+      // 3. Create availability_poll_dates (up to 3)
+      const { error: datesError } = await supabase
+        .from("availability_poll_dates")
+        .insert(selectedDates.map((d) => ({ poll_id: poll.id, proposed_date: d })));
 
-    if (datesError) {
-      setError("Failed to save date options.");
-      setLoading(false);
-      return;
+      if (datesError) {
+        setError("Failed to save date options.");
+        setLoading(false);
+        return;
+      }
     }
 
     // 4. Seed restaurant poll_options (if any were selected)
@@ -518,12 +533,14 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
           <StepDots step={1} />
 
           <div className="mt-4 mb-6">
-            <p className="text-ink-muted text-sm mb-1">
-              {clubEmoji} {clubName}
-            </p>
+            {clubName && (
+              <p className="text-ink-muted text-sm mb-1">
+                {clubEmoji} {clubName}
+              </p>
+            )}
             <h2 className="font-sans text-2xl font-bold text-ink">When should we eat?</h2>
             <p className="text-ink-muted text-sm mt-1">
-              Pick up to 3 nights. The club will vote.
+              {clubId ? "Pick up to 3 nights. The club will vote." : "Pick a night for the dinner."}
             </p>
           </div>
 
@@ -535,6 +552,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
               selected={selectedDates}
               onToggle={toggleDate}
               minDate={today}
+              maxDates={maxDates}
             />
             <div className="border-t border-black/5" />
             <CalendarMonth
@@ -543,6 +561,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
               selected={selectedDates}
               onToggle={toggleDate}
               minDate={today}
+              maxDates={maxDates}
             />
           </div>
 
@@ -582,7 +601,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
             }}
             className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Send date poll to club →
+            {clubId ? "Send date poll to club →" : "Next →"}
           </button>
         </div>
       </main>
@@ -687,21 +706,25 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
 
         <div className="mt-4 mb-8 text-center">
           <div className="text-5xl mb-4">🎉</div>
-          <h2 className="font-sans text-2xl font-bold text-ink">Dinner poll is live</h2>
-          <p className="text-ink-muted text-sm mt-1">Share it with your group so they can vote on dates.</p>
+          <h2 className="font-sans text-2xl font-bold text-ink">{clubId ? "Dinner poll is live" : "Dinner created!"}</h2>
+          <p className="text-ink-muted text-sm mt-1">{clubId ? "Share it with your group so they can vote on dates." : "Share it so your crew can vote on where to eat."}</p>
         </div>
 
         {/* Read-only preview */}
         <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
           <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
-            Date options
+            {clubId ? "Date options" : "Date"}
           </p>
           <div className="flex flex-col gap-3 mb-1">
             {confirmedDates.map((d) => (
               <div key={d} className="flex items-center gap-3">
                 <span className="text-sm text-ink w-36 shrink-0">{formatDate(d)}</span>
-                <div className="flex-1 bg-black/5 rounded-full h-1.5" />
-                <span className="text-xs text-ink-faint w-6 text-right">0%</span>
+                {clubId && (
+                  <>
+                    <div className="flex-1 bg-black/5 rounded-full h-1.5" />
+                    <span className="text-xs text-ink-faint w-6 text-right">0%</span>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -727,13 +750,13 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
 
         <ShareButton
           label="Share with group chat"
-          message={`Hey! Vote on dates for our next dinner 🍽`}
-          url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}/clubs/${clubId}/dinners/${createdDinnerId}`}
+          message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
         />
 
         <button
           type="button"
-          onClick={() => router.push(`/clubs/${clubId}/dinners/${createdDinnerId}`)}
+          onClick={() => router.push(clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`)}
           className="w-full mt-3 bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
         >
           View dinner →
