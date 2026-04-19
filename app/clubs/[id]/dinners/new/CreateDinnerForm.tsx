@@ -198,7 +198,7 @@ function Nav({ onBack }: { onBack?: () => void }) {
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"
+            className="flex items-center gap-1.5 inline-flex border border-white/20 hover:bg-white/10 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"
           >
             <span className="text-base leading-none">←</span>
             <span>Back</span>

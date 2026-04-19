@@ -46,7 +46,7 @@ export default async function UserProfilePage({
     <main className="min-h-screen bg-snow">
       <nav className="bg-slate px-6 py-4 flex items-center">
         <div className="flex-1">
-          <a href="/dashboard" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"><span className="text-base leading-none">←</span><span>Back</span></a>
+          <a href="/dashboard" className="flex items-center gap-1.5 inline-flex border border-white/20 hover:bg-white/10 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"><span className="text-base leading-none">←</span><span>Back</span></a>
         </div>
         <h1 className="font-sans text-base font-bold text-white">Profile</h1>
         <div className="flex-1 flex justify-end">
