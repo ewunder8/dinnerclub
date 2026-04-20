@@ -47,6 +47,17 @@ export default function ShareActions({ message, url }: Props) {
         )}
       </button>
 
+      {/* SMS / Text */}
+      <a
+        href={`sms:&body=${encodeURIComponent(fullText)}`}
+        className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-full border border-slate text-slate font-semibold text-[13px] transition-colors bg-white hover:bg-slate/5"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        Text
+      </a>
+
       {/* WhatsApp */}
       <a
         href={`https://wa.me/?text=${encodeURIComponent(fullText)}`}

@@ -63,18 +63,18 @@ export default async function DashboardPage() {
       .order("target_date", { ascending: true }),
     supabase
       .from("rsvps")
-      .select("dinner_id, dinners ( id, title, status, target_date, planning_stage, winning_restaurant_place_id, created_by )")
+      .select("dinner_id, dinners ( id, title, status, target_date, planning_stage, winning_restaurant_place_id, created_by, club_id )")
       .eq("user_id", user.id)
       .not("dinner_id", "is", null),
   ]);
 
   // Merge and deduplicate one-off dinners
-  type OneOffDinner = { id: string; title: string | null; status: string; target_date: string | null; planning_stage: string; winning_restaurant_place_id: string | null; created_by?: string | null };
+  type OneOffDinner = { id: string; title: string | null; status: string; target_date: string | null; planning_stage: string; winning_restaurant_place_id: string | null; created_by?: string | null; club_id?: string | null };
   const oneOffMap = new Map<string, OneOffDinner>();
   for (const d of rawOneOffCreated ?? []) oneOffMap.set(d.id, d as OneOffDinner);
   for (const r of rawOneOffRsvps ?? []) {
     const d = r.dinners as OneOffDinner | null;
-    if (d && !oneOffMap.has(d.id) && ["polling", "seeking_reservation", "waitlisted", "confirmed"].includes(d.status)) {
+    if (d && !d.club_id && !oneOffMap.has(d.id) && ["polling", "seeking_reservation", "waitlisted", "confirmed"].includes(d.status)) {
       oneOffMap.set(d.id, d);
     }
   }

@@ -198,7 +198,8 @@ export default async function ClubPage({
   }[];
 
   const hasCompletedDinner = (dinners ?? []).some((d) => d.status === "completed");
-  const isNewClub = members.length === 1 && !hasCompletedDinner;
+  const hasAnyDinner = (dinners ?? []).length > 0;
+  const isNewClub = members.length === 1 && !hasCompletedDinner && !hasAnyDinner;
 
   return (
     <main className="min-h-screen bg-snow">
@@ -282,36 +283,38 @@ export default async function ClubPage({
           <>
             {/* Established club: active dinner, then plan CTA, then full content */}
 
-            {/* Active dinner — most recent non-completed dinner */}
+            {/* Active dinners — all in-progress (any stage) */}
             {(() => {
-              const activeDinner = (dinners ?? []).find(
+              const activeDinners = (dinners ?? []).filter(
                 (d) => d.status !== "completed" && d.status !== "cancelled"
               );
-              if (!activeDinner) return null;
-              const restaurantName = activeDinner.winning_restaurant_place_id
-                ? restaurantNameMap[activeDinner.winning_restaurant_place_id] ?? null
-                : null;
+              if (activeDinners.length === 0) return null;
               return (
-                <ActiveDinnerCard
-                  dinner={activeDinner as any}
-                  clubId={params.id}
-                  restaurantName={restaurantName}
-                />
+                <div className="flex flex-col gap-3">
+                  {activeDinners.map((d) => (
+                    <ActiveDinnerCard
+                      key={d.id}
+                      dinner={d as any}
+                      clubId={params.id}
+                      restaurantName={d.winning_restaurant_place_id ? restaurantNameMap[d.winning_restaurant_place_id] ?? null : null}
+                    />
+                  ))}
+                </div>
               );
             })()}
 
             {/* Plan a dinner CTA */}
             <Link
               href={`/clubs/${params.id}/dinners/new`}
-              className="group block border-2 border-dashed border-citrus-dark/40 bg-citrus/5 hover:bg-citrus/10 hover:border-citrus-dark/60 rounded-2xl px-6 py-7 transition-all"
+              className="group block bg-slate hover:bg-slate-light rounded-2xl px-6 py-6 transition-all"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-2xl mb-2">🍽️</p>
-                  <p className="font-sans text-lg font-bold text-ink">Plan a dinner</p>
-                  <p className="text-sm text-ink-muted mt-0.5">Propose dates, vote on restaurants, lock it in.</p>
+                  <p className="font-sans text-lg font-bold text-white">Plan a dinner</p>
+                  <p className="text-sm text-white/70 mt-0.5">Propose dates, vote on restaurants, lock it in.</p>
                 </div>
-                <span className="shrink-0 bg-slate group-hover:bg-slate-light text-white font-bold text-sm px-5 py-3 rounded-xl transition-colors">
+                <span className="shrink-0 bg-citrus text-slate font-bold text-sm px-5 py-3 rounded-xl group-hover:bg-citrus/90 transition-colors">
                   Start →
                 </span>
               </div>
@@ -326,26 +329,33 @@ export default async function ClubPage({
               clubCity={(club as any).city ?? null}
             />
 
-            {/* Dinners */}
-            <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
-                  Dinners · {dinners?.length ?? 0}
-                </h3>
-                <Link
-                  href="/discover"
-                  className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
-                >
-                  Discover
-                </Link>
-              </div>
-              <DinnersList
-                dinners={dinners ?? []}
-                clubId={params.id}
-                restaurantNameMap={restaurantNameMap}
-                confirmedSeats={confirmedSeats}
-              />
-            </section>
+            {/* Dinners — past only (active shown above) */}
+            {(() => {
+              const pastDinners = (dinners ?? []).filter(
+                (d) => d.status === "completed" || d.status === "cancelled"
+              );
+              return (
+                <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+                      Past dinners · {pastDinners.length}
+                    </h3>
+                    <Link
+                      href="/discover"
+                      className="border border-black/10 text-ink-muted font-semibold rounded-xl px-4 py-2 hover:text-ink transition-colors text-sm"
+                    >
+                      Discover
+                    </Link>
+                  </div>
+                  <DinnersList
+                    dinners={pastDinners}
+                    clubId={params.id}
+                    restaurantNameMap={restaurantNameMap}
+                    confirmedSeats={confirmedSeats}
+                  />
+                </section>
+              );
+            })()}
 
             {/* Invite Friends */}
             {(isOwner || (club as any).members_can_invite) && (
