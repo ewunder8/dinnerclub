@@ -198,11 +198,8 @@ function Nav({ onBack }: { onBack?: () => void }) {
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 inline-flex border border-white/20 hover:bg-white/10 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"
-          >
-            <span className="text-base leading-none">←</span>
-            <span>Back</span>
-          </button>
+            className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none"
+          >←</button>
         )}
       </div>
       <h1 className="font-sans text-base font-bold text-white">New dinner</h1>
@@ -520,10 +517,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
     // TODO: send email — notify club members that a dinner poll is open
 
     setCreatedDinnerId(dinner.id);
-    setConfirmedDates(selectedDates);
-    setConfirmedRestaurants(selectedRestaurants);
     setLoading(false);
-    setStep(3);
   }
 
   // ── Step 1: Pick nights ────────────────────────────────────────
@@ -698,11 +692,14 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
           <div className="mt-6">
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => {
+                setConfirmedDates(selectedDates);
+                setConfirmedRestaurants(selectedRestaurants);
+                setStep(3);
+              }}
+              className="w-full bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
             >
-              {loading ? "Creating…" : "Start the poll →"}
+              Review →
             </button>
           </div>
         </div>
@@ -710,70 +707,81 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
     );
   }
 
-  // ── Step 3: Confirmation ───────────────────────────────────────
+  // ── Step 3: Review → Create → Share ───────────────────────────
 
   return (
     <main className="min-h-screen bg-snow">
-      <Nav />
+      <Nav onBack={createdDinnerId ? undefined : () => setStep(2)} />
       <div className="max-w-lg mx-auto px-6 py-8">
         <StepDots step={3} />
 
-        <div className="mt-4 mb-8 text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="font-sans text-2xl font-bold text-ink">{clubId ? "Dinner poll is live" : "Dinner created!"}</h2>
-          <p className="text-ink-muted text-sm mt-1">{clubId ? "Share it with your group so they can vote on dates." : "Share it so your crew can vote on where to eat."}</p>
-        </div>
+        {!createdDinnerId ? (
+          // Phase A: Review (dinner not yet created)
+          <>
+            <div className="mt-4 mb-6">
+              <h2 className="font-sans text-2xl font-bold text-ink">Looks good?</h2>
+              <p className="text-ink-muted text-sm mt-1">Review your dinner before creating it.</p>
+            </div>
 
-        {/* Read-only preview */}
-        <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
-          <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
-            {clubId ? "Date options" : "Date"}
-          </p>
-          <div className="flex flex-col gap-3 mb-1">
-            {confirmedDates.map((d) => (
-              <div key={d} className="flex items-center gap-3">
-                <span className="text-sm text-ink w-36 shrink-0">{formatDate(d)}</span>
-                {clubId && (
-                  <>
-                    <div className="flex-1 bg-black/5 rounded-full h-1.5" />
-                    <span className="text-xs text-ink-faint w-6 text-right">0%</span>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {confirmedRestaurants.length > 0 && (
-            <>
-              <div className="border-t border-black/5 my-4" />
+            <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
               <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
-                Restaurant ideas
+                {clubId ? "Date options" : "Date"}
               </p>
-              <div className="flex flex-col gap-3">
-                {confirmedRestaurants.map((r) => (
-                  <div key={r.place_id} className="flex items-center gap-3">
-                    <span className="text-sm text-ink truncate flex-1">{r.name}</span>
-                    <div className="w-16 bg-black/5 rounded-full h-1.5" />
-                    <span className="text-xs text-ink-faint w-6 text-right">0%</span>
-                  </div>
+              <div className="flex flex-col gap-2 mb-1">
+                {confirmedDates.map((d) => (
+                  <p key={d} className="text-sm font-semibold text-ink">{formatDate(d)}</p>
                 ))}
               </div>
-            </>
-          )}
-        </div>
 
-        <ShareActions
-          message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
-          url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
-        />
+              {confirmedRestaurants.length > 0 && (
+                <>
+                  <div className="border-t border-black/5 my-4" />
+                  <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
+                    Restaurant ideas
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {confirmedRestaurants.map((r) => (
+                      <p key={r.place_id} className="text-sm text-ink">{r.name}</p>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
-        <button
-          type="button"
-          onClick={() => router.push(clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`)}
-          className="w-full mt-3 bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
-        >
-          View dinner →
-        </button>
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full bg-citrus text-slate font-bold py-4 rounded-xl hover:bg-citrus/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creating…" : clubId ? "Create dinner poll →" : "Create dinner →"}
+            </button>
+          </>
+        ) : (
+          // Phase B: Created — share and view
+          <>
+            <div className="mt-4 mb-8 text-center">
+              <div className="text-5xl mb-4">🎉</div>
+              <h2 className="font-sans text-2xl font-bold text-ink">{clubId ? "Dinner poll is live!" : "Dinner created!"}</h2>
+              <p className="text-ink-muted text-sm mt-1">{clubId ? "Share it with your group so they can vote on dates." : "Share it so your crew can vote on where to eat."}</p>
+            </div>
+
+            <ShareActions
+              message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
+              url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
+            />
+
+            <button
+              type="button"
+              onClick={() => router.push(clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`)}
+              className="w-full mt-3 bg-slate text-white font-bold py-4 rounded-xl hover:bg-slate-light transition-colors"
+            >
+              View dinner →
+            </button>
+          </>
+        )}
       </div>
     </main>
   );

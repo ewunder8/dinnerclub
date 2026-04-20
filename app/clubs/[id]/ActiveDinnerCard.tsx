@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getCountdown } from "@/lib/countdown";
 
 type ActiveDinner = {
   id: string;
@@ -98,6 +99,41 @@ function getStageInfo(dinner: ActiveDinner, restaurantName: string | null): {
 }
 
 export default function ActiveDinnerCard({ dinner, clubId, restaurantName }: Props) {
+  // Confirmed upcoming dinners get a prominent countdown card
+  if (dinner.status === "confirmed" && dinner.reservation_datetime) {
+    const countdown = getCountdown(dinner.reservation_datetime);
+    const isImminent = countdown.urgency === "imminent";
+    const isPast = countdown.urgency === "past";
+    return (
+      <Link
+        href={`/clubs/${clubId}/dinners/${dinner.id}`}
+        className={`block rounded-2xl px-5 py-4 transition-all hover:opacity-90 ${
+          isImminent ? "bg-red-500" : isPast ? "bg-black/5 border border-black/8" : "bg-slate hover:bg-slate-light"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isPast ? "text-ink-muted" : "text-white/60"}`}>
+              {isPast ? "Dinner was" : isImminent ? "🔥 Tonight!" : "Upcoming dinner"}
+            </p>
+            <p className={`font-sans font-bold truncate ${isPast ? "text-ink" : "text-white"}`}>
+              {restaurantName ?? "Dinner"}
+            </p>
+            <p className={`text-xs mt-0.5 truncate ${isPast ? "text-ink-muted" : "text-white/70"}`}>
+              {formatDateTime(dinner.reservation_datetime)}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className={`font-sans text-2xl font-bold leading-none ${isPast ? "text-ink-muted" : "text-citrus"}`}>
+              {countdown.label}
+            </p>
+            <p className={`text-xs mt-1 ${isPast ? "text-ink-muted" : "text-white/60"}`}>→</p>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
   const { emoji, label, sublabel, chipColor } = getStageInfo(dinner, restaurantName);
 
   return (

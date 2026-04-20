@@ -41,7 +41,7 @@ function Nav({
   return (
     <nav className="bg-slate px-6 py-4 flex items-center">
       <div className="flex-1">
-        <Link href="/dashboard" className="flex items-center gap-1.5 inline-flex border border-white/20 hover:bg-white/10 transition-colors text-white text-sm font-semibold px-3 py-1.5 rounded-full"><span className="text-base leading-none">←</span><span>Back</span></Link>
+        <Link href="/dashboard" className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none">←</Link>
       </div>
       <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{title ?? "Dinner"}</h1>
       <div className="flex-1 flex justify-end">
@@ -116,9 +116,17 @@ export default async function OneOffDinnerPage({
   // ── Planning flow ──────────────────────────────────────────────
   const planningStage = dinner.planning_stage;
 
+  // Treat any active polling dinner as being in the planning flow, even if
+  // planning_stage is null or an unexpected value (guards against bad state).
   const inPlanningFlow =
+    dinner.status === "polling" ||
     planningStage === "restaurant_voting" ||
     (planningStage === "winner" && dinner.status !== "completed" && !(dinner.status === "confirmed" && dinner.reservation_datetime));
+
+  // Normalise planning_stage so DinnerPlanningView always gets a valid value
+  if (inPlanningFlow && !dinner.planning_stage) {
+    (dinner as any).planning_stage = "restaurant_voting";
+  }
 
   if (inPlanningFlow) {
     const [

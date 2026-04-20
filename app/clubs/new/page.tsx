@@ -68,10 +68,8 @@ export default function CreateClubPage() {
       <nav className="bg-slate px-8 py-5 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="text-white/60 hover:text-white transition-colors text-sm"
-        >
-          ← Back
-        </button>
+          className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none"
+        >←</button>
         <h1 className="font-sans text-xl font-extrabold text-white">
           dinner<span className="text-citrus">club</span>
         </h1>
