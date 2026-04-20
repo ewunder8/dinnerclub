@@ -102,7 +102,7 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
             value={body}
             onChange={(e) => setBody(e.target.value.slice(0, MAX_LENGTH))}
             placeholder="Cash only, BYOB, ask for the back room…"
-            className="flex-1 text-sm border border-black/10 rounded-full px-4 py-2.5 bg-surface placeholder:text-ink-muted/60 focus:outline-none focus:border-black/25"
+            className="flex-1 text-sm text-ink border border-black/10 rounded-full px-4 py-2.5 bg-surface placeholder:text-ink-muted/60 focus:outline-none focus:border-black/25"
           />
           <button
             type="submit"

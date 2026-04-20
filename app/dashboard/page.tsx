@@ -8,6 +8,7 @@ import InstallBanner from "@/components/InstallBanner";
 import AcceptInviteButton from "./AcceptInviteButton";
 import Link from "next/link";
 import { isSupportedCity } from "@/lib/editorial";
+import LocalDate from "@/components/LocalDate";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -293,9 +294,7 @@ export default async function DashboardPage() {
                     <div className="text-right shrink-0">
                       <p className="text-xs font-bold text-citrus-dark">{countdown.label}</p>
                       <p className="text-xs text-ink-muted mt-0.5">
-                        {new Date(dinner.reservation_datetime!).toLocaleDateString("en-US", {
-                          month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-                        })}
+                        <LocalDate iso={dinner.reservation_datetime!} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
                       </p>
                     </div>
                   </Link>

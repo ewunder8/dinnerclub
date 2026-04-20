@@ -222,7 +222,7 @@ export default function PollOptionCard({
                 placeholder="https://beliapp.co/…"
                 value={beliInput}
                 onChange={(e) => setBeliInput(e.target.value)}
-                className="flex-1 text-xs bg-surface border border-slate/20 rounded-lg px-3 py-1.5 focus:outline-none focus:border-slate"
+                className="flex-1 text-xs text-ink placeholder-ink-faint bg-surface border border-slate/20 rounded-lg px-3 py-1.5 focus:outline-none focus:border-slate"
               />
               <button
                 onClick={handleSaveBeliUrl}
