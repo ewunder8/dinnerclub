@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { rsvpDinner } from "./actions";
 import ReservationAttempts from "./ReservationAttempts";
-import ConfirmReservationForm from "./ConfirmReservationForm";
 import type { ReservationAttempt, User } from "@/lib/supabase/database.types";
 
 type RsvpMember = {
@@ -56,7 +55,32 @@ export default function RsvpPanel({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* RSVP section */}
+
+      {/* Big RSVP prompt — only when user hasn't responded yet */}
+      {myStatus === null && (
+        <div className="bg-white border border-black/8 rounded-2xl p-5">
+          <p className="font-sans text-xl font-bold text-ink mb-1">Are you coming?</p>
+          <p className="text-sm text-ink-muted mb-4">Let the group know so someone can book a table.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleRsvp("going")}
+              disabled={loading !== null}
+              className="flex-1 py-4 rounded-xl font-bold text-sm bg-green-500 text-white hover:bg-green-600 transition-all disabled:opacity-40"
+            >
+              {loading === "going" ? "…" : "I'm in 🙌"}
+            </button>
+            <button
+              onClick={() => handleRsvp("not_going")}
+              disabled={loading !== null}
+              className="flex-1 py-4 rounded-xl font-semibold text-sm bg-black/5 text-ink-muted hover:bg-black/10 hover:text-ink transition-all disabled:opacity-40"
+            >
+              {loading === "not_going" ? "…" : "Can't make it"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Who's in list */}
       <div className="bg-white border border-black/8 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-black/5">
           <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">
@@ -93,31 +117,34 @@ export default function RsvpPanel({
           ))}
         </div>
 
-        {/* My RSVP buttons */}
-        <div className="px-5 py-4 border-t border-black/5 flex gap-3">
-          <button
-            onClick={() => handleRsvp("going")}
-            disabled={loading !== null}
-            className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${
-              myStatus === "going"
-                ? "bg-green-500 text-white"
-                : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-            }`}
-          >
-            {loading === "going" ? "…" : myStatus === "going" ? "✓ I'm in" : "I'm in"}
-          </button>
-          <button
-            onClick={() => handleRsvp("not_going")}
-            disabled={loading !== null}
-            className={`flex-1 py-3.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 ${
-              myStatus === "not_going"
-                ? "bg-red-100 text-red-500 border border-red-200"
-                : "bg-black/5 text-ink-muted hover:bg-black/8 hover:text-ink"
-            }`}
-          >
-            {loading === "not_going" ? "…" : "Can't make it"}
-          </button>
-        </div>
+        {/* Change answer row — compact, only when already responded */}
+        {myStatus !== null && (
+          <div className="px-5 py-3 border-t border-black/5 flex items-center gap-3">
+            <span className="text-xs text-ink-muted shrink-0">Change your answer:</span>
+            <button
+              onClick={() => handleRsvp("going")}
+              disabled={loading !== null}
+              className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 ${
+                myStatus === "going"
+                  ? "bg-green-500 text-white"
+                  : "bg-black/5 text-ink-muted hover:bg-green-50 hover:text-green-700"
+              }`}
+            >
+              {loading === "going" ? "…" : "I'm in"}
+            </button>
+            <button
+              onClick={() => handleRsvp("not_going")}
+              disabled={loading !== null}
+              className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 ${
+                myStatus === "not_going"
+                  ? "bg-red-100 text-red-500 border border-red-200"
+                  : "bg-black/5 text-ink-muted hover:bg-red-50 hover:text-red-400"
+              }`}
+            >
+              {loading === "not_going" ? "…" : "Can't make it"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Reservation claiming — show for both seeking and waitlisted */}
@@ -144,14 +171,6 @@ export default function RsvpPanel({
             dinnerStatus={dinnerStatus}
           />
 
-          {isCreator && dinnerStatus === "seeking_reservation" && (
-            <ConfirmReservationForm
-              dinnerId={dinnerId}
-              clubId={clubId}
-              userId={userId}
-              topOptions={topOptions}
-            />
-          )}
         </div>
       )}
     </div>

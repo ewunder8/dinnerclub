@@ -345,6 +345,25 @@ export default function DinnerPlanningView({
             )}
           </div>
 
+          {/* Share — above RSVP list so organiser shares before tracking responses */}
+          {(() => {
+            const pendingCount = rsvpMembers.filter((m) => m.status === null).length;
+            const shareMsg = winnerRestaurant
+              ? `We're going to ${winnerRestaurant.name}! RSVP for ${dinner.title ?? "our next dinner"} 🎉`
+              : `RSVP for ${dinner.title ?? "our next dinner"} 🎉`;
+            return (
+              <div className="bg-white border border-black/8 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite your crew</p>
+                  {pendingCount > 0 && (
+                    <span className="text-xs text-ink-muted">{pendingCount} haven't responded</span>
+                  )}
+                </div>
+                <ShareActions message={shareMsg} url={dinnerUrl} />
+              </div>
+            );
+          })()}
+
           <RsvpPanel
             dinnerId={dinnerId}
             clubId={clubId}
@@ -354,15 +373,6 @@ export default function DinnerPlanningView({
             attempts={rawAttempts}
             topOptions={topWinnerOption}
             dinnerStatus={dinner.status}
-          />
-
-          <ShareActions
-            message={
-              winnerRestaurant
-                ? `We're going to ${winnerRestaurant.name}! RSVP for ${dinner.title ?? "our next dinner"} 🎉`
-                : `RSVP for ${dinner.title ?? "our next dinner"} 🎉`
-            }
-            url={dinnerUrl}
           />
         </>
       )}

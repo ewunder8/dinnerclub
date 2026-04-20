@@ -245,11 +245,13 @@ export default function ReservationAttempts({ dinnerId, clubId, userId, attempts
         </div>
       )}
 
-      {/* Confirm form — shown to whoever got the reservation */}
-      {isSucceeded && (
+      {/* Confirm form — shown to anyone actively trying or who succeeded */}
+      {(isAttempting || isWaitlisted || isSucceeded) && (
         <div>
-          <p className="text-sm font-semibold text-green-600 mb-3">
-            Nice work! Fill in the details to confirm for the group.
+          <p className="text-sm font-semibold text-ink-muted mb-3">
+            {isSucceeded
+              ? "Nice work! Fill in the details to confirm for the group."
+              : "Got a table? Fill in the details below."}
           </p>
           <ConfirmReservationForm dinnerId={dinnerId} clubId={clubId} userId={userId} topOptions={topOptions} />
         </div>
