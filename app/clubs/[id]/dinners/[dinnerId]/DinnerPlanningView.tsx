@@ -69,6 +69,8 @@ type Props = {
   wishlistForPoll: { place_id: string; name: string; address: string | null }[];
   dietaryRestrictions: string[];
   appUrl: string;
+  /** Override share URL — e.g. invite link for one-off dinners */
+  inviteUrl?: string | null;
 };
 
 function parseLocalDate(dateStr: string) {
@@ -174,9 +176,10 @@ export default function DinnerPlanningView({
   wishlistForPoll,
   dietaryRestrictions,
   appUrl,
+  inviteUrl,
 }: Props) {
   const stage = dinner.planning_stage as "date_voting" | "restaurant_voting" | "winner";
-  const dinnerUrl = `${appUrl}/clubs/${clubId}/dinners/${dinnerId}`;
+  const dinnerUrl = inviteUrl ?? `${appUrl}/clubs/${clubId}/dinners/${dinnerId}`;
 
   // ── Stage 2: restaurant voting data ────────────────────────
   const activeOptionCount = mergedOptions.length;

@@ -175,19 +175,16 @@ export default async function OneOffDinnerPage({
       winnerRestaurant = (wr as RestaurantCache) ?? null;
     }
 
-    // Fetch invite link for creator to share
-    let inviteToken: string | null = null;
-    if (isCreator) {
-      const { data: inviteLink } = await supabase
-        .from("invite_links")
-        .select("token")
-        .eq("dinner_id", params.dinnerId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      inviteToken = inviteLink?.token ?? null;
-    }
+    // Fetch invite link — used for share buttons by anyone with access
+    const { data: inviteLink } = await supabase
+      .from("invite_links")
+      .select("token")
+      .eq("dinner_id", params.dinnerId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const inviteToken = inviteLink?.token ?? null;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -219,6 +216,7 @@ export default async function OneOffDinnerPage({
             wishlistForPoll={[]}
             dietaryRestrictions={[]}
             appUrl={appUrl}
+            inviteUrl={inviteToken ? `${appUrl}/dinners/join/${inviteToken}` : null}
           />
         </div>
       </main>
