@@ -77,8 +77,16 @@ export default async function OneOffDinnerPage({
 
   if (!dinner) notFound();
 
-  // Access check: must be creator or have an RSVP
-  const isCreator = dinner.created_by === user.id;
+  // Access check: must be creator, cohost, or have an RSVP
+  const isOriginalCreator = dinner.created_by === user.id;
+  const { data: cohostRow } = await supabase
+    .from("dinner_cohosts")
+    .select("id")
+    .eq("dinner_id", params.dinnerId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const isCreator = isOriginalCreator || !!cohostRow;
+
   if (!isCreator) {
     const { data: rsvp } = await supabase
       .from("rsvps")
@@ -134,6 +142,8 @@ export default async function OneOffDinnerPage({
       { data: rawVotes },
       { data: rawRsvps },
       { data: rawAttempts },
+      { data: rawCohosts },
+      { data: creatorProfile },
     ] = await Promise.all([
       supabase.from("poll_options").select("*").eq("dinner_id", params.dinnerId).is("removed_at", null),
       supabase.from("votes").select("*").eq("dinner_id", params.dinnerId),
@@ -143,6 +153,12 @@ export default async function OneOffDinnerPage({
         .eq("dinner_id", params.dinnerId)
         .in("status", ["attempting", "waitlisted", "succeeded"])
         .order("created_at", { ascending: true }),
+      supabase.from("dinner_cohosts")
+        .select("user_id, users ( name, email )")
+        .eq("dinner_id", params.dinnerId),
+      dinner.created_by
+        ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+        : Promise.resolve({ data: null }),
     ]);
 
     const opts = rawOptions ?? [];
@@ -188,12 +204,37 @@ export default async function OneOffDinnerPage({
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+    // Build hosts list (creator first, then cohosts)
+    const cohostList = (rawCohosts ?? []).map((c: any) => ({
+      userId: c.user_id as string,
+      name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string,
+    }));
+    const creatorName = creatorProfile
+      ? (creatorProfile.name || creatorProfile.email?.split("@")[0] || "Host")
+      : null;
+    const hosts = creatorName
+      ? [{ name: creatorName }, ...cohostList.map((c) => ({ name: c.name }))]
+      : cohostList.map((c) => ({ name: c.name }));
+
+    // Eligible cohost members = RSVPed users who aren't already cohosts or creator
+    const cohostUserIds = new Set(cohostList.map((c) => c.userId));
+    const eligibleCohostMembers = (rawRsvps ?? [])
+      .filter((r: any) => r.user_id !== dinner.created_by && !cohostUserIds.has(r.user_id))
+      .map((r: any) => ({
+        userId: r.user_id as string,
+        name: (r.users?.name || r.users?.email?.split("@")[0] || "Member") as string,
+      }))
+      // deduplicate by userId
+      .filter((m: { userId: string; name: string }, i: number, arr: { userId: string; name: string }[]) =>
+        arr.findIndex((x) => x.userId === m.userId) === i
+      );
+
     return (
       <main className="min-h-screen bg-snow">
         <Nav title={dinnerTitle} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10">
           {/* Invite link banner for creator */}
-          {isCreator && inviteToken && (
+          {isOriginalCreator && inviteToken && (
             <ShareInviteLink link={`${appUrl}/dinners/join/${inviteToken}`} />
           )}
           <DinnerPlanningView
@@ -217,6 +258,10 @@ export default async function OneOffDinnerPage({
             dietaryRestrictions={[]}
             appUrl={appUrl}
             inviteUrl={inviteToken ? `${appUrl}/dinners/join/${inviteToken}` : null}
+            hosts={hosts}
+            cohosts={cohostList}
+            eligibleCohostMembers={eligibleCohostMembers}
+            isOriginalCreator={isOriginalCreator}
           />
         </div>
       </main>
@@ -225,7 +270,7 @@ export default async function OneOffDinnerPage({
 
   // ── Confirmed ─────────────────────────────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
-    const [{ data: restaurant }, { data: rawRsvps }, { data: booker }, { data: rawComments }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawRsvps }, { data: booker }, { data: rawComments }, { data: confirmedCohosts }, { data: confirmedCreator }] = await Promise.all([
       supabase.from("restaurant_cache").select("*").eq("place_id", dinner.winning_restaurant_place_id ?? "").single(),
       supabase.from("rsvps").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId),
       dinner.reserved_by
@@ -235,6 +280,12 @@ export default async function OneOffDinnerPage({
         .select("id, user_id, body, created_at, users ( name, email )")
         .eq("dinner_id", params.dinnerId)
         .order("created_at", { ascending: true }),
+      supabase.from("dinner_cohosts")
+        .select("user_id, users ( name, email )")
+        .eq("dinner_id", params.dinnerId),
+      dinner.created_by
+        ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+        : Promise.resolve({ data: null }),
     ]);
 
     if (!restaurant) notFound();
@@ -248,6 +299,16 @@ export default async function OneOffDinnerPage({
       author_name: c.users?.name || c.users?.email?.split("@")[0] || "Guest",
     }));
 
+    const confirmedCoHostNames = (confirmedCohosts ?? []).map((c: any) => ({
+      name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string,
+    }));
+    const confirmedCreatorName = confirmedCreator
+      ? (confirmedCreator.name || confirmedCreator.email?.split("@")[0] || null)
+      : null;
+    const confirmedHosts = confirmedCreatorName
+      ? [{ name: confirmedCreatorName }, ...confirmedCoHostNames]
+      : confirmedCoHostNames;
+
     return (
       <main className="min-h-screen bg-snow">
         <Nav title={dinnerTitle} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
@@ -259,6 +320,7 @@ export default async function OneOffDinnerPage({
             userId={user.id}
             clubName=""
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
+            hosts={confirmedHosts}
           />
           <DinnerComments dinnerId={params.dinnerId} userId={user.id} comments={comments} />
           {isCreator && (

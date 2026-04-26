@@ -17,6 +17,7 @@ import DateVotingPanel from "./DateVotingPanel";
 import RestaurantVotingPanel from "./RestaurantVotingPanel";
 import RsvpPanel from "./RsvpPanel";
 import ShareActions from "@/components/ShareActions";
+import CoHostManager from "./CoHostManager";
 import { extractCuisineFromTypes } from "@/lib/places";
 
 type PollDate = { id: string; proposed_date: string };
@@ -71,6 +72,10 @@ type Props = {
   appUrl: string;
   /** Override share URL — e.g. invite link for one-off dinners */
   inviteUrl?: string | null;
+  hosts?: { name: string }[];
+  cohosts?: { userId: string; name: string }[];
+  eligibleCohostMembers?: { userId: string; name: string }[];
+  isOriginalCreator?: boolean;
 };
 
 function parseLocalDate(dateStr: string) {
@@ -177,6 +182,10 @@ export default function DinnerPlanningView({
   dietaryRestrictions,
   appUrl,
   inviteUrl,
+  hosts = [],
+  cohosts = [],
+  eligibleCohostMembers = [],
+  isOriginalCreator = false,
 }: Props) {
   const stage = dinner.planning_stage as "date_voting" | "restaurant_voting" | "winner";
   const dinnerUrl = inviteUrl ?? `${appUrl}/clubs/${clubId}/dinners/${dinnerId}`;
@@ -221,6 +230,22 @@ export default function DinnerPlanningView({
         targetDate={dinner.target_date}
         winnerName={winnerRestaurant?.name ?? null}
       />
+
+      {/* Hosts */}
+      {hosts.length > 0 && (
+        <p className="text-sm text-ink-muted -mt-3">
+          Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
+        </p>
+      )}
+
+      {/* Cohost management — only original creator */}
+      {isOriginalCreator && (
+        <CoHostManager
+          dinnerId={dinnerId}
+          cohosts={cohosts}
+          eligibleMembers={eligibleCohostMembers}
+        />
+      )}
 
       {/* ── Stage 1: Date voting ─────────────────────────────── */}
       {stage === "date_voting" && availPoll && (

@@ -30,6 +30,7 @@ type Props = {
   userId: string;
   clubName: string;
   reservedByName?: string | null;
+  hosts?: { name: string }[];
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; sublabel: string }> = {
@@ -41,7 +42,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; subl
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName, hosts }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
@@ -142,6 +143,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               </a>
             )}
           </div>
+
+          {/* Hosts */}
+          {hosts && hosts.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-black/5 flex items-center gap-2">
+              <span className="text-base">🍽️</span>
+              <p className="text-sm text-ink-muted">
+                Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
+              </p>
+            </div>
+          )}
 
           {/* Booker */}
           {reservedByName && (

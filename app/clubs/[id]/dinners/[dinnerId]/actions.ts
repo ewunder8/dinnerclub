@@ -344,6 +344,37 @@ export async function noneOfTheAbove({
   return {};
 }
 
+async function getIsCohost(dinnerId: string, userId: string, supabase: Awaited<ReturnType<typeof createClient>>): Promise<boolean> {
+  const { data } = await supabase.from("dinner_cohosts").select("id").eq("dinner_id", dinnerId).eq("user_id", userId).maybeSingle();
+  return !!data;
+}
+
+export async function addCohost({ dinnerId, userId }: { dinnerId: string; userId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase.from("dinners").select("created_by").eq("id", dinnerId).single();
+  if (!dinner || dinner.created_by !== user.id) return { error: "Only the dinner creator can add cohosts." };
+
+  const { error } = await supabase.from("dinner_cohosts").insert({ dinner_id: dinnerId, user_id: userId, added_by: user.id });
+  if (error) return { error: "Failed to add cohost." };
+  return {};
+}
+
+export async function removeCohost({ dinnerId, userId }: { dinnerId: string; userId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase.from("dinners").select("created_by").eq("id", dinnerId).single();
+  if (!dinner || dinner.created_by !== user.id) return { error: "Only the dinner creator can remove cohosts." };
+
+  const { error } = await supabase.from("dinner_cohosts").delete().eq("dinner_id", dinnerId).eq("user_id", userId);
+  if (error) return { error: "Failed to remove cohost." };
+  return {};
+}
+
 export async function lockDate({
   dinnerId,
   clubId,
@@ -363,7 +394,8 @@ export async function lockDate({
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
-  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can lock a date." };
+  const cohost = await getIsCohost(dinnerId, user.id, supabase);
+  if (dinner.created_by !== user.id && !cohost) return { error: "Only the dinner host can lock a date." };
   if (dinner.planning_stage !== "date_voting") return { error: "Not in date voting stage." };
 
   const { error: dinnerError } = await supabase
@@ -401,7 +433,8 @@ export async function lockRestaurant({
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
-  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can pick the restaurant." };
+  const cohost2 = await getIsCohost(dinnerId, user.id, supabase);
+  if (dinner.created_by !== user.id && !cohost2) return { error: "Only the dinner host can pick the restaurant." };
   if (dinner.planning_stage !== "restaurant_voting") return { error: "Not in restaurant voting stage." };
 
   const { error } = await supabase

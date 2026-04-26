@@ -427,6 +427,23 @@ export type Database = {
         ];
       };
 
+      dinner_cohosts: {
+        Row: {
+          id: string;
+          dinner_id: string;
+          user_id: string;
+          added_by: string;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["dinner_cohosts"]["Row"], "id" | "created_at">;
+        Update: never;
+        Relationships: [
+          { foreignKeyName: "dinner_cohosts_dinner_id_fkey"; columns: ["dinner_id"]; isOneToOne: false; referencedRelation: "dinners"; referencedColumns: ["id"] },
+          { foreignKeyName: "dinner_cohosts_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "users"; referencedColumns: ["id"] },
+          { foreignKeyName: "dinner_cohosts_added_by_fkey"; columns: ["added_by"]; isOneToOne: false; referencedRelation: "users"; referencedColumns: ["id"] }
+        ];
+      };
+
       // Added beli_url for Beli app deep links
       restaurant_cache: {
         Row: {

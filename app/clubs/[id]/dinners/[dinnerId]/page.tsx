@@ -27,6 +27,7 @@ import ShareActions from "@/components/ShareActions";
 import RefreshButton from "./RefreshButton";
 import EditDinnerDetails from "./EditDinnerDetails";
 import DinnerPlanningView from "./DinnerPlanningView";
+import CoHostManager from "./CoHostManager";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -103,7 +104,16 @@ export default async function DinnerPage({
 
   // ── Planning flow (date voting → restaurant voting → winner) ──
   const planningStage = dinner.planning_stage;
-  const isCreator = dinner.created_by === user.id;
+  const isOriginalCreator = dinner.created_by === user.id;
+
+  // Check cohost status
+  const { data: cohostRow } = await supabase
+    .from("dinner_cohosts")
+    .select("id")
+    .eq("dinner_id", params.dinnerId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const isCreator = isOriginalCreator || !!cohostRow;
 
   const inPlanningFlow =
     (planningStage === "date_voting" || planningStage === "restaurant_voting") ||
@@ -130,6 +140,8 @@ export default async function DinnerPage({
         { data: rawAttempts },
         { data: clubData },
         { data: rawWishlist },
+        { data: rawCohosts },
+        { data: creatorProfile },
       ] = await Promise.all([
         supabase.from("availability_poll_dates").select("*").eq("poll_id", availPoll.id).order("proposed_date"),
         supabase.from("availability_responses").select("*").eq("poll_id", availPoll.id),
@@ -141,6 +153,10 @@ export default async function DinnerPage({
         supabase.from("reservation_attempts").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId).in("status", ["attempting", "waitlisted", "succeeded"]).order("created_at", { ascending: true }),
         supabase.from("clubs").select("city").eq("id", params.id).single(),
         supabase.from("club_wishlist").select("place_id").eq("club_id", params.id),
+        supabase.from("dinner_cohosts").select("user_id, users ( name, email )").eq("dinner_id", params.dinnerId),
+        dinner.created_by
+          ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+          : Promise.resolve({ data: null }),
       ]);
 
       // Build restaurant map for poll options
@@ -201,6 +217,26 @@ export default async function DinnerPage({
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+      // Build hosts display list (creator first, then cohosts)
+      const creatorName = (creatorProfile as any)?.name || (creatorProfile as any)?.email?.split("@")[0] || null;
+      const cohostList = (rawCohosts ?? []).map((c: any) => ({
+        userId: c.user_id as string,
+        name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string,
+      }));
+      const hosts = [
+        ...(creatorName ? [{ name: creatorName as string }] : []),
+        ...cohostList.map((c: { name: string }) => ({ name: c.name })),
+      ];
+
+      // Members eligible to be added as cohosts (not already cohosts, not the creator)
+      const coHostUserIds = new Set(cohostList.map((c: { userId: string }) => c.userId));
+      const eligibleCohostMembers = (clubMembers ?? [])
+        .filter((m: any) => m.user_id !== dinner.created_by && !coHostUserIds.has(m.user_id))
+        .map((m: any) => ({
+          userId: m.user_id as string,
+          name: (m.users?.name || m.users?.email?.split("@")[0] || "Member") as string,
+        }));
+
       return (
         <main className="min-h-screen bg-snow">
           <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
@@ -221,10 +257,14 @@ export default async function DinnerPage({
               clubId={params.id}
               dinnerId={params.dinnerId}
               isCreator={isCreator}
+              isOriginalCreator={isOriginalCreator}
               clubCity={(clubData as any)?.city ?? null}
               wishlistForPoll={wishlistForPoll}
               dietaryRestrictions={dietaryRestrictions}
               appUrl={appUrl}
+              hosts={hosts}
+              cohosts={cohostList}
+              eligibleCohostMembers={eligibleCohostMembers}
             />
           </div>
         </main>
@@ -234,7 +274,7 @@ export default async function DinnerPage({
 
   // ── Confirmed: show countdown view ───────────────────────────
   if (dinner.status === "confirmed" && dinner.reservation_datetime) {
-    const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }, { data: rawComments }] = await Promise.all([
+    const [{ data: restaurant }, { data: rawRsvps }, { data: club }, { data: booker }, { data: rawComments }, { data: confirmedCohosts }, { data: confirmedCreator }] = await Promise.all([
       supabase
         .from("restaurant_cache")
         .select("*")
@@ -257,6 +297,10 @@ export default async function DinnerPage({
         .select("id, user_id, body, created_at, users ( name, email )")
         .eq("dinner_id", params.dinnerId)
         .order("created_at", { ascending: true }),
+      supabase.from("dinner_cohosts").select("user_id, users ( name, email )").eq("dinner_id", params.dinnerId),
+      dinner.created_by
+        ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+        : Promise.resolve({ data: null }),
     ]);
 
     if (!restaurant) notFound();
@@ -271,6 +315,12 @@ export default async function DinnerPage({
       author_name: c.users?.name || c.users?.email?.split("@")[0] || "Member",
     }));
 
+    const confirmedCreatorName = (confirmedCreator as any)?.name || (confirmedCreator as any)?.email?.split("@")[0] || null;
+    const confirmedHosts = [
+      ...(confirmedCreatorName ? [{ name: confirmedCreatorName as string }] : []),
+      ...(confirmedCohosts ?? []).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string })),
+    ];
+
     return (
       <main className="min-h-screen bg-snow">
         <Nav clubId={params.id} title={(membership.clubs as any)?.name} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
@@ -282,6 +332,7 @@ export default async function DinnerPage({
             userId={user.id}
             clubName={club?.name ?? ""}
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
+            hosts={confirmedHosts}
           />
           <DinnerComments dinnerId={params.dinnerId} userId={user.id} comments={comments} />
           {isOwner && (

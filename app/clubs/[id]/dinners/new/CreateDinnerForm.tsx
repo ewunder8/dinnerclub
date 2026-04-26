@@ -24,11 +24,14 @@ type SearchResult = {
   rating: number | null;
 };
 
+type ClubMember = { userId: string; name: string };
+
 type Props = {
   clubId: string | null;
   clubName?: string | null;
   clubEmoji?: string | null;
   clubCity?: string | null;
+  clubMembers?: ClubMember[];
 };
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -210,7 +213,7 @@ function Nav({ onBack }: { onBack?: () => void }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity }: Props) {
+export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity, clubMembers = [] }: Props) {
   const router = useRouter();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -249,6 +252,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
   const [createdDinnerId, setCreatedDinnerId] = useState<string | null>(null);
   const [confirmedDates, setConfirmedDates] = useState<string[]>([]);
   const [confirmedRestaurants, setConfirmedRestaurants] = useState<SeededRestaurant[]>([]);
+  const [coHostIds, setCoHostIds] = useState<string[]>([]);
 
   // ── Load suggestions when entering Step 2 ──────────────────────
 
@@ -514,6 +518,13 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       }
     }
 
+    // 5. Insert cohosts (if any selected)
+    if (coHostIds.length > 0) {
+      await supabase.from("dinner_cohosts").insert(
+        coHostIds.map((uid) => ({ dinner_id: dinner.id, user_id: uid, added_by: user.id }))
+      );
+    }
+
     // TODO: send email — notify club members that a dinner poll is open
 
     setCreatedDinnerId(dinner.id);
@@ -747,6 +758,37 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
                 </>
               )}
             </div>
+
+            {/* Cohost picker — only for club dinners with other members */}
+            {clubId && clubMembers.length > 0 && (
+              <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
+                <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">
+                  Add a cohost <span className="font-normal normal-case">(optional)</span>
+                </p>
+                <div className="flex flex-col gap-2">
+                  {clubMembers.map((m) => {
+                    const selected = coHostIds.includes(m.userId);
+                    return (
+                      <button
+                        key={m.userId}
+                        type="button"
+                        onClick={() => setCoHostIds((ids) =>
+                          selected ? ids.filter((id) => id !== m.userId) : [...ids, m.userId]
+                        )}
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                          selected
+                            ? "bg-citrus/10 border-citrus-dark text-ink"
+                            : "bg-white border-black/8 text-ink hover:border-slate/30"
+                        }`}
+                      >
+                        <span>{m.name}</span>
+                        {selected && <span className="text-citrus-dark text-xs">✓ Cohost</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
