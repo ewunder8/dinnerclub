@@ -16,6 +16,7 @@ type Platform = NonNullable<Dinner["reservation_platform"]>;
 
 export async function updateDinnerDetails({
   dinnerId,
+  title,
   cuisine,
   price,
   vibe,
@@ -24,6 +25,7 @@ export async function updateDinnerDetails({
   pollClosesAt,
 }: {
   dinnerId: string;
+  title?: string | null;
   cuisine: string | null;
   price: number | null;
   vibe: string | null;
@@ -38,6 +40,7 @@ export async function updateDinnerDetails({
   const { error } = await supabase
     .from("dinners")
     .update({
+      ...(title !== undefined ? { title: title || null } : {}),
       theme_cuisine: cuisine || null,
       theme_price: price,
       theme_vibe: vibe || null,

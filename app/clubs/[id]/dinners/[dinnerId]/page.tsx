@@ -817,12 +817,8 @@ export default async function DinnerPage({
             <EditDinnerDetails
               dinnerId={params.dinnerId}
               initial={{
-                cuisine: dinner.theme_cuisine ?? null,
-                price: dinner.theme_price ?? null,
-                vibe: dinner.theme_vibe ?? null,
-                neighborhood: dinner.theme_neighborhood ?? null,
+                title: dinner.title ?? null,
                 targetDate: dinner.target_date ?? null,
-                pollClosesAt: dinner.poll_closes_at ?? null,
               }}
             />
           )}

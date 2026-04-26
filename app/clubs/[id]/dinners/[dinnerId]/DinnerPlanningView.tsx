@@ -18,6 +18,7 @@ import RestaurantVotingPanel from "./RestaurantVotingPanel";
 import RsvpPanel from "./RsvpPanel";
 import ShareActions from "@/components/ShareActions";
 import CoHostManager from "./CoHostManager";
+import EditDinnerDetails from "./EditDinnerDetails";
 import { extractCuisineFromTypes } from "@/lib/places";
 
 type PollDate = { id: string; proposed_date: string };
@@ -224,19 +225,33 @@ export default function DinnerPlanningView({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Dinner title */}
+      <div>
+        <h1 className="font-sans text-3xl font-bold text-ink">
+          {dinner.title ?? "Dinner"}
+        </h1>
+        {hosts.length > 0 && (
+          <p className="text-sm text-ink-muted mt-1">
+            Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
+          </p>
+        )}
+        {isCreator && (
+          <EditDinnerDetails
+            dinnerId={dinnerId}
+            initial={{
+              title: dinner.title ?? null,
+              targetDate: dinner.target_date ?? null,
+            }}
+          />
+        )}
+      </div>
+
       {/* Stage progress */}
       <StageTracker
         stage={stage}
         targetDate={dinner.target_date}
         winnerName={winnerRestaurant?.name ?? null}
       />
-
-      {/* Hosts */}
-      {hosts.length > 0 && (
-        <p className="text-sm text-ink-muted -mt-3">
-          Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
-        </p>
-      )}
 
       {/* Cohost management — only original creator */}
       {isOriginalCreator && (
