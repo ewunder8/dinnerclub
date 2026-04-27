@@ -282,13 +282,17 @@ export default function DinnerPlanningView({
             memberCount={memberCount}
           />
 
-          <div className="bg-white border border-black/8 rounded-2xl p-5">
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
-            <ShareActions
-              message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
-              url={dinnerUrl}
-            />
-          </div>
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
+            </div>
+            <div className="p-5">
+              <ShareActions
+                message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
+                url={dinnerUrl}
+              />
+            </div>
+          </section>
         </>
       )}
 
@@ -330,13 +334,17 @@ export default function DinnerPlanningView({
             memberCount={memberCount}
           />
 
-          <div className="bg-white border border-black/8 rounded-2xl p-5">
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
-            <ShareActions
-              message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
-              url={dinnerUrl}
-            />
-          </div>
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
+            </div>
+            <div className="p-5">
+              <ShareActions
+                message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
+                url={dinnerUrl}
+              />
+            </div>
+          </section>
         </>
       )}
 
@@ -399,15 +407,17 @@ export default function DinnerPlanningView({
               ? `We're going to ${winnerRestaurant.name}! Are you coming? 🎉`
               : `Are you coming to ${dinner.title ?? "our next dinner"}? 🎉`;
             return (
-              <div className="bg-white border border-black/8 rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</p>
+              <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
                   {pendingCount > 0 && (
                     <span className="text-xs text-ink-muted">{pendingCount} haven't responded</span>
                   )}
                 </div>
-                <ShareActions message={shareMsg} url={dinnerUrl} />
-              </div>
+                <div className="p-5">
+                  <ShareActions message={shareMsg} url={dinnerUrl} />
+                </div>
+              </section>
             );
           })()}
 

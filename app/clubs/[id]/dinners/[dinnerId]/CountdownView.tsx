@@ -252,10 +252,14 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
       </section>
 
       {/* Share Details */}
-      <div className="bg-white border border-black/8 rounded-2xl p-5">
-        <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
-        <ShareActions message={shareMessage} url={shareUrl} />
-      </div>
+      <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/5">
+          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
+        </div>
+        <div className="p-5">
+          <ShareActions message={shareMessage} url={shareUrl} />
+        </div>
+      </section>
 
       {/* Action buttons */}
       <div className="flex flex-col gap-3">
