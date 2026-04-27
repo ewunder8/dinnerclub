@@ -810,10 +810,17 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
               <p className="text-ink-muted text-sm mt-1">{clubId ? "Share it with your group so they can vote on dates." : "Share it so your crew can vote on where to eat."}</p>
             </div>
 
-            <ShareActions
-              message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
-              url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
-            />
+            <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-black/5">
+                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
+              </div>
+              <div className="p-5">
+                <ShareActions
+                  message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}
+                  url={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}${clubId ? `/clubs/${clubId}/dinners/${createdDinnerId}` : `/dinners/${createdDinnerId}`}`}
+                />
+              </div>
+            </section>
 
             <button
               type="button"
