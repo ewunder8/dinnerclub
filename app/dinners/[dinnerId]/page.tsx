@@ -144,6 +144,7 @@ export default async function OneOffDinnerPage({
       { data: rawAttempts },
       { data: rawCohosts },
       { data: creatorProfile },
+      { data: rawComments },
     ] = await Promise.all([
       supabase.from("poll_options").select("*").eq("dinner_id", params.dinnerId).is("removed_at", null),
       supabase.from("votes").select("*").eq("dinner_id", params.dinnerId),
@@ -159,6 +160,10 @@ export default async function OneOffDinnerPage({
       dinner.created_by
         ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
         : Promise.resolve({ data: null }),
+      supabase.from("dinner_comments")
+        .select("id, user_id, body, created_at, users ( name, email )")
+        .eq("dinner_id", params.dinnerId)
+        .order("created_at", { ascending: true }),
     ]);
 
     const opts = rawOptions ?? [];
@@ -216,6 +221,14 @@ export default async function OneOffDinnerPage({
       ? [{ name: creatorName }, ...cohostList.map((c) => ({ name: c.name }))]
       : cohostList.map((c) => ({ name: c.name }));
 
+    const planningComments = (rawComments ?? []).map((c: any) => ({
+      id: c.id,
+      user_id: c.user_id,
+      body: c.body,
+      created_at: c.created_at,
+      author_name: c.users?.name || c.users?.email?.split("@")[0] || "Guest",
+    }));
+
     // Eligible cohost members = RSVPed users who aren't already cohosts or creator
     const cohostUserIds = new Set(cohostList.map((c) => c.userId));
     const eligibleCohostMembers = (rawRsvps ?? [])
@@ -262,6 +275,7 @@ export default async function OneOffDinnerPage({
             cohosts={cohostList}
             eligibleCohostMembers={eligibleCohostMembers}
             isOriginalCreator={isOriginalCreator}
+            comments={planningComments}
           />
         </div>
       </main>

@@ -18,6 +18,8 @@ import RestaurantVotingPanel from "./RestaurantVotingPanel";
 import RsvpPanel from "./RsvpPanel";
 import ShareActions from "@/components/ShareActions";
 import EditDinnerDetails from "./EditDinnerDetails";
+import DinnerComments from "./DinnerComments";
+import type { DinnerComment } from "./DinnerComments";
 import { extractCuisineFromTypes } from "@/lib/places";
 
 type PollDate = { id: string; proposed_date: string };
@@ -76,6 +78,7 @@ type Props = {
   cohosts?: { userId: string; name: string }[];
   eligibleCohostMembers?: { userId: string; name: string }[];
   isOriginalCreator?: boolean;
+  comments?: DinnerComment[];
 };
 
 function parseLocalDate(dateStr: string) {
@@ -186,6 +189,7 @@ export default function DinnerPlanningView({
   cohosts = [],
   eligibleCohostMembers = [],
   isOriginalCreator = false,
+  comments = [],
 }: Props) {
   const stage = dinner.planning_stage as "date_voting" | "restaurant_voting" | "winner";
   const dinnerUrl = inviteUrl ?? `${appUrl}/clubs/${clubId}/dinners/${dinnerId}`;
@@ -386,12 +390,12 @@ export default function DinnerPlanningView({
           {(() => {
             const pendingCount = rsvpMembers.filter((m) => m.status === null).length;
             const shareMsg = winnerRestaurant
-              ? `We're going to ${winnerRestaurant.name}! RSVP for ${dinner.title ?? "our next dinner"} 🎉`
-              : `RSVP for ${dinner.title ?? "our next dinner"} 🎉`;
+              ? `We're going to ${winnerRestaurant.name}! Are you coming? 🎉`
+              : `Are you coming to ${dinner.title ?? "our next dinner"}? 🎉`;
             return (
               <div className="bg-white border border-black/8 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite your crew</p>
+                  <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</p>
                   {pendingCount > 0 && (
                     <span className="text-xs text-ink-muted">{pendingCount} haven't responded</span>
                   )}
@@ -413,6 +417,9 @@ export default function DinnerPlanningView({
           />
         </>
       )}
+
+      {/* Notes — always visible */}
+      <DinnerComments dinnerId={dinnerId} userId={userId} comments={comments} />
     </div>
   );
 }

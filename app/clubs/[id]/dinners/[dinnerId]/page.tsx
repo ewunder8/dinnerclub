@@ -142,6 +142,7 @@ export default async function DinnerPage({
         { data: rawWishlist },
         { data: rawCohosts },
         { data: creatorProfile },
+        { data: rawComments },
       ] = await Promise.all([
         supabase.from("availability_poll_dates").select("*").eq("poll_id", availPoll.id).order("proposed_date"),
         supabase.from("availability_responses").select("*").eq("poll_id", availPoll.id),
@@ -157,6 +158,7 @@ export default async function DinnerPage({
         dinner.created_by
           ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
           : Promise.resolve({ data: null }),
+        supabase.from("dinner_comments").select("id, user_id, body, created_at, users ( name, email )").eq("dinner_id", params.dinnerId).order("created_at", { ascending: true }),
       ]);
 
       // Build restaurant map for poll options
@@ -228,6 +230,14 @@ export default async function DinnerPage({
         ...cohostList.map((c: { name: string }) => ({ name: c.name })),
       ];
 
+      const planningComments = (rawComments ?? []).map((c: any) => ({
+        id: c.id,
+        user_id: c.user_id,
+        body: c.body,
+        created_at: c.created_at,
+        author_name: c.users?.name || c.users?.email?.split("@")[0] || "Member",
+      }));
+
       // Members eligible to be added as cohosts (not already cohosts, not the creator)
       const coHostUserIds = new Set(cohostList.map((c: { userId: string }) => c.userId));
       const eligibleCohostMembers = (clubMembers ?? [])
@@ -265,6 +275,7 @@ export default async function DinnerPage({
               hosts={hosts}
               cohosts={cohostList}
               eligibleCohostMembers={eligibleCohostMembers}
+              comments={planningComments}
             />
           </div>
         </main>

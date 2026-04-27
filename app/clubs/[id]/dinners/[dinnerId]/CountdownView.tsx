@@ -68,7 +68,9 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     setRsvpLoading(false);
   };
 
-  const shareMessage = `We're going to ${restaurant.name}! RSVP for ${clubName} 🎉`;
+  const shareMessage = dinner.reservation_datetime
+    ? `We're going to ${restaurant.name} — ${formatReservationTime(dinner.reservation_datetime)} 🍽️`
+    : `We're going to ${restaurant.name}! Are you coming? 🎉`;
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const reservationUrl =
