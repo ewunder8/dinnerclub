@@ -251,10 +251,14 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         </div>
       </section>
 
+      {/* Share Details */}
+      <div className="bg-white border border-black/8 rounded-2xl p-5">
+        <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
+        <ShareActions message={shareMessage} url={shareUrl} />
+      </div>
+
       {/* Action buttons */}
       <div className="flex flex-col gap-3">
-        {/* Share */}
-        <ShareActions message={shareMessage} url={shareUrl} />
 
         {/* Add to Calendar */}
         <div>
