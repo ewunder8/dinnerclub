@@ -4,7 +4,9 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Calendar, Pencil } from "lucide-react";
-import { updateDinnerDetails } from "./actions";
+import { updateDinnerDetails, addCohost, removeCohost } from "./actions";
+
+type CoHost = { userId: string; name: string };
 
 type Props = {
   dinnerId: string;
@@ -12,6 +14,8 @@ type Props = {
     title: string | null;
     targetDate: string | null;
   };
+  cohosts?: CoHost[];
+  eligibleCohostMembers?: CoHost[];
 };
 
 function toDatetimeLocal(iso: string | null): string {
@@ -19,12 +23,13 @@ function toDatetimeLocal(iso: string | null): string {
   return new Date(iso).toISOString().slice(0, 16);
 }
 
-export default function EditDinnerDetails({ dinnerId, initial }: Props) {
+export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eligibleCohostMembers = [] }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const [title, setTitle] = useState(initial.title ?? "");
   const [targetDate, setTargetDate] = useState(toDatetimeLocal(initial.targetDate));
+  const [cohostLoading, setCohostLoading] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,11 +59,27 @@ export default function EditDinnerDetails({ dinnerId, initial }: Props) {
     setSaving(false);
   };
 
+  const handleAddCohost = async (userId: string) => {
+    setCohostLoading(userId);
+    const result = await addCohost({ dinnerId, userId });
+    if (!result.error) router.refresh();
+    setCohostLoading(null);
+  };
+
+  const handleRemoveCohost = async (userId: string) => {
+    setCohostLoading(userId);
+    const result = await removeCohost({ dinnerId, userId });
+    if (!result.error) router.refresh();
+    setCohostLoading(null);
+  };
+
+  const showCohostSection = cohosts.length > 0 || eligibleCohostMembers.length > 0;
+
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center text-ink-muted hover:text-ink transition-colors mt-1"
+        className="inline-flex items-center text-ink-muted hover:text-ink transition-colors"
         aria-label="Edit details"
       >
         <Pencil className="w-4 h-4" />
@@ -111,8 +132,41 @@ export default function EditDinnerDetails({ dinnerId, initial }: Props) {
         <input ref={targetDateRef} type="datetime-local" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="sr-only" />
       </div>
 
+      {/* Cohosts */}
+      {showCohostSection && (
+        <div>
+          <label className="block text-xs font-semibold text-ink-muted mb-2">Cohosts</label>
+          <div className="flex flex-col gap-2">
+            {cohosts.map((c) => (
+              <div key={c.userId} className="flex items-center justify-between py-2 px-3 bg-black/3 rounded-xl">
+                <span className="text-sm text-ink">{c.name}</span>
+                <button
+                  onClick={() => handleRemoveCohost(c.userId)}
+                  disabled={cohostLoading === c.userId}
+                  className="text-xs text-ink-muted hover:text-red-500 transition-colors disabled:opacity-40"
+                >
+                  {cohostLoading === c.userId ? "…" : "Remove"}
+                </button>
+              </div>
+            ))}
+            {eligibleCohostMembers.map((m) => (
+              <button
+                key={m.userId}
+                onClick={() => handleAddCohost(m.userId)}
+                disabled={cohostLoading === m.userId}
+                className="flex items-center justify-between py-2 px-3 rounded-xl border border-black/8 hover:border-slate/30 hover:bg-black/3 transition-colors disabled:opacity-40"
+              >
+                <span className="text-sm text-ink">{m.name}</span>
+                <span className="text-xs text-citrus-dark font-semibold">
+                  {cohostLoading === m.userId ? "…" : "+ Add"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-{error && <p className="text-red-500 text-xs">{error}</p>}
+      {error && <p className="text-red-500 text-xs">{error}</p>}
 
       <button
         onClick={handleSave}

@@ -17,7 +17,6 @@ import DateVotingPanel from "./DateVotingPanel";
 import RestaurantVotingPanel from "./RestaurantVotingPanel";
 import RsvpPanel from "./RsvpPanel";
 import ShareActions from "@/components/ShareActions";
-import CoHostManager from "./CoHostManager";
 import EditDinnerDetails from "./EditDinnerDetails";
 import { extractCuisineFromTypes } from "@/lib/places";
 
@@ -227,22 +226,26 @@ export default function DinnerPlanningView({
     <div className="flex flex-col gap-6">
       {/* Dinner title */}
       <div>
-        <h1 className="font-sans text-3xl font-bold text-ink">
-          {dinner.title ?? "Dinner"}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-sans text-3xl font-bold text-ink">
+            {dinner.title ?? "Dinner"}
+          </h1>
+          {isCreator && (
+            <EditDinnerDetails
+              dinnerId={dinnerId}
+              initial={{
+                title: dinner.title ?? null,
+                targetDate: dinner.target_date ?? null,
+              }}
+              cohosts={isOriginalCreator ? cohosts : undefined}
+              eligibleCohostMembers={isOriginalCreator ? eligibleCohostMembers : undefined}
+            />
+          )}
+        </div>
         {hosts.length > 0 && (
           <p className="text-sm text-ink-muted mt-1">
             Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
           </p>
-        )}
-        {isCreator && (
-          <EditDinnerDetails
-            dinnerId={dinnerId}
-            initial={{
-              title: dinner.title ?? null,
-              targetDate: dinner.target_date ?? null,
-            }}
-          />
         )}
       </div>
 
@@ -252,15 +255,6 @@ export default function DinnerPlanningView({
         targetDate={dinner.target_date}
         winnerName={winnerRestaurant?.name ?? null}
       />
-
-      {/* Cohost management — only original creator */}
-      {isOriginalCreator && (
-        <CoHostManager
-          dinnerId={dinnerId}
-          cohosts={cohosts}
-          eligibleMembers={eligibleCohostMembers}
-        />
-      )}
 
       {/* ── Stage 1: Date voting ─────────────────────────────── */}
       {stage === "date_voting" && availPoll && (
