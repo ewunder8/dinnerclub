@@ -282,10 +282,13 @@ export default function DinnerPlanningView({
             memberCount={memberCount}
           />
 
-          <ShareActions
-            message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
-            url={dinnerUrl}
-          />
+          <div className="bg-white border border-black/8 rounded-2xl p-5">
+            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
+            <ShareActions
+              message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
+              url={dinnerUrl}
+            />
+          </div>
         </>
       )}
 
@@ -327,10 +330,13 @@ export default function DinnerPlanningView({
             memberCount={memberCount}
           />
 
-          <ShareActions
-            message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
-            url={dinnerUrl}
-          />
+          <div className="bg-white border border-black/8 rounded-2xl p-5">
+            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Share Details</p>
+            <ShareActions
+              message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
+              url={dinnerUrl}
+            />
+          </div>
         </>
       )}
 
