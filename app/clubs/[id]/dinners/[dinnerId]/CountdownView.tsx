@@ -47,6 +47,31 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [currentBeliUrl, setCurrentBeliUrl] = useState(restaurant.beli_url ?? "");
+  const [editingBeli, setEditingBeli] = useState(false);
+  const [beliInput, setBeliInput] = useState(restaurant.beli_url ?? "");
+  const [beliSaving, setBeliSaving] = useState(false);
+  const [beliError, setBeliError] = useState<string | null>(null);
+
+  const handleSaveBeli = async () => {
+    const trimmed = beliInput.trim();
+    if (trimmed && !trimmed.startsWith("https://")) {
+      setBeliError("Please enter a full web URL starting with https://");
+      return;
+    }
+    setBeliSaving(true);
+    setBeliError(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("restaurant_cache")
+      .update({ beli_url: trimmed || null })
+      .eq("place_id", restaurant.place_id);
+    if (error) { setBeliError("Failed to save. Try again."); setBeliSaving(false); return; }
+    setCurrentBeliUrl(trimmed);
+    setEditingBeli(false);
+    setBeliSaving(false);
+    router.refresh();
+  };
 
   const countdown = getCountdown(dinner.reservation_datetime!);
   const styles = URGENCY_STYLES[countdown.urgency];
@@ -134,9 +159,9 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
             >
               Google Maps →
             </a>
-            {restaurant.beli_url && (
+            {currentBeliUrl && (
               <a
-                href={restaurant.beli_url}
+                href={currentBeliUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
@@ -145,6 +170,43 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               </a>
             )}
           </div>
+
+          {/* Beli URL inline edit — open to anyone */}
+          {editingBeli ? (
+            <div className="mt-3 flex flex-col gap-2">
+              <input
+                type="url"
+                placeholder="https://beliapp.com/restaurant/…"
+                value={beliInput}
+                onChange={(e) => setBeliInput(e.target.value)}
+                className="w-full bg-surface border border-slate/20 rounded-xl px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+              />
+              {beliError && <p className="text-xs text-red-500">{beliError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveBeli}
+                  disabled={beliSaving}
+                  className="flex-1 bg-slate text-white text-xs font-bold py-2 rounded-lg hover:bg-slate-light transition-colors disabled:opacity-40"
+                >
+                  {beliSaving ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={() => { setEditingBeli(false); setBeliInput(currentBeliUrl); setBeliError(null); }}
+                  disabled={beliSaving}
+                  className="flex-1 bg-white border border-black/10 text-ink text-xs font-semibold py-2 rounded-lg hover:bg-black/5 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditingBeli(true)}
+              className="mt-2 text-xs text-ink-muted hover:text-ink transition-colors"
+            >
+              {currentBeliUrl ? "Edit Beli link" : "+ Add Beli link"}
+            </button>
+          )}
 
           {/* Hosts */}
           {hosts && hosts.length > 0 && (
