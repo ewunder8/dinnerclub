@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Calendar, Pencil, Search } from "lucide-react";
 import { FOOD_EMOJIS } from "@/lib/emojis";
+import { createClient } from "@/lib/supabase/client";
 import { updateDinnerDetails, addCohost, removeCohost } from "./actions";
 
 type CoHost = { userId: string; name: string };
@@ -30,6 +31,7 @@ type Props = {
   showEmojiPicker?: boolean;
   initialEmoji?: string | null;
   initialRestaurant?: { place_id: string; name: string } | null;
+  initialBeliUrl?: string | null;
   userCity?: string | null;
 };
 
@@ -47,6 +49,7 @@ export default function EditDinnerDetails({
   showEmojiPicker = false,
   initialEmoji = null,
   initialRestaurant = null,
+  initialBeliUrl = null,
   userCity = null,
 }: Props) {
   const router = useRouter();
@@ -56,6 +59,7 @@ export default function EditDinnerDetails({
   const [targetDate, setTargetDate] = useState(toDatetimeLocal(initial.targetDate));
   const [emoji, setEmoji] = useState(initialEmoji ?? "🍽️");
   const [restaurant, setRestaurant] = useState<{ place_id: string; name: string } | null>(initialRestaurant ?? null);
+  const [beliUrl, setBeliUrl] = useState(initialBeliUrl ?? "");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
   const [searching, setSearching] = useState(false);
@@ -115,6 +119,16 @@ export default function EditDinnerDetails({
       setSaving(false);
       return;
     }
+
+    // Update Beli URL on the restaurant cache row if changed
+    const currentPlaceId = restaurant?.place_id ?? initialRestaurant?.place_id;
+    if (isOneOff && currentPlaceId && beliUrl !== (initialBeliUrl ?? "")) {
+      const supabase = createClient();
+      await supabase.from("restaurant_cache")
+        .update({ beli_url: beliUrl.trim() || null })
+        .eq("place_id", currentPlaceId);
+    }
+
     setOpen(false);
     router.refresh();
     setSaving(false);
@@ -231,6 +245,22 @@ export default function EditDinnerDetails({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Beli URL — one-off only, shown when a restaurant is selected */}
+      {isOneOff && (restaurant ?? initialRestaurant) && (
+        <div>
+          <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+            Beli URL <span className="font-normal text-ink-faint">(optional)</span>
+          </label>
+          <input
+            type="url"
+            placeholder="https://beliapp.com/restaurant/…"
+            value={beliUrl}
+            onChange={(e) => setBeliUrl(e.target.value)}
+            className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
+          />
         </div>
       )}
 

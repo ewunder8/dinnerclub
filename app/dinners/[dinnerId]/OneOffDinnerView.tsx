@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 import { rsvpDinner, lockRsvps } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
-import ShareInviteLink from "./ShareInviteLink";
+import ShareActions from "@/components/ShareActions";
 import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import type { DinnerComment } from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import EditDinnerDetails from "@/app/clubs/[id]/dinners/[dinnerId]/EditDinnerDetails";
@@ -50,15 +50,15 @@ export default function OneOffDinnerView({
   const [lockError, setLockError] = useState<string | null>(null);
   const [locking, setLocking] = useState(false);
 
-  const isLocked = dinner.status === "confirmed";
   const myRsvp = rawRsvps.find((r) => r.user_id === userId);
   const goingRsvps = rawRsvps.filter((r) => r.status === "going");
   const notGoingRsvps = rawRsvps.filter((r) => r.status === "not_going");
-  const nonCreatorRsvps = rawRsvps.filter((r) => r.user_id !== dinner.created_by);
-  const showShareBanner = isCreator && !isLocked && nonCreatorRsvps.length === 0;
 
   const dinnerName = dinner.title ?? "Dinner";
   const emoji = dinner.emoji ?? "🍽️";
+  const shareMessage = restaurant
+    ? `You're invited to ${dinnerName} at ${restaurant.name}! RSVP here 🎉`
+    : `You're invited to ${dinnerName}! RSVP here 🎉`;
 
   async function handleRsvp(status: "going" | "not_going") {
     setRsvpError(null);
@@ -86,7 +86,7 @@ export default function OneOffDinnerView({
         <div className="flex items-center gap-2">
           <span className="text-3xl">{emoji}</span>
           <h1 className="font-sans text-3xl font-bold text-ink">{dinnerName}</h1>
-          {isCreator && !isLocked && (
+          {isCreator && (
             <EditDinnerDetails
               dinnerId={dinner.id}
               initial={{
@@ -94,8 +94,8 @@ export default function OneOffDinnerView({
                 targetDate: dinner.target_date ?? null,
               }}
               isOneOff
-              initialEmoji={dinner.emoji ?? null}
               initialRestaurant={restaurant ? { place_id: restaurant.place_id, name: restaurant.name } : null}
+              initialBeliUrl={restaurant?.beli_url ?? null}
               userCity={userCity}
             />
           )}
@@ -107,129 +107,128 @@ export default function OneOffDinnerView({
         )}
       </div>
 
-      {/* Dinner details card */}
-      <div className="bg-white border border-black/8 rounded-2xl px-5 py-5 flex flex-col gap-3">
-        {restaurant && (
-          <div className="flex items-start gap-3">
-            <span className="text-lg mt-0.5">🍴</span>
-            <div>
-              <p className="font-semibold text-ink text-sm">{restaurant.name}</p>
-              {restaurant.address && (
-                <p className="text-xs text-ink-muted mt-0.5">{restaurant.address}</p>
-              )}
+      {/* Restaurant card — citrus excitement style */}
+      {restaurant && (
+        <div className="bg-citrus/10 border border-citrus/20 rounded-2xl px-5 py-5">
+          <p className="text-xs font-bold text-citrus-dark uppercase tracking-widest mb-2">Restaurant 🎉</p>
+          <p className="font-sans text-2xl font-bold text-ink">{restaurant.name}</p>
+          {restaurant.address && (
+            <p className="text-sm text-ink-muted mt-0.5">{restaurant.address}</p>
+          )}
+          {dinner.target_date && (
+            <p className="text-sm font-semibold text-ink mt-2">📅 {formatDateTime(dinner.target_date)}</p>
+          )}
+          <div className="flex items-center gap-2 mt-4 flex-wrap">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-ink border border-black/15 bg-white rounded-lg px-3 py-2 hover:bg-black/5 transition-colors"
+            >
+              Google Maps →
+            </a>
+            {restaurant.beli_url && (
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
+                href={restaurant.beli_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-citrus-dark hover:underline mt-1 inline-block"
+                className="text-xs font-semibold text-citrus-dark border border-citrus/30 bg-white rounded-lg px-3 py-2 hover:bg-citrus/5 transition-colors"
               >
-                Google Maps →
+                Beli →
               </a>
-            </div>
+            )}
           </div>
-        )}
-        {dinner.target_date && (
-          <div className="flex items-start gap-3">
-            <span className="text-lg mt-0.5">📅</span>
-            <p className="text-sm text-ink">{formatDateTime(dinner.target_date)}</p>
-          </div>
-        )}
-        {isLocked && (
-          <div className="flex items-center gap-2 pt-1 border-t border-black/5">
-            <span className="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-              RSVPs locked
-            </span>
-            <span className="text-xs text-ink-muted">{goingRsvps.length} going</span>
-          </div>
-        )}
-      </div>
-
-      {/* Locked celebration */}
-      {isLocked && (
-        <div className="bg-citrus/10 border border-citrus/20 rounded-2xl px-5 py-5 text-center">
-          <p className="text-2xl mb-2">🎉</p>
-          <p className="font-sans font-bold text-ink text-lg">RSVPs are locked. See you there!</p>
-          <p className="text-sm text-ink-muted mt-1">{goingRsvps.length} {goingRsvps.length === 1 ? "person" : "people"} going</p>
         </div>
       )}
 
-      {/* Share banner — creator only, pre-lock, no guests yet */}
-      {showShareBanner && inviteUrl && (
-        <ShareInviteLink link={inviteUrl} dinnerName={dinnerName} />
+      {/* Share Details — always visible */}
+      {inviteUrl && (
+        <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
+            {goingRsvps.length > 0 && (
+              <span className="text-xs text-ink-muted">{goingRsvps.length} going</span>
+            )}
+          </div>
+          <div className="p-5">
+            <ShareActions message={shareMessage} url={inviteUrl} />
+          </div>
+        </section>
       )}
 
       {/* RSVP panel */}
-      <div className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Who&apos;s coming</h2>
-          <span className="text-xs text-ink-muted">{goingRsvps.length} going</span>
+      <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/5">
+          <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Who&apos;s coming · {goingRsvps.length}</h2>
         </div>
 
         {/* Current user RSVP toggle */}
-        {!isLocked && (
-          <div className="px-5 py-4 border-b border-black/5">
-            <p className="text-xs font-semibold text-ink-muted mb-3">Are you going?</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleRsvp("going")}
-                disabled={isPending}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  myRsvp?.status === "going"
-                    ? "bg-slate text-white"
-                    : "bg-white border border-black/10 text-ink hover:border-slate/30"
-                }`}
-              >
-                {myRsvp?.status === "going" ? "✓ Going" : "Going"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRsvp("not_going")}
-                disabled={isPending}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  myRsvp?.status === "not_going"
-                    ? "bg-black/10 text-ink"
-                    : "bg-white border border-black/10 text-ink hover:border-slate/30"
-                }`}
-              >
-                {myRsvp?.status === "not_going" ? "✗ Can't make it" : "Can't make it"}
-              </button>
+        <div className="p-5">
+          <div className="flex gap-2 mb-5">
+            <button
+              type="button"
+              onClick={() => handleRsvp("going")}
+              disabled={isPending}
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 ${
+                myRsvp?.status === "going"
+                  ? "bg-green-100 text-green-700 border-green-300"
+                  : "bg-surface text-ink-muted border-black/10 hover:bg-black/5"
+              }`}
+            >
+              ✓ Going
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRsvp("not_going")}
+              disabled={isPending}
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 ${
+                myRsvp?.status === "not_going"
+                  ? "bg-black/8 text-ink border-black/20"
+                  : "bg-surface text-ink-muted border-black/10 hover:bg-black/5"
+              }`}
+            >
+              Can&apos;t make it
+            </button>
+          </div>
+
+          {rsvpError && <p className="text-red-500 text-xs mb-3">{rsvpError}</p>}
+
+          {/* Guest list */}
+          {rawRsvps.length === 0 ? (
+            <p className="text-sm text-ink-muted">No RSVPs yet — be the first!</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {goingRsvps.map((r) => (
+                <div key={r.user_id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-sm font-bold shrink-0">
+                    {((r.users as any)?.name || (r.users as any)?.email || "G").slice(0, 1).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-ink">
+                    {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
+                    {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
+                  </span>
+                  <span className="ml-auto text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Going</span>
+                </div>
+              ))}
+              {notGoingRsvps.map((r) => (
+                <div key={r.user_id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black/8 flex items-center justify-center text-ink-muted text-sm font-bold shrink-0">
+                    {((r.users as any)?.name || (r.users as any)?.email || "G").slice(0, 1).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-ink-muted">
+                    {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
+                    {r.user_id === userId && <span className="font-normal"> (you)</span>}
+                  </span>
+                  <span className="ml-auto text-xs font-semibold text-ink-muted bg-black/5 px-2.5 py-1 rounded-full">Can&apos;t make it</span>
+                </div>
+              ))}
             </div>
-            {rsvpError && <p className="text-red-500 text-xs mt-2">{rsvpError}</p>}
-          </div>
-        )}
+          )}
+        </div>
+      </section>
 
-        {/* Guest list */}
-        {rawRsvps.length > 0 ? (
-          <div className="divide-y divide-black/5">
-            {goingRsvps.map((r) => (
-              <div key={r.user_id} className="flex items-center justify-between px-5 py-3">
-                <p className="text-sm font-medium text-ink">
-                  {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
-                  {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
-                </p>
-                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Going</span>
-              </div>
-            ))}
-            {notGoingRsvps.map((r) => (
-              <div key={r.user_id} className="flex items-center justify-between px-5 py-3">
-                <p className="text-sm font-medium text-ink-muted">
-                  {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
-                  {r.user_id === userId && <span className="font-normal"> (you)</span>}
-                </p>
-                <span className="text-xs font-semibold text-ink-muted bg-black/5 px-2.5 py-1 rounded-full">Can&apos;t make it</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="px-5 py-6 text-center">
-            <p className="text-sm text-ink-muted">No RSVPs yet. Share the invite link above!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Lock RSVPs button — creator only, pre-lock */}
-      {isCreator && !isLocked && (
+      {/* Lock RSVPs button — creator only */}
+      {isCreator && (
         <div>
           {!showLockConfirm ? (
             <button
@@ -267,7 +266,7 @@ export default function OneOffDinnerView({
         </div>
       )}
 
-      {/* Comments */}
+      {/* Notes */}
       <DinnerComments dinnerId={dinner.id} userId={userId} comments={comments} />
     </div>
   );

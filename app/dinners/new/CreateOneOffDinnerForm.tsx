@@ -154,6 +154,7 @@ export default function CreateOneOffDinnerForm({ userCity }: { userCity: string 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
   const [searching, setSearching] = useState(false);
+  const [beliUrl, setBeliUrl] = useState("");
 
   // Step 3 state (post-create)
   const [createdDinnerId, setCreatedDinnerId] = useState<string | null>(null);
@@ -227,6 +228,13 @@ export default function CreateOneOffDinnerForm({ userCity }: { userCity: string 
       },
       { onConflict: "place_id", ignoreDuplicates: true }
     );
+
+    // Update Beli URL separately (upsert above is a no-op if row exists)
+    if (beliUrl.trim()) {
+      await supabase.from("restaurant_cache")
+        .update({ beli_url: beliUrl.trim() })
+        .eq("place_id", selectedRestaurant.place_id);
+    }
 
     // 2. Create the dinner row
     const { data: dinner, error: dinnerError } = await supabase
@@ -452,6 +460,22 @@ export default function CreateOneOffDinnerForm({ userCity }: { userCity: string 
               </div>
             )}
           </div>
+
+          {/* Beli URL — optional, shown after restaurant selected */}
+          {selectedRestaurant && (
+            <div className="mt-4">
+              <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">
+                Beli URL <span className="font-normal normal-case text-ink-faint">(optional)</span>
+              </label>
+              <input
+                type="url"
+                placeholder="https://beliapp.com/restaurant/…"
+                value={beliUrl}
+                onChange={(e) => setBeliUrl(e.target.value)}
+                className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-slate transition-colors"
+              />
+            </div>
+          )}
 
           {error && <p className="text-red-500 text-sm mb-4 mt-4">{error}</p>}
 
