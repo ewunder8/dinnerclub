@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import CreateDinnerForm from "@/app/clubs/[id]/dinners/new/CreateDinnerForm";
+import CreateOneOffDinnerForm from "./CreateOneOffDinnerForm";
 
 export default async function NewOneOffDinnerPage() {
   const supabase = await createClient();
@@ -8,5 +8,11 @@ export default async function NewOneOffDinnerPage() {
 
   if (!user) redirect("/auth/login");
 
-  return <CreateDinnerForm clubId={null} />;
+  const { data: profile } = await supabase
+    .from("users")
+    .select("city")
+    .eq("id", user.id)
+    .single();
+
+  return <CreateOneOffDinnerForm userCity={profile?.city ?? null} />;
 }

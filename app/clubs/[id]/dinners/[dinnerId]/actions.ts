@@ -23,6 +23,8 @@ export async function updateDinnerDetails({
   neighborhood,
   targetDate,
   pollClosesAt,
+  emoji,
+  winningRestaurantPlaceId,
 }: {
   dinnerId: string;
   title?: string | null;
@@ -32,6 +34,8 @@ export async function updateDinnerDetails({
   neighborhood: string | null;
   targetDate: string | null;
   pollClosesAt: string | null;
+  emoji?: string | null;
+  winningRestaurantPlaceId?: string | null;
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -47,10 +51,38 @@ export async function updateDinnerDetails({
       theme_neighborhood: neighborhood || null,
       target_date: targetDate ? new Date(targetDate).toISOString() : null,
       poll_closes_at: pollClosesAt ? new Date(pollClosesAt).toISOString() : null,
+      ...(emoji !== undefined ? { emoji: emoji || null } : {}),
+      ...(winningRestaurantPlaceId !== undefined ? { winning_restaurant_place_id: winningRestaurantPlaceId } : {}),
     })
     .eq("id", dinnerId);
 
   if (error) return { error: "Failed to update dinner." };
+  return {};
+}
+
+export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, club_id, status")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can lock RSVPs." };
+  if (dinner.club_id !== null) return { error: "This action is only for one-off dinners." };
+  if (dinner.status === "confirmed") return { error: "RSVPs are already locked." };
+
+  const { error } = await supabase
+    .from("dinners")
+    .update({ status: "confirmed" })
+    .eq("id", dinnerId);
+
+  if (error) return { error: "Failed to lock RSVPs." };
+
+  // TODO: email — notify RSVPed guests that the dinner is confirmed
   return {};
 }
 

@@ -57,20 +57,20 @@ export default async function DashboardPage() {
   const [{ data: rawOneOffCreated }, { data: rawOneOffRsvps }] = await Promise.all([
     supabase
       .from("dinners")
-      .select("id, title, status, target_date, planning_stage, winning_restaurant_place_id")
+      .select("id, title, emoji, status, target_date, planning_stage, winning_restaurant_place_id")
       .is("club_id", null)
       .eq("created_by", user.id)
       .in("status", ["polling", "seeking_reservation", "waitlisted", "confirmed"])
       .order("target_date", { ascending: true }),
     supabase
       .from("rsvps")
-      .select("dinner_id, dinners ( id, title, status, target_date, planning_stage, winning_restaurant_place_id, created_by, club_id )")
+      .select("dinner_id, dinners ( id, title, emoji, status, target_date, planning_stage, winning_restaurant_place_id, created_by, club_id )")
       .eq("user_id", user.id)
       .not("dinner_id", "is", null),
   ]);
 
   // Merge and deduplicate one-off dinners
-  type OneOffDinner = { id: string; title: string | null; status: string; target_date: string | null; planning_stage: string; winning_restaurant_place_id: string | null; created_by?: string | null; club_id?: string | null };
+  type OneOffDinner = { id: string; title: string | null; emoji: string | null; status: string; target_date: string | null; planning_stage: string; winning_restaurant_place_id: string | null; created_by?: string | null; club_id?: string | null };
   const oneOffMap = new Map<string, OneOffDinner>();
   for (const d of rawOneOffCreated ?? []) oneOffMap.set(d.id, d as OneOffDinner);
   for (const r of rawOneOffRsvps ?? []) {
@@ -419,21 +419,26 @@ export default async function DashboardPage() {
                 const dateLabel = dinner.target_date
                   ? new Date(dinner.target_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
                   : null;
-                const statusLabel = dinner.status === "confirmed" ? "Confirmed" :
-                  dinner.planning_stage === "restaurant_voting" ? "Picking restaurant" :
-                  dinner.planning_stage === "winner" ? "Finding table" : "Planning";
+                const statusLabel = dinner.status === "confirmed"
+                  ? "Enjoy your dinner! 🎉"
+                  : dinner.planning_stage === "restaurant_voting"
+                  ? "Awaiting RSVPs"
+                  : "Planning";
+                const isConfirmed = dinner.status === "confirmed";
                 return (
                   <Link key={dinner.id} href={`/dinners/${dinner.id}`}
                     className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">🍽️</span>
+                      <span className="text-2xl">{dinner.emoji ?? "🍽️"}</span>
                       <div>
                         <p className="font-semibold text-ink text-sm">{dinner.title ?? "Dinner"}</p>
                         {dateLabel && <p className="text-xs text-ink-muted mt-0.5">{dateLabel}</p>}
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-ink-muted shrink-0">{statusLabel}</span>
+                    <span className={`text-xs font-semibold shrink-0 ${isConfirmed ? "text-citrus-dark" : "text-ink-muted"}`}>
+                      {statusLabel}
+                    </span>
                   </Link>
                 );
               })}
@@ -475,16 +480,16 @@ export default async function DashboardPage() {
 
         {/* ── Start a one-off dinner ── */}
         <Link href="/dinners/new"
-          className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
+          className="flex items-center px-5 py-4 rounded-2xl transition-colors"
+          style={{ backgroundColor: "#c8952a" }}
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">✨</span>
+            <span className="text-2xl">✦</span>
             <div>
-              <p className="font-semibold text-ink text-sm">Start a one-off dinner</p>
-              <p className="text-xs text-ink-muted mt-0.5">Birthday, special occasion, one-time plans</p>
+              <p className="font-semibold text-white text-sm">Start a one-off dinner</p>
+              <p className="text-xs text-white/80 mt-0.5">Birthday, special occasion, one-time plans</p>
             </div>
           </div>
-          <span className="text-ink-faint text-sm">→</span>
         </Link>
 
         {/* ── Discover ── */}

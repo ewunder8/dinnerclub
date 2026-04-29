@@ -251,10 +251,12 @@ export type Database = {
           planning_stage: "date_voting" | "restaurant_voting" | "winner";
           created_by: string | null;
           created_at: string;
+          // one-off dinner
+          emoji: string | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["dinners"]["Row"],
-          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode" | "planning_stage"
+          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode" | "planning_stage" | "emoji"
         > & {
           // Fields with DB defaults — optional on insert
           status?: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
@@ -262,6 +264,7 @@ export type Database = {
           poll_min_options?: number;
           suggestion_mode?: "owner_only" | "members" | "hybrid";
           planning_stage?: "date_voting" | "restaurant_voting" | "winner";
+          emoji?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dinners"]["Insert"]>;
         Relationships: [

@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Calendar, Pencil } from "lucide-react";
+import { Calendar, Pencil, Search } from "lucide-react";
+import { FOOD_EMOJIS } from "@/lib/emojis";
 import { updateDinnerDetails, addCohost, removeCohost } from "./actions";
 
 type CoHost = { userId: string; name: string };
+
+type Restaurant = {
+  place_id: string;
+  name: string;
+  address: string | null;
+  price_level: number | null;
+  rating: number | null;
+};
 
 type Props = {
   dinnerId: string;
@@ -16,6 +25,10 @@ type Props = {
   };
   cohosts?: CoHost[];
   eligibleCohostMembers?: CoHost[];
+  // One-off only
+  isOneOff?: boolean;
+  initialEmoji?: string | null;
+  initialRestaurant?: { place_id: string; name: string } | null;
 };
 
 function toDatetimeLocal(iso: string | null): string {
@@ -23,22 +36,62 @@ function toDatetimeLocal(iso: string | null): string {
   return new Date(iso).toISOString().slice(0, 16);
 }
 
-export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eligibleCohostMembers = [] }: Props) {
+export default function EditDinnerDetails({
+  dinnerId,
+  initial,
+  cohosts = [],
+  eligibleCohostMembers = [],
+  isOneOff = false,
+  initialEmoji = null,
+  initialRestaurant = null,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const [title, setTitle] = useState(initial.title ?? "");
   const [targetDate, setTargetDate] = useState(toDatetimeLocal(initial.targetDate));
-  const [cohostLoading, setCohostLoading] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState(initialEmoji ?? "🍽️");
+  const [restaurant, setRestaurant] = useState<{ place_id: string; name: string } | null>(initialRestaurant ?? null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
+  const [searching, setSearching] = useState(false);
 
+  const [cohostLoading, setCohostLoading] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const targetDateRef = useRef<HTMLInputElement>(null);
 
+  // Debounced restaurant search
+  useEffect(() => {
+    if (!searchQuery.trim()) { setSearchResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/places/search?q=${encodeURIComponent(searchQuery)}`);
+        const json = await res.json();
+        setSearchResults(json.places ?? []);
+      } catch { /* non-fatal */ }
+      finally { setSearching(false); }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  function selectRestaurant(r: Restaurant) {
+    setRestaurant({ place_id: r.place_id, name: r.name });
+    setSearchQuery("");
+    setSearchResults([]);
+  }
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
+
+    // For one-off: ensure new restaurant is in cache before updating
+    if (isOneOff && restaurant && restaurant.place_id !== initialRestaurant?.place_id) {
+      await fetch(`/api/places/details?id=${encodeURIComponent(restaurant.place_id)}`);
+    }
+
     const result = await updateDinnerDetails({
       dinnerId,
       title: title.trim() || null,
@@ -48,6 +101,8 @@ export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eli
       neighborhood: null,
       targetDate: targetDate || null,
       pollClosesAt: null,
+      ...(isOneOff ? { emoji: emoji || null } : {}),
+      ...(isOneOff && restaurant ? { winningRestaurantPlaceId: restaurant.place_id } : {}),
     });
     if (result.error) {
       setError(result.error);
@@ -79,10 +134,11 @@ export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eli
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center text-ink-muted hover:text-ink transition-colors"
+        className="inline-flex items-center gap-1.5 border border-slate/40 text-slate px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate/5 transition-colors"
         aria-label="Edit details"
       >
-        <Pencil className="w-4 h-4" />
+        <Pencil className="w-3 h-3" />
+        Edit
       </button>
     );
   }
@@ -94,12 +150,36 @@ export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eli
         <button onClick={() => setOpen(false)} className="text-ink-muted hover:text-ink text-lg leading-none">×</button>
       </div>
 
+      {/* Emoji picker — one-off only */}
+      {isOneOff && (
+        <div>
+          <label className="block text-xs font-semibold text-ink-muted mb-2">Emoji</label>
+          <div className="grid grid-cols-8 gap-1.5">
+            {FOOD_EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setEmoji(e)}
+                className={cn(
+                  "w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all",
+                  emoji === e
+                    ? "bg-citrus/15 ring-2 ring-citrus-dark scale-110"
+                    : "bg-white border border-black/8 hover:border-slate/30"
+                )}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Title */}
       <div>
-        <label className="block text-xs font-semibold text-ink-muted mb-1.5">Dinner title</label>
+        <label className="block text-xs font-semibold text-ink-muted mb-1.5">Dinner name</label>
         <input
           type="text"
-          placeholder="e.g. Summer Omakase, Birthday dinner"
+          placeholder="e.g. Birthday dinner, Anniversary"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
@@ -107,9 +187,52 @@ export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eli
         />
       </div>
 
-      {/* Target date */}
+      {/* Restaurant search — one-off only */}
+      {isOneOff && (
+        <div>
+          <label className="block text-xs font-semibold text-ink-muted mb-1.5">Restaurant</label>
+          {restaurant && (
+            <div className="flex items-center justify-between bg-citrus/8 border border-citrus/20 rounded-xl px-4 py-2.5 mb-2">
+              <p className="text-sm font-medium text-ink">{restaurant.name}</p>
+              <button type="button" onClick={() => setRestaurant(null)} className="text-ink-muted hover:text-ink text-base leading-none ml-2">×</button>
+            </div>
+          )}
+          <div className="relative">
+            <div className="flex items-center gap-2 bg-surface border border-slate/20 rounded-xl px-4 py-3 focus-within:border-slate transition-colors">
+              <Search className="w-4 h-4 text-ink-muted shrink-0" />
+              <input
+                type="text"
+                placeholder={restaurant ? "Search to change…" : "Search restaurants…"}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-ink text-sm outline-none placeholder-ink-faint"
+              />
+              {searching && <div className="w-4 h-4 border-2 border-ink-muted/30 border-t-ink-muted rounded-full animate-spin shrink-0" />}
+            </div>
+            {searchResults.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-black/10 rounded-xl shadow-lg overflow-hidden z-10">
+                {searchResults.slice(0, 5).map((r) => (
+                  <button
+                    key={r.place_id}
+                    type="button"
+                    onClick={() => selectRestaurant(r)}
+                    className="w-full flex flex-col px-4 py-3 text-left hover:bg-black/5 transition-colors border-b border-black/5 last:border-0"
+                  >
+                    <span className="text-sm font-semibold text-ink">{r.name}</span>
+                    {r.address && <span className="text-xs text-ink-muted mt-0.5">{r.address}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Target date / datetime */}
       <div>
-        <label className="block text-xs font-semibold text-ink-muted mb-1.5">Target date</label>
+        <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+          {isOneOff ? "Date & time" : "Target date"}
+        </label>
         <button
           type="button"
           onClick={() => targetDateRef.current?.showPicker()}
@@ -118,7 +241,7 @@ export default function EditDinnerDetails({ dinnerId, initial, cohosts = [], eli
           <Calendar className="w-4 h-4 text-ink-muted shrink-0" />
           <span className={cn("text-sm", targetDate ? "text-ink" : "text-ink-faint")}>
             {targetDate
-              ? new Date(targetDate).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+              ? new Date(targetDate).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
               : "Pick a date & time"}
           </span>
           {targetDate && (
