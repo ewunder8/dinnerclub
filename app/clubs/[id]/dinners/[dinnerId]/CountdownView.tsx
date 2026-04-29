@@ -69,8 +69,8 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
   };
 
   const shareMessage = dinner.reservation_datetime
-    ? `We're going to ${restaurant.name} — ${formatReservationTime(dinner.reservation_datetime)} 🍽️`
-    : `We're going to ${restaurant.name}! Are you coming? 🎉`;
+    ? `We're going to ${restaurant.name} on ${formatReservationTime(dinner.reservation_datetime)}! 🎉`
+    : `We're going to ${restaurant.name}! 🎉`;
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const reservationUrl =
@@ -253,9 +253,6 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
       {/* Share Details */}
       <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-black/5">
-          <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-        </div>
         <div className="p-5">
           <ShareActions message={shareMessage} url={shareUrl} />
         </div>

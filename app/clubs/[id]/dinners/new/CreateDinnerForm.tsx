@@ -811,9 +811,6 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
             </div>
 
             <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-black/5">
-                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-              </div>
               <div className="p-5">
                 <ShareActions
                   message={clubId ? `Hey! Vote on dates for our next dinner 🍽` : `Planning a dinner — vote on where we should eat! 🍽`}

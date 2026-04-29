@@ -916,9 +916,6 @@ export default async function DinnerPage({
 
         {/* Share poll */}
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-black/5">
-            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-          </div>
           <div className="p-5">
             <ShareActions
               message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}

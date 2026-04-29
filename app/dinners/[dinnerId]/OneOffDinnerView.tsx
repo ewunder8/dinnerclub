@@ -156,12 +156,6 @@ export default function OneOffDinnerView({
       {/* Share Details — always visible */}
       {inviteUrl && (
         <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-            {goingRsvps.length > 0 && (
-              <span className="text-xs text-ink-muted">{goingRsvps.length} going</span>
-            )}
-          </div>
           <div className="p-5">
             <ShareActions message={shareMessage} url={inviteUrl} />
           </div>

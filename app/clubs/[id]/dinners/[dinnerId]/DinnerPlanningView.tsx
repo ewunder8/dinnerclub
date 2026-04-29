@@ -283,9 +283,6 @@ export default function DinnerPlanningView({
           />
 
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-black/5">
-              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-            </div>
             <div className="p-5">
               <ShareActions
                 message={`Hey! Vote on which night works for ${dinner.title ?? "our next dinner"} 🗓`}
@@ -335,9 +332,6 @@ export default function DinnerPlanningView({
           />
 
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-black/5">
-              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-            </div>
             <div className="p-5">
               <ShareActions
                 message={`Hey! Vote on where we eat for ${dinner.title ?? "our next dinner"} 🍽`}
@@ -402,18 +396,11 @@ export default function DinnerPlanningView({
 
           {/* Share — above RSVP list so organiser shares before tracking responses */}
           {(() => {
-            const pendingCount = rsvpMembers.filter((m) => m.status === null).length;
             const shareMsg = winnerRestaurant
-              ? `We're going to ${winnerRestaurant.name}! Are you coming? 🎉`
-              : `Are you coming to ${dinner.title ?? "our next dinner"}? 🎉`;
+              ? `We're going to ${winnerRestaurant.name}! RSVP for ${dinner.title ?? "our next dinner"} 🎉`
+              : `RSVP for ${dinner.title ?? "our next dinner"} 🎉`;
             return (
               <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Share Details</h3>
-                  {pendingCount > 0 && (
-                    <span className="text-xs text-ink-muted">{pendingCount} haven't responded</span>
-                  )}
-                </div>
                 <div className="p-5">
                   <ShareActions message={shareMsg} url={dinnerUrl} />
                 </div>

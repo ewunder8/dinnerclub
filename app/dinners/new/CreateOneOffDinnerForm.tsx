@@ -557,11 +557,7 @@ export default function CreateOneOffDinnerForm({ userCity }: { userCity: string 
             </div>
 
             <section className="bg-white border border-black/8 rounded-2xl overflow-hidden mb-3">
-              <div className="px-5 py-3 border-b border-black/5">
-                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Invite your crew</h3>
-              </div>
               <div className="p-5">
-                <p className="text-xs text-ink-muted mb-3">Share this link so everyone can RSVP.</p>
                 {inviteUrl && (
                   <ShareActions
                     message={`You're invited to ${dinnerName.trim() || "dinner"}! RSVP here 🎉`}
