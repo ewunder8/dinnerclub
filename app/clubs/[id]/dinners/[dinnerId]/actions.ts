@@ -90,6 +90,111 @@ export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ e
   return {};
 }
 
+export async function cancelOneOffDinner({ dinnerId }: { dinnerId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, club_id")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can cancel." };
+  if (dinner.club_id !== null) return { error: "This action is only for one-off dinners." };
+
+  const { error } = await supabase
+    .from("dinners")
+    .update({ status: "cancelled" })
+    .eq("id", dinnerId);
+
+  if (error) return { error: "Failed to cancel dinner." };
+  // TODO: email — notify RSVPed guests of cancellation
+  return {};
+}
+
+export async function markOneOffCompleted({ dinnerId }: { dinnerId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, club_id, title, winning_restaurant_place_id, reservation_datetime, target_date")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id) return { error: "Only the dinner creator can mark as completed." };
+  if (dinner.club_id !== null) return { error: "This action is only for one-off dinners." };
+
+  const ratingsOpenUntil = new Date();
+  ratingsOpenUntil.setDate(ratingsOpenUntil.getDate() + 7);
+
+  const { error } = await supabase
+    .from("dinners")
+    .update({ status: "completed", ratings_open_until: ratingsOpenUntil.toISOString() })
+    .eq("id", dinnerId);
+
+  if (error) return { error: "Failed to mark dinner as completed." };
+
+  sendOneOffRatingPromptEmails({ dinnerId, dinner });
+  return {};
+}
+
+async function sendOneOffRatingPromptEmails({
+  dinnerId,
+  dinner,
+}: {
+  dinnerId: string;
+  dinner: {
+    title: string | null;
+    winning_restaurant_place_id: string | null;
+    reservation_datetime: string | null;
+    target_date: string | null;
+  };
+}) {
+  const supabase = await createClient();
+
+  const [{ data: rsvps }, { data: restaurant }] = await Promise.all([
+    supabase
+      .from("rsvps")
+      .select("users ( id, email, email_notifications )")
+      .eq("dinner_id", dinnerId)
+      .eq("status", "going"),
+    dinner.winning_restaurant_place_id
+      ? supabase.from("restaurant_cache").select("name").eq("place_id", dinner.winning_restaurant_place_id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  if (!rsvps || !restaurant) return;
+
+  const ratingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dinners/${dinnerId}`;
+  const dinnerName = dinner.title ?? "Dinner";
+  const dateIso = dinner.reservation_datetime ?? dinner.target_date;
+  const dinnerDate = dateIso
+    ? new Date(dateIso).toLocaleDateString("en-US", { month: "long", day: "numeric" })
+    : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
+
+  type RsvpRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+  const eligible = (rsvps as RsvpRow[]).filter(
+    (r) => r.users?.email && r.users.email_notifications?.rating_prompt !== false
+  );
+
+  await Promise.allSettled(
+    eligible.map((r) =>
+      sendRatingPrompt({
+        to: r.users.email,
+        restaurantName: restaurant.name,
+        dinnerName,
+        dinnerDate,
+        ratingUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(r.users.id, "rating_prompt"),
+      })
+    )
+  );
+}
+
 export async function addDinnerComment({ dinnerId, body }: { dinnerId: string; body: string }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

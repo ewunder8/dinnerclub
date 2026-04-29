@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
-import { rsvpDinner, lockRsvps } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
+import { rsvpDinner, lockRsvps, cancelOneOffDinner } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
+import { toast } from "sonner";
 import ShareActions from "@/components/ShareActions";
 import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import type { DinnerComment } from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import EditDinnerDetails from "@/app/clubs/[id]/dinners/[dinnerId]/EditDinnerDetails";
+import { buildDinnerCalendarEvent, downloadICSFile, generateGoogleCalendarURL } from "@/lib/calendar";
 
 type RsvpWithUser = RSVP & { users: User };
 
@@ -49,6 +51,9 @@ export default function OneOffDinnerView({
   const [showLockConfirm, setShowLockConfirm] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
   const [locking, setLocking] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const myRsvp = rawRsvps.find((r) => r.user_id === userId);
   const goingRsvps = rawRsvps.filter((r) => r.status === "going");
@@ -67,6 +72,13 @@ export default function OneOffDinnerView({
       if (result.error) { setRsvpError(result.error); return; }
       router.refresh();
     });
+  }
+
+  async function handleCancelConfirm() {
+    setCancelling(true);
+    const result = await cancelOneOffDinner({ dinnerId: dinner.id });
+    if (result.error) { toast.error(result.error); setCancelling(false); return; }
+    router.refresh();
   }
 
   async function handleLockConfirm() {
@@ -227,6 +239,46 @@ export default function OneOffDinnerView({
         </div>
       </section>
 
+      {/* Add to Calendar — shown when date is set */}
+      {dinner.target_date && restaurant && (
+        <div>
+          <button
+            onClick={() => setCalendarOpen((o) => !o)}
+            className="w-full bg-white border border-black/10 text-ink font-semibold py-4 rounded-xl hover:border-black/25 transition-colors text-sm"
+          >
+            Add to Calendar
+          </button>
+          {calendarOpen && (() => {
+            const calEvent = buildDinnerCalendarEvent({
+              clubName: dinnerName,
+              restaurantName: restaurant.name,
+              restaurantAddress: restaurant.address ?? undefined,
+              restaurantPhone: restaurant.phone ?? undefined,
+              reservationDatetime: new Date(dinner.target_date!),
+              appUrl: typeof window !== "undefined" ? window.location.href : undefined,
+            });
+            return (
+              <div className="mt-2 bg-white border border-black/8 rounded-2xl p-4 flex flex-col gap-2">
+                <a
+                  href={generateGoogleCalendarURL(calEvent)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
+                >
+                  Google Calendar
+                </a>
+                <button
+                  onClick={() => { downloadICSFile(calEvent); setCalendarOpen(false); }}
+                  className="text-left text-sm font-semibold text-ink hover:text-citrus-dark transition-colors px-2 py-1.5"
+                >
+                  Apple / Outlook (.ics)
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Lock RSVPs button — creator only */}
       {isCreator && (
         <div>
@@ -261,6 +313,37 @@ export default function OneOffDinnerView({
                   Cancel
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cancel — creator only */}
+      {isCreator && (
+        <div className="text-center">
+          {!showCancelConfirm ? (
+            <button
+              onClick={() => setShowCancelConfirm(true)}
+              className="text-xs text-ink-muted hover:text-red-500 transition-colors"
+            >
+              Cancel dinner
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-xs text-ink-muted">Cancel this dinner?</span>
+              <button
+                onClick={handleCancelConfirm}
+                disabled={cancelling}
+                className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors disabled:opacity-40"
+              >
+                {cancelling ? "Cancelling…" : "Yes, cancel"}
+              </button>
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="text-xs text-ink-muted hover:text-ink transition-colors"
+              >
+                Never mind
+              </button>
             </div>
           )}
         </div>

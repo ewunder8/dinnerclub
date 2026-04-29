@@ -8,6 +8,7 @@ import RatingsForm from "@/app/clubs/[id]/dinners/[dinnerId]/RatingsForm";
 import CountdownView from "@/app/clubs/[id]/dinners/[dinnerId]/CountdownView";
 import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import OneOffDinnerView from "./OneOffDinnerView";
+import OneOffDinnerActions from "./OneOffDinnerActions";
 import type { DinnerComment } from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 
 function Nav({
@@ -147,7 +148,7 @@ export default async function OneOffDinnerPage({
   }
 
   // ── Confirmed ──────────────────────────────────────────────────
-  if (dinner.status === "confirmed" && dinner.reservation_datetime) {
+  if (dinner.status === "confirmed") {
     const placeId = dinner.winning_restaurant_place_id ?? "";
     const [{ data: restaurant }, { data: rawRsvps }, { data: rawComments }] = await Promise.all([
       placeId
@@ -177,12 +178,18 @@ export default async function OneOffDinnerPage({
       author_name: c.users?.name || c.users?.email?.split("@")[0] || "Guest",
     }));
 
+    // Use target_date as fallback if reservation_datetime wasn't set (pre-migration data)
+    const dinnerForCountdown = {
+      ...dinner,
+      reservation_datetime: dinner.reservation_datetime ?? dinner.target_date,
+    };
+
     return (
       <main className="min-h-screen bg-snow">
         <Nav title={dinnerTitle} emoji={dinnerEmoji} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-5">
           <CountdownView
-            dinner={dinner}
+            dinner={dinnerForCountdown}
             restaurant={restaurant as RestaurantCache}
             rsvps={(rawRsvps ?? []) as (RSVP & { users: User })[]}
             userId={user.id}
@@ -190,6 +197,7 @@ export default async function OneOffDinnerPage({
             hosts={hosts}
           />
           <DinnerComments dinnerId={dinner.id} userId={user.id} comments={comments} />
+          {isCreator && <OneOffDinnerActions dinnerId={dinner.id} />}
         </div>
       </main>
     );
