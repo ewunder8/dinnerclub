@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReservationConfirmed, sendVotingOpen, sendRatingPrompt, sendDinnerCancelled, sendDateLocked, sendRestaurantPicked } from "@/lib/email";
@@ -248,6 +249,12 @@ export async function addDinnerComment({ dinnerId, body }: { dinnerId: string; b
     .insert({ dinner_id: dinnerId, user_id: user.id, body: body.trim().slice(0, 100) });
 
   if (error) return { error: "Failed to post comment." };
+
+  if (dinner.club_id) {
+    revalidatePath(`/clubs/${dinner.club_id}/dinners/${dinnerId}`);
+  } else {
+    revalidatePath(`/dinners/${dinnerId}`);
+  }
   return {};
 }
 
@@ -255,6 +262,13 @@ export async function deleteDinnerComment({ commentId }: { commentId: string }):
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
+
+  const { data: comment } = await supabase
+    .from("dinner_comments")
+    .select("dinner_id, dinners ( club_id )")
+    .eq("id", commentId)
+    .eq("user_id", user.id)
+    .single();
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -264,6 +278,15 @@ export async function deleteDinnerComment({ commentId }: { commentId: string }):
     .eq("user_id", user.id);
 
   if (error) return { error: "Failed to delete comment." };
+
+  if (comment) {
+    const clubId = (comment.dinners as any)?.club_id;
+    if (clubId) {
+      revalidatePath(`/clubs/${clubId}/dinners/${comment.dinner_id}`);
+    } else {
+      revalidatePath(`/dinners/${comment.dinner_id}`);
+    }
+  }
   return {};
 }
 
