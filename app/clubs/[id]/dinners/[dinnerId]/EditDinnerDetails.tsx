@@ -29,6 +29,7 @@ type Props = {
   isOneOff?: boolean;
   initialEmoji?: string | null;
   initialRestaurant?: { place_id: string; name: string } | null;
+  userCity?: string | null;
 };
 
 function toDatetimeLocal(iso: string | null): string {
@@ -44,6 +45,7 @@ export default function EditDinnerDetails({
   isOneOff = false,
   initialEmoji = null,
   initialRestaurant = null,
+  userCity = null,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -68,7 +70,9 @@ export default function EditDinnerDetails({
     const t = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/places/search?q=${encodeURIComponent(searchQuery)}`);
+        const params = new URLSearchParams({ q: searchQuery });
+      if (userCity) params.set("city", userCity);
+      const res = await fetch(`/api/places/search?${params}`);
         const json = await res.json();
         setSearchResults(json.places ?? []);
       } catch { /* non-fatal */ }

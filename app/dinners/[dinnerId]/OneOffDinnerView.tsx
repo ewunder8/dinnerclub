@@ -21,6 +21,7 @@ type Props = {
   comments: DinnerComment[];
   hosts: { name: string }[];
   appUrl: string;
+  userCity: string | null;
 };
 
 function formatDateTime(iso: string): string {
@@ -40,6 +41,7 @@ export default function OneOffDinnerView({
   comments,
   hosts,
   appUrl,
+  userCity,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -94,6 +96,7 @@ export default function OneOffDinnerView({
               isOneOff
               initialEmoji={dinner.emoji ?? null}
               initialRestaurant={restaurant ? { place_id: restaurant.place_id, name: restaurant.name } : null}
+              userCity={userCity}
             />
           )}
         </div>

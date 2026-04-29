@@ -60,7 +60,7 @@ export default async function OneOffDinnerPage({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, avatar_url")
+    .select("name, avatar_url, city")
     .eq("id", user.id)
     .single();
 
@@ -220,6 +220,7 @@ export default async function OneOffDinnerPage({
           comments={comments}
           hosts={hosts}
           appUrl={appUrl}
+          userCity={profile?.city ?? null}
         />
       </div>
     </main>
