@@ -194,6 +194,7 @@ export default async function OneOffDinnerPage({
             rsvps={(rawRsvps ?? []) as (RSVP & { users: User })[]}
             userId={user.id}
             clubName={dinnerTitle}
+            shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/dinners/${dinner.id}`}
             hosts={hosts}
           />
           <DinnerComments dinnerId={dinner.id} userId={user.id} comments={comments} />

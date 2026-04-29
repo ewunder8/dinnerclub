@@ -29,6 +29,7 @@ type Props = {
   rsvps: RsvpWithUser[];
   userId: string;
   clubName: string;
+  shareUrl: string;
   reservedByName?: string | null;
   hosts?: { name: string }[];
 };
@@ -42,7 +43,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; subl
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, reservedByName, hosts }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, shareUrl, reservedByName, hosts }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
@@ -96,7 +97,6 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
   const shareMessage = dinner.reservation_datetime
     ? `We're going to ${restaurant.name} on ${formatReservationTime(dinner.reservation_datetime)}! 🎉`
     : `We're going to ${restaurant.name}! 🎉`;
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const reservationUrl =
     dinner.reservation_platform && dinner.reservation_platform !== "other"

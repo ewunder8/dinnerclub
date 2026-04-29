@@ -342,6 +342,7 @@ export default async function DinnerPage({
             rsvps={rsvps}
             userId={user.id}
             clubName={club?.name ?? ""}
+            shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/clubs/${params.id}/dinners/${params.dinnerId}`}
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
             hosts={confirmedHosts}
           />
