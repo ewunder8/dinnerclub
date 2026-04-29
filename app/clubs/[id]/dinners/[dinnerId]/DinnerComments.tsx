@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { addDinnerComment, deleteDinnerComment } from "./actions";
 
@@ -22,9 +22,15 @@ type Props = {
 
 export default function DinnerComments({ dinnerId, userId, comments }: Props) {
   const router = useRouter();
+  const [localComments, setLocalComments] = useState(comments);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync local state when server refreshes the prop
+  useEffect(() => {
+    setLocalComments(comments);
+  }, [comments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +47,24 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
       return;
     }
 
+    // Optimistically add the comment immediately
+    setLocalComments((prev) => [
+      ...prev,
+      {
+        id: `pending-${Date.now()}`,
+        user_id: userId,
+        body: trimmed,
+        created_at: new Date().toISOString(),
+        author_name: "You",
+      },
+    ]);
     setBody("");
     setSubmitting(false);
     router.refresh();
   };
 
   const handleDelete = async (commentId: string) => {
+    setLocalComments((prev) => prev.filter((c) => c.id !== commentId));
     await deleteDinnerComment({ commentId });
     router.refresh();
   };
@@ -55,15 +73,15 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
     <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
       <div className="px-5 py-3 border-b border-black/5">
         <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
-          Notes · {comments.length}
+          Notes · {localComments.length}
         </h3>
       </div>
       <div className="flex flex-col">
         <div className="px-4 py-4 flex flex-col gap-3">
-          {comments.length === 0 && (
+          {localComments.length === 0 && (
             <p className="text-sm text-ink-muted text-center py-2">No notes yet — add one below.</p>
           )}
-          {comments.map((c) => {
+          {localComments.map((c) => {
             const isMe = c.user_id === userId;
             return (
               <div key={c.id} className={`flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -74,8 +74,13 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     router.refresh();
   };
 
-  const countdown = getCountdown(dinner.reservation_datetime!);
-  const styles = URGENCY_STYLES[countdown.urgency];
+  // Compute countdown client-side only to avoid server/browser timezone mismatch (hydration error)
+  const [countdown, setCountdown] = useState<ReturnType<typeof getCountdown> | null>(null);
+  useEffect(() => {
+    setCountdown(getCountdown(dinner.reservation_datetime!));
+  }, [dinner.reservation_datetime]);
+
+  const styles = countdown ? URGENCY_STYLES[countdown.urgency] : URGENCY_STYLES.far;
 
   const myRsvp = rsvps.find((r) => r.user_id === userId);
   const goingRsvps = rsvps.filter((r) => r.status === "going");
@@ -118,13 +123,19 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
       {/* Countdown banner */}
       <div className={cn("rounded-2xl px-6 py-8 text-center", styles.banner)}>
-        <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
-          {countdown.urgency === "past" ? "Dinner was" : countdown.urgency === "imminent" ? "🔥 Tonight!" : "Dinner in"}
-        </p>
-        <p className={cn("font-sans text-6xl font-bold leading-none mb-3", styles.label)}>
-          {countdown.label}
-        </p>
-        <p className={cn("text-sm font-medium", styles.sublabel)}>
+        {countdown ? (
+          <>
+            <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
+              {countdown.urgency === "past" ? "Dinner was" : countdown.urgency === "imminent" ? "🔥 Tonight!" : "Dinner in"}
+            </p>
+            <p className={cn("font-sans text-6xl font-bold leading-none mb-3", styles.label)}>
+              {countdown.label}
+            </p>
+          </>
+        ) : (
+          <div className="h-20" />
+        )}
+        <p className={cn("text-sm font-medium", styles.sublabel)} suppressHydrationWarning>
           {formatReservationTime(dinner.reservation_datetime!)}
         </p>
       </div>
