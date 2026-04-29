@@ -200,32 +200,47 @@ export async function addDinnerComment({ dinnerId, body }: { dinnerId: string; b
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  // Access check: creator, cohost, or has RSVP
+  // Access check: creator, cohost, club member, or RSVP guest (one-off)
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("created_by")
+    .select("created_by, club_id")
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
 
-  const isCreator = dinner.created_by === user.id;
-  if (!isCreator) {
+  let hasAccess = dinner.created_by === user.id;
+
+  if (!hasAccess) {
     const { data: cohostRow } = await supabase
       .from("dinner_cohosts")
       .select("id")
       .eq("dinner_id", dinnerId)
       .eq("user_id", user.id)
       .maybeSingle();
-    if (!cohostRow) {
-      const { data: rsvp } = await supabase
-        .from("rsvps")
-        .select("user_id")
-        .eq("dinner_id", dinnerId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!rsvp) return { error: "You don't have access to this dinner." };
-    }
+    hasAccess = !!cohostRow;
   }
+
+  if (!hasAccess && dinner.club_id) {
+    const { data: membership } = await supabase
+      .from("club_members")
+      .select("id")
+      .eq("club_id", dinner.club_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    hasAccess = !!membership;
+  }
+
+  if (!hasAccess) {
+    const { data: rsvp } = await supabase
+      .from("rsvps")
+      .select("id")
+      .eq("dinner_id", dinnerId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    hasAccess = !!rsvp;
+  }
+
+  if (!hasAccess) return { error: "You don't have access to this dinner." };
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -875,3 +890,4 @@ async function sendCancellationEmails({
     )
   );
 }
+
