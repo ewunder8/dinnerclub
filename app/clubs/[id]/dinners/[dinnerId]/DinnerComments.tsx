@@ -36,7 +36,7 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
     const result = await addDinnerComment({ dinnerId, body: trimmed });
 
     if (result.error) {
-      setError("Failed to post comment. Try again.");
+      setError(result.error);
       setSubmitting(false);
       return;
     }
