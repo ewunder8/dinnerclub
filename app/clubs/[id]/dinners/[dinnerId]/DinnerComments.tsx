@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { addDinnerComment, deleteDinnerComment } from "./actions";
 
 const MAX_LENGTH = 100;
 
@@ -33,12 +33,9 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
 
     setSubmitting(true);
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("dinner_comments")
-      .insert({ dinner_id: dinnerId, user_id: userId, body: trimmed });
+    const result = await addDinnerComment({ dinnerId, body: trimmed });
 
-    if (error) {
+    if (result.error) {
       setError("Failed to post comment. Try again.");
       setSubmitting(false);
       return;
@@ -50,8 +47,7 @@ export default function DinnerComments({ dinnerId, userId, comments }: Props) {
   };
 
   const handleDelete = async (commentId: string) => {
-    const supabase = createClient();
-    await supabase.from("dinner_comments").delete().eq("id", commentId);
+    await deleteDinnerComment({ commentId });
     router.refresh();
   };
 

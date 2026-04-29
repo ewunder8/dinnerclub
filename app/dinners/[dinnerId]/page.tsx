@@ -5,6 +5,8 @@ import Link from "next/link";
 import { isRatingWindowOpen } from "@/lib/countdown";
 import type { RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 import RatingsForm from "@/app/clubs/[id]/dinners/[dinnerId]/RatingsForm";
+import CountdownView from "@/app/clubs/[id]/dinners/[dinnerId]/CountdownView";
+import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 import OneOffDinnerView from "./OneOffDinnerView";
 import type { DinnerComment } from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
 
@@ -139,6 +141,55 @@ export default async function OneOffDinnerPage({
             summary={summary ?? null}
             ratingWindowOpen={windowOpen}
           />
+        </div>
+      </main>
+    );
+  }
+
+  // ── Confirmed ──────────────────────────────────────────────────
+  if (dinner.status === "confirmed" && dinner.reservation_datetime) {
+    const placeId = dinner.winning_restaurant_place_id ?? "";
+    const [{ data: restaurant }, { data: rawRsvps }, { data: rawComments }] = await Promise.all([
+      placeId
+        ? supabase.from("restaurant_cache").select("*").eq("place_id", placeId).single()
+        : Promise.resolve({ data: null }),
+      supabase.from("rsvps").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId),
+      supabase.from("dinner_comments")
+        .select("id, user_id, body, created_at, users ( name, email )")
+        .eq("dinner_id", params.dinnerId)
+        .order("created_at", { ascending: true }),
+    ]);
+
+    const { data: creatorProfile } = dinner.created_by
+      ? await supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+      : { data: null };
+
+    const creatorName = creatorProfile
+      ? (creatorProfile.name || creatorProfile.email?.split("@")[0] || "Host")
+      : null;
+    const hosts = creatorName ? [{ name: creatorName }] : [];
+
+    const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
+      id: c.id,
+      user_id: c.user_id,
+      body: c.body,
+      created_at: c.created_at,
+      author_name: c.users?.name || c.users?.email?.split("@")[0] || "Guest",
+    }));
+
+    return (
+      <main className="min-h-screen bg-snow">
+        <Nav title={dinnerTitle} emoji={dinnerEmoji} name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
+        <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-5">
+          <CountdownView
+            dinner={dinner}
+            restaurant={restaurant as RestaurantCache}
+            rsvps={(rawRsvps ?? []) as (RSVP & { users: User })[]}
+            userId={user.id}
+            clubName={dinnerTitle}
+            hosts={hosts}
+          />
+          <DinnerComments dinnerId={dinner.id} userId={user.id} comments={comments} />
         </div>
       </main>
     );

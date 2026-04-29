@@ -143,6 +143,9 @@ export default async function DashboardPage() {
   const upcoming = dinners.filter(
     (d) => d.status === "confirmed" && d.reservation_datetime && new Date(d.reservation_datetime) > nowDate
   );
+  const upcomingOneOffs = oneOffDinners.filter(
+    (d) => d.target_date && new Date(d.target_date) > nowDate
+  );
   const polls = dinners.filter(
     (d) => d.status === "polling" || d.status === "seeking_reservation" || d.status === "waitlisted"
   );
@@ -270,7 +273,7 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Upcoming reservations ── */}
-        {upcoming.length > 0 && (
+        {(upcoming.length > 0 || upcomingOneOffs.length > 0) && (
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-black/5">
               <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Upcoming</h2>
@@ -297,6 +300,27 @@ export default async function DashboardPage() {
                         <LocalDate iso={dinner.reservation_datetime!} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
                       </p>
                     </div>
+                  </Link>
+                );
+              })}
+              {upcomingOneOffs.map((dinner) => {
+                const isConfirmed = dinner.status === "confirmed";
+                return (
+                  <Link key={dinner.id} href={`/dinners/${dinner.id}`}
+                    className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{dinner.emoji ?? "🍽️"}</span>
+                      <div>
+                        <p className="font-semibold text-ink text-sm">{dinner.title ?? "Dinner"}</p>
+                        <p className="text-xs text-ink-muted mt-0.5">
+                          <LocalDate iso={dinner.target_date!} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-semibold shrink-0 ${isConfirmed ? "text-green-700" : "text-ink-muted"}`}>
+                      {isConfirmed ? "Locked in 🎉" : "Awaiting RSVPs"}
+                    </span>
                   </Link>
                 );
               })}
@@ -355,7 +379,7 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Nothing active nudge ── */}
-        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && unratedDinners.length === 0 && oneOffDinners.length === 0 && (
+        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && upcomingOneOffs.length === 0 && unratedDinners.length === 0 && (
           <div className="bg-citrus/8 border border-citrus/20 rounded-2xl px-6 py-8 text-center">
             <p className="text-3xl mb-3">🍽️</p>
             <p className="font-semibold text-ink mb-1">Nothing cooking right now</p>
@@ -403,47 +427,6 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-        )}
-
-        {/* ── One-off dinners ── */}
-        {oneOffDinners.length > 0 && (
-          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
-            <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
-              <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">One-off dinners</h2>
-              <Link href="/dinners/new" className="text-xs font-semibold text-citrus-dark hover:text-citrus transition-colors">
-                + New
-              </Link>
-            </div>
-            <div className="divide-y divide-black/5">
-              {oneOffDinners.map((dinner) => {
-                const dateLabel = dinner.target_date
-                  ? new Date(dinner.target_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                  : null;
-                const statusLabel = dinner.status === "confirmed"
-                  ? "Enjoy your dinner! 🎉"
-                  : dinner.planning_stage === "restaurant_voting"
-                  ? "Awaiting RSVPs"
-                  : "Planning";
-                const isConfirmed = dinner.status === "confirmed";
-                return (
-                  <Link key={dinner.id} href={`/dinners/${dinner.id}`}
-                    className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{dinner.emoji ?? "🍽️"}</span>
-                      <div>
-                        <p className="font-semibold text-ink text-sm">{dinner.title ?? "Dinner"}</p>
-                        {dateLabel && <p className="text-xs text-ink-muted mt-0.5">{dateLabel}</p>}
-                      </div>
-                    </div>
-                    <span className={`text-xs font-semibold shrink-0 ${isConfirmed ? "text-citrus-dark" : "text-ink-muted"}`}>
-                      {statusLabel}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
         )}
 
         {/* ── Your clubs ── */}

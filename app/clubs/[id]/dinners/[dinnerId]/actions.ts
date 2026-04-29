@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReservationConfirmed, sendVotingOpen, sendRatingPrompt, sendDinnerCancelled, sendDateLocked, sendRestaurantPicked } from "@/lib/email";
 import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
 import type { Dinner } from "@/lib/supabase/database.types";
@@ -67,7 +68,7 @@ export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ e
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("created_by, club_id, status")
+    .select("created_by, club_id, status, target_date")
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
@@ -77,12 +78,72 @@ export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ e
 
   const { error } = await supabase
     .from("dinners")
-    .update({ status: "confirmed" })
+    .update({
+      status: "confirmed",
+      reservation_datetime: dinner.target_date ?? null,
+    })
     .eq("id", dinnerId);
 
   if (error) return { error: "Failed to lock RSVPs." };
 
   // TODO: email — notify RSVPed guests that the dinner is confirmed
+  return {};
+}
+
+export async function addDinnerComment({ dinnerId, body }: { dinnerId: string; body: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  // Access check: creator, cohost, or has RSVP
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+
+  const isCreator = dinner.created_by === user.id;
+  if (!isCreator) {
+    const { data: cohostRow } = await supabase
+      .from("dinner_cohosts")
+      .select("id")
+      .eq("dinner_id", dinnerId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!cohostRow) {
+      const { data: rsvp } = await supabase
+        .from("rsvps")
+        .select("user_id")
+        .eq("dinner_id", dinnerId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!rsvp) return { error: "You don't have access to this dinner." };
+    }
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("dinner_comments")
+    .insert({ dinner_id: dinnerId, user_id: user.id, body: body.trim().slice(0, 100) });
+
+  if (error) return { error: "Failed to post comment." };
+  return {};
+}
+
+export async function deleteDinnerComment({ commentId }: { commentId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("dinner_comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: "Failed to delete comment." };
   return {};
 }
 

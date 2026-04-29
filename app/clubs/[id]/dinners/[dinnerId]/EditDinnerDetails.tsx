@@ -27,6 +27,7 @@ type Props = {
   eligibleCohostMembers?: CoHost[];
   // One-off only
   isOneOff?: boolean;
+  showEmojiPicker?: boolean;
   initialEmoji?: string | null;
   initialRestaurant?: { place_id: string; name: string } | null;
   userCity?: string | null;
@@ -43,6 +44,7 @@ export default function EditDinnerDetails({
   cohosts = [],
   eligibleCohostMembers = [],
   isOneOff = false,
+  showEmojiPicker = false,
   initialEmoji = null,
   initialRestaurant = null,
   userCity = null,
@@ -154,8 +156,8 @@ export default function EditDinnerDetails({
         <button onClick={() => setOpen(false)} className="text-ink-muted hover:text-ink text-lg leading-none">×</button>
       </div>
 
-      {/* Emoji picker — one-off only */}
-      {isOneOff && (
+      {/* Emoji picker — one-off only, and only when explicitly enabled */}
+      {isOneOff && showEmojiPicker && (
         <div>
           <label className="block text-xs font-semibold text-ink-muted mb-2">Emoji</label>
           <div className="grid grid-cols-8 gap-1.5">
