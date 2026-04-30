@@ -132,23 +132,23 @@ export default function OneOffDinnerView({
           {dinner.target_date && (
             <p className="text-sm font-semibold text-ink mt-2">📅 {formatDateTime(dinner.target_date)}</p>
           )}
-          <div className="flex items-center gap-2 mt-4 flex-wrap">
+          <div className="flex gap-2 mt-4">
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}&query_place_id=${restaurant.place_id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-semibold text-ink border border-black/15 bg-white rounded-lg px-3 py-2 hover:bg-black/5 transition-colors"
+              className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/15 bg-white rounded-xl px-3 py-2.5 hover:bg-black/5 transition-colors"
             >
-              Google Maps →
+              📍 Google Maps
             </a>
             {restaurant.beli_url && (
               <a
                 href={restaurant.beli_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-citrus-dark border border-citrus/30 bg-white rounded-lg px-3 py-2 hover:bg-citrus/5 transition-colors"
+                className="flex-1 text-center text-xs font-semibold bg-slate text-white rounded-xl px-3 py-2.5 hover:bg-slate-light transition-colors"
               >
-                Beli →
+                🍴 Beli
               </a>
             )}
           </div>

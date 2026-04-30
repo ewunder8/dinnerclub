@@ -171,16 +171,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               rel="noopener noreferrer"
               className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
             >
-              Google Maps →
+              📍 Google Maps
             </a>
             {currentBeliUrl && (
               <a
                 href={currentBeliUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
+                className="flex-1 text-center text-xs font-semibold bg-slate text-white px-3 py-2.5 rounded-xl hover:bg-slate-light transition-colors"
               >
-                Beli →
+                🍴 Beli
               </a>
             )}
           </div>
