@@ -110,6 +110,7 @@ export default function OneOffDinnerView({
               initialRestaurant={restaurant ? { place_id: restaurant.place_id, name: restaurant.name } : null}
               initialBeliUrl={restaurant?.beli_url ?? null}
               userCity={userCity}
+              editUrl={`/dinners/${dinner.id}/edit`}
             />
           )}
         </div>

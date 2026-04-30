@@ -833,6 +833,7 @@ export default async function DinnerPage({
                 title: dinner.title ?? null,
                 targetDate: dinner.target_date ?? null,
               }}
+              editUrl={`/clubs/${params.id}/dinners/${params.dinnerId}/edit`}
             />
           )}
         </div>

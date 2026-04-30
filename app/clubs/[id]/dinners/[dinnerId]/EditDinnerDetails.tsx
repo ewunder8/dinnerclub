@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Calendar, Pencil, Search } from "lucide-react";
 import { FOOD_EMOJIS } from "@/lib/emojis";
@@ -33,6 +34,10 @@ type Props = {
   initialRestaurant?: { place_id: string; name: string } | null;
   initialBeliUrl?: string | null;
   userCity?: string | null;
+  // Page-based editing
+  editUrl?: string;   // if set, button links to this URL instead of expanding inline
+  standalone?: boolean; // render form directly (for edit pages)
+  backUrl?: string;   // where to navigate after save in standalone mode
 };
 
 function toDatetimeLocal(iso: string | null): string {
@@ -51,6 +56,9 @@ export default function EditDinnerDetails({
   initialRestaurant = null,
   initialBeliUrl = null,
   userCity = null,
+  editUrl,
+  standalone = false,
+  backUrl = "/",
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -129,8 +137,12 @@ export default function EditDinnerDetails({
         .eq("place_id", currentPlaceId);
     }
 
-    setOpen(false);
-    router.refresh();
+    if (standalone) {
+      router.push(backUrl);
+    } else {
+      setOpen(false);
+      router.refresh();
+    }
     setSaving(false);
   };
 
@@ -150,7 +162,22 @@ export default function EditDinnerDetails({
 
   const showCohostSection = cohosts.length > 0 || eligibleCohostMembers.length > 0;
 
-  if (!open) {
+  // Link to edit page
+  if (editUrl && !standalone) {
+    return (
+      <Link
+        href={editUrl}
+        className="inline-flex items-center gap-1.5 border border-slate/40 text-slate px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate/5 transition-colors"
+        aria-label="Edit details"
+      >
+        <Pencil className="w-3 h-3" />
+        Edit
+      </Link>
+    );
+  }
+
+  // Inline toggle (legacy / fallback)
+  if (!standalone && !open) {
     return (
       <button
         onClick={() => setOpen(true)}
@@ -164,11 +191,13 @@ export default function EditDinnerDetails({
   }
 
   return (
-    <div className="mt-4 bg-white border border-black/8 rounded-2xl p-5 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-ink">Edit dinner details</p>
-        <button onClick={() => setOpen(false)} className="text-ink-muted hover:text-ink text-lg leading-none">×</button>
-      </div>
+    <div className={standalone ? "flex flex-col gap-4" : "mt-4 bg-white border border-black/8 rounded-2xl p-5 flex flex-col gap-4"}>
+      {!standalone && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-ink">Edit dinner details</p>
+          <button onClick={() => setOpen(false)} className="text-ink-muted hover:text-ink text-lg leading-none">×</button>
+        </div>
+      )}
 
       {/* Emoji picker — one-off only, and only when explicitly enabled */}
       {isOneOff && showEmojiPicker && (

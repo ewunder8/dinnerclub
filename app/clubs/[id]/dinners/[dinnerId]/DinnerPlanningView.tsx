@@ -243,6 +243,7 @@ export default function DinnerPlanningView({
               }}
               cohosts={isOriginalCreator ? cohosts : undefined}
               eligibleCohostMembers={isOriginalCreator ? eligibleCohostMembers : undefined}
+              editUrl={`/clubs/${clubId}/dinners/${dinnerId}/edit`}
             />
           )}
         </div>
