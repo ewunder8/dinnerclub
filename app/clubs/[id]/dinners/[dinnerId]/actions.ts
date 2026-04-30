@@ -830,6 +830,31 @@ export async function giveUpWaitlist({ dinnerId }: { dinnerId: string }): Promis
   return {};
 }
 
+export async function removeRsvp({ dinnerId, targetUserId }: { dinnerId: string; targetUserId: string }): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+
+  const isCreator = dinner.created_by === user.id;
+  const isCohost = await getIsCohost(dinnerId, user.id, supabase);
+  if (!isCreator && !isCohost) return { error: "Only the dinner host can remove RSVPs." };
+
+  const { error } = await supabase
+    .from("rsvps")
+    .delete()
+    .eq("dinner_id", dinnerId)
+    .eq("user_id", targetUserId);
+  if (error) return { error: "Failed to remove RSVP." };
+  return {};
+}
+
 export async function rsvpDinner({
   dinnerId,
   status,

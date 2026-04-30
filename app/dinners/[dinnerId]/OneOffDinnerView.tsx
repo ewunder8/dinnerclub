@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
-import { rsvpDinner, lockRsvps, cancelOneOffDinner } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
+import { rsvpDinner, lockRsvps, cancelOneOffDinner, removeRsvp } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
 import { toast } from "sonner";
 import ShareActions from "@/components/ShareActions";
 import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
@@ -214,6 +214,16 @@ export default function OneOffDinnerView({
                     {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
                   </span>
                   <span className="ml-auto text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Going</span>
+                  {isCreator && r.user_id !== userId && (
+                    <button
+                      type="button"
+                      onClick={async () => { await removeRsvp({ dinnerId: dinner.id, targetUserId: r.user_id }); router.refresh(); }}
+                      className="text-xs text-ink-muted hover:text-red-500 transition-colors ml-1"
+                      title="Remove RSVP"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
               {notGoingRsvps.map((r) => (
@@ -226,6 +236,16 @@ export default function OneOffDinnerView({
                     {r.user_id === userId && <span className="font-normal"> (you)</span>}
                   </span>
                   <span className="ml-auto text-xs font-semibold text-ink-muted bg-black/5 px-2.5 py-1 rounded-full">Can&apos;t make it</span>
+                  {isCreator && r.user_id !== userId && (
+                    <button
+                      type="button"
+                      onClick={async () => { await removeRsvp({ dinnerId: dinner.id, targetUserId: r.user_id }); router.refresh(); }}
+                      className="text-xs text-ink-muted hover:text-red-500 transition-colors ml-1"
+                      title="Remove RSVP"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

@@ -98,7 +98,7 @@ export default async function JoinOneOffDinnerPage({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user) {
-    await supabase
+    await admin
       .from("rsvps")
       .upsert(
         { dinner_id: invite.dinner_id, user_id: user.id, status: "going" },

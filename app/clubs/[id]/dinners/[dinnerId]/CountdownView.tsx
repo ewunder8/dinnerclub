@@ -19,6 +19,7 @@ import {
   downloadICSFile,
   generateGoogleCalendarURL,
 } from "@/lib/calendar";
+import { removeRsvp } from "./actions";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 
 type RsvpWithUser = RSVP & { users: User };
@@ -32,6 +33,7 @@ type Props = {
   shareUrl: string;
   reservedByName?: string | null;
   hosts?: { name: string }[];
+  isCreator?: boolean;
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; sublabel: string }> = {
@@ -43,7 +45,7 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; subl
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, shareUrl, reservedByName, hosts }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, shareUrl, reservedByName, hosts, isCreator }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
@@ -316,6 +318,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   </span>
                   {r.user_id === userId && (
                     <span className="text-xs text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">you</span>
+                  )}
+                  {isCreator && r.user_id !== userId && (
+                    <button
+                      type="button"
+                      onClick={async () => { await removeRsvp({ dinnerId: dinner.id, targetUserId: r.user_id }); router.refresh(); }}
+                      className="ml-auto text-xs text-ink-muted hover:text-red-500 transition-colors"
+                      title="Remove RSVP"
+                    >
+                      ✕
+                    </button>
                   )}
                 </div>
               ))}

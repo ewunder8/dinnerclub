@@ -197,6 +197,7 @@ export default async function OneOffDinnerPage({
             clubName={dinnerTitle}
             shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/dinners/${dinner.id}`}
             hosts={hosts}
+            isCreator={isCreator}
           />
           <DinnerComments dinnerId={dinner.id} userId={user.id} comments={comments} />
           {isCreator && <OneOffDinnerActions dinnerId={dinner.id} />}

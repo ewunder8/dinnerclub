@@ -345,6 +345,7 @@ export default async function DinnerPage({
             shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/clubs/${params.id}/dinners/${params.dinnerId}`}
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
             hosts={confirmedHosts}
+            isCreator={isCreator}
           />
           <DinnerComments dinnerId={params.dinnerId} userId={user.id} comments={comments} />
           {isOwner && (
