@@ -208,11 +208,13 @@ export default function OneOffDinnerView({
             <div className="flex flex-col gap-2">
               {goingRsvps.map((r) => (
                 <div key={r.user_id} className="flex items-center gap-3">
-                  <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
-                  <span className="text-sm font-medium text-ink">
-                    {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
-                    {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
-                  </span>
+                  <a href={`/users/${r.user_id}`} className="flex items-center gap-3 hover:opacity-75 transition-opacity min-w-0">
+                    <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
+                    <span className="text-sm font-medium text-ink">
+                      {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
+                      {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
+                    </span>
+                  </a>
                   <span className="ml-auto text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Going</span>
                   {isCreator && r.user_id !== userId && (
                     <button
@@ -228,11 +230,13 @@ export default function OneOffDinnerView({
               ))}
               {notGoingRsvps.map((r) => (
                 <div key={r.user_id} className="flex items-center gap-3">
-                  <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
-                  <span className="text-sm font-medium text-ink-muted">
-                    {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
-                    {r.user_id === userId && <span className="font-normal"> (you)</span>}
-                  </span>
+                  <a href={`/users/${r.user_id}`} className="flex items-center gap-3 hover:opacity-75 transition-opacity min-w-0">
+                    <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
+                    <span className="text-sm font-medium text-ink-muted">
+                      {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
+                      {r.user_id === userId && <span className="font-normal"> (you)</span>}
+                    </span>
+                  </a>
                   <span className="ml-auto text-xs font-semibold text-ink-muted bg-black/5 px-2.5 py-1 rounded-full">Can&apos;t make it</span>
                   {isCreator && r.user_id !== userId && (
                     <button

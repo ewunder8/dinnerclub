@@ -405,13 +405,13 @@ export default async function ClubPage({
           <div className="divide-y divide-black/5">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 px-5 py-4">
-                <a href={`/users/${m.users.id}`}>
+                <a href={`/users/${m.users.id}`} className="flex items-center gap-3 min-w-0 hover:opacity-75 transition-opacity shrink-0">
                   <UserAvatar name={m.users.name} email={m.users.email} avatarUrl={m.users.avatar_url} />
-                </a>
-                <div className="flex-1 min-w-0">
                   <p className="font-semibold text-ink truncate">
                     {m.users.name || m.users.email}
                   </p>
+                </a>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     {m.role === "owner" && (
                       <p className="text-xs text-ink-muted">Owner</p>

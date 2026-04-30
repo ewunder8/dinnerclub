@@ -311,10 +311,12 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   key={r.id}
                   className="flex items-center gap-3"
                 >
-                  <UserAvatar name={r.users.name} email={r.users.email} avatarUrl={(r.users as any).avatar_url} size="sm" />
-                  <span className="text-sm font-medium text-ink">
-                    {r.users.name || r.users.email.split("@")[0]}
-                  </span>
+                  <a href={`/users/${r.user_id}`} className="flex items-center gap-3 hover:opacity-75 transition-opacity min-w-0">
+                    <UserAvatar name={r.users.name} email={r.users.email} avatarUrl={(r.users as any).avatar_url} size="sm" />
+                    <span className="text-sm font-medium text-ink">
+                      {r.users.name || r.users.email.split("@")[0]}
+                    </span>
+                  </a>
                   {r.user_id === userId && (
                     <span className="text-xs text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">you</span>
                   )}

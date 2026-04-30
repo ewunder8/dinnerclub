@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { rsvpDinner } from "./actions";
 import ReservationAttempts from "./ReservationAttempts";
@@ -92,11 +93,11 @@ export default function RsvpPanel({
         <div className="divide-y divide-black/5">
           {members.map((m) => (
             <div key={m.userId} className="px-5 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
+              <Link href={`/users/${m.userId}`} className="flex items-center gap-2.5 min-w-0 hover:opacity-75 transition-opacity">
                 <UserAvatar name={m.name} avatarUrl={m.avatarUrl} size="sm" />
                 <span className="text-sm font-semibold text-ink truncate">{m.name}</span>
                 {m.userId === userId && <span className="text-xs text-ink-muted shrink-0">you</span>}
-              </div>
+              </Link>
               <span
                 className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
                   m.status === "going"
