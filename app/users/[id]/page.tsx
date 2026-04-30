@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound, redirect } from "next/navigation";
 import UserAvatar from "@/components/UserAvatar";
 import NavUser from "@/components/NavUser";
+import { scoreToStars } from "@/lib/countdown";
 
 const DIETARY_EMOJI: Record<string, string> = {
   "Vegetarian": "🌱",
@@ -24,23 +26,86 @@ export default async function UserProfilePage({
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/auth/login");
 
+  const admin = createAdminClient();
+  const isOwnProfile = user.id === params.id;
+
   const [{ data: profile }, { data: viewer }] = await Promise.all([
-    supabase
-      .from("users")
-      .select("id, name, email, avatar_url, city, beli_username, dietary_restrictions, dietary_public")
-      .eq("id", params.id)
-      .single(),
-    supabase
-      .from("users")
-      .select("name, avatar_url")
-      .eq("id", user.id)
-      .single(),
+    supabase.from("users").select("id, name, email, avatar_url, city, beli_username, dietary_restrictions, dietary_public").eq("id", params.id).single(),
+    supabase.from("users").select("name, avatar_url").eq("id", user.id).single(),
   ]);
 
   if (!profile) notFound();
+
+  // Fetch data for stats in parallel
+  const [
+    { data: profileGoingRsvps },
+    { data: viewerGoingRsvps },
+    { data: profileClubs },
+    { data: viewerClubs },
+    { data: rawTopRatings },
+  ] = await Promise.all([
+    admin.from("rsvps").select("dinner_id").eq("user_id", params.id).eq("status", "going"),
+    isOwnProfile
+      ? Promise.resolve({ data: [] as { dinner_id: string }[] })
+      : admin.from("rsvps").select("dinner_id").eq("user_id", user.id).eq("status", "going"),
+    admin.from("club_members").select("club_id, clubs ( id, name, emoji )").eq("user_id", params.id),
+    supabase.from("club_members").select("club_id").eq("user_id", user.id),
+    admin.from("dinner_ratings")
+      .select("overall_score, place_id, restaurant_cache ( name )")
+      .eq("user_id", params.id)
+      .not("overall_score", "is", null)
+      .order("overall_score", { ascending: false })
+      .limit(10),
+  ]);
+
+  // Dinners attended (completed only)
+  const profileDinnerIds = (profileGoingRsvps ?? []).map(r => r.dinner_id);
+  let dinnersAttended = 0;
+  if (profileDinnerIds.length > 0) {
+    const { count } = await admin.from("dinners")
+      .select("id", { count: "exact", head: true })
+      .in("id", profileDinnerIds)
+      .eq("status", "completed");
+    dinnersAttended = count ?? 0;
+  }
+
+  // Eaten together (completed dinners both attended)
+  let eatenTogether = 0;
+  if (!isOwnProfile) {
+    const viewerDinnerIdSet = new Set((viewerGoingRsvps ?? []).map(r => r.dinner_id));
+    const sharedIds = profileDinnerIds.filter(id => viewerDinnerIdSet.has(id));
+    if (sharedIds.length > 0) {
+      const { count } = await admin.from("dinners")
+        .select("id", { count: "exact", head: true })
+        .in("id", sharedIds)
+        .eq("status", "completed");
+      eatenTogether = count ?? 0;
+    }
+  }
+
+  // Clubs in common
+  const viewerClubIdSet = new Set((viewerClubs ?? []).map(m => m.club_id));
+  const clubsInCommon = (profileClubs ?? [])
+    .filter(m => viewerClubIdSet.has(m.club_id))
+    .map(m => m.clubs as { id: string; name: string; emoji: string | null } | null)
+    .filter(Boolean) as { id: string; name: string; emoji: string | null }[];
+
+  // Top-rated restaurants — dedupe by place_id
+  const seenPlaceIds = new Set<string>();
+  const topRatings: { place_id: string; overall_score: number; name: string }[] = [];
+  for (const r of rawTopRatings ?? []) {
+    if (!r.place_id || seenPlaceIds.has(r.place_id)) continue;
+    seenPlaceIds.add(r.place_id);
+    const restaurantName = (r.restaurant_cache as any)?.name;
+    if (restaurantName && r.overall_score) {
+      topRatings.push({ place_id: r.place_id, overall_score: r.overall_score, name: restaurantName });
+    }
+    if (topRatings.length >= 4) break;
+  }
+
+  const displayName = profile.name || profile.email?.split("@")[0] || "Member";
 
   return (
     <main className="min-h-screen bg-snow">
@@ -48,55 +113,108 @@ export default async function UserProfilePage({
         <div className="flex-1">
           <a href="/dashboard" className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none">←</a>
         </div>
-        <h1 className="font-sans text-base font-bold text-white">Profile</h1>
+        <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{displayName}</h1>
         <div className="flex-1 flex justify-end">
           <NavUser name={viewer?.name} email={user.email} avatarUrl={viewer?.avatar_url} />
         </div>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <div className="bg-white border border-black/8 rounded-2xl p-6 flex flex-col items-center text-center gap-4">
-          <UserAvatar
-            name={profile.name}
-            email={profile.email}
-            avatarUrl={profile.avatar_url}
-            size="lg"
-          />
+      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-4">
 
+        {/* Header card */}
+        <div className="bg-white border border-black/8 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
+          <UserAvatar name={profile.name} email={profile.email} avatarUrl={profile.avatar_url} size="lg" />
           <div>
-            <h2 className="font-sans text-2xl font-bold text-ink">
-              {profile.name || profile.email}
-            </h2>
-            {profile.city && (
-              <p className="text-ink-muted mt-1">{profile.city}</p>
-            )}
+            <h2 className="font-sans text-2xl font-bold text-ink">{displayName}</h2>
+            {profile.city && <p className="text-ink-muted text-sm mt-0.5">{profile.city}</p>}
           </div>
-
           {profile.beli_username && (
             <a
               href={`https://beliapp.co/app/${profile.beli_username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-citrus/40 rounded-xl text-sm font-semibold text-citrus-dark hover:bg-citrus/5 transition-colors"
+              className="bg-slate text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-slate-light transition-colors"
             >
-              View on Beli →
+              🍴 View on Beli
             </a>
           )}
+        </div>
 
-          {profile.dietary_public && profile.dietary_restrictions && profile.dietary_restrictions.length > 0 && (
-            <div className="w-full pt-4 border-t border-black/5">
-              <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Dietary restrictions</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {profile.dietary_restrictions.map((d) => (
-                  <span key={d} className="flex items-center gap-1.5 px-3 py-1 bg-black/5 rounded-full text-sm text-ink font-medium">
-                    {DIETARY_EMOJI[d] && <span>{DIETARY_EMOJI[d]}</span>}
-                    <span>{d}</span>
-                  </span>
-                ))}
-              </div>
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
+            <p className="font-sans text-2xl font-bold text-ink">{dinnersAttended}</p>
+            <p className="text-xs text-ink-muted mt-1">Dinners</p>
+          </div>
+          <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
+            <p className="font-sans text-2xl font-bold text-ink">{(profileClubs ?? []).length}</p>
+            <p className="text-xs text-ink-muted mt-1">Clubs</p>
+          </div>
+          {!isOwnProfile ? (
+            <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
+              <p className="font-sans text-2xl font-bold text-ink">{eatenTogether}</p>
+              <p className="text-xs text-ink-muted mt-1">Together</p>
+            </div>
+          ) : (
+            <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
+              <p className="font-sans text-2xl font-bold text-ink">{topRatings.length}</p>
+              <p className="text-xs text-ink-muted mt-1">Reviews</p>
             </div>
           )}
         </div>
+
+        {/* Clubs in common — only when viewing another user */}
+        {!isOwnProfile && clubsInCommon.length > 0 && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Clubs in common</h3>
+            </div>
+            <div className="divide-y divide-black/5">
+              {clubsInCommon.map((club) => (
+                <a key={club.id} href={`/clubs/${club.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-snow transition-colors">
+                  <span className="text-xl">{club.emoji ?? "🍽️"}</span>
+                  <span className="text-sm font-semibold text-ink">{club.name}</span>
+                  <span className="ml-auto text-ink-faint text-sm">→</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Top-rated restaurants */}
+        {topRatings.length > 0 && (
+          <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-black/5">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+                {isOwnProfile ? "Your top-rated spots" : `${displayName.split(" ")[0]}'s top-rated spots`}
+              </h3>
+            </div>
+            <div className="divide-y divide-black/5">
+              {topRatings.map((r) => (
+                <div key={r.place_id} className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm font-semibold text-ink">{r.name}</span>
+                  <span className="text-sm text-citrus-dark shrink-0 ml-3">{scoreToStars(r.overall_score)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Dietary restrictions */}
+        {profile.dietary_public && profile.dietary_restrictions && profile.dietary_restrictions.length > 0 && (
+          <section className="bg-white border border-black/8 rounded-2xl p-5">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">Dietary needs</h3>
+            <div className="flex flex-wrap gap-2">
+              {profile.dietary_restrictions.map((d) => (
+                <span key={d} className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 rounded-full text-sm text-ink font-medium">
+                  {DIETARY_EMOJI[d] && <span>{DIETARY_EMOJI[d]}</span>}
+                  <span>{d}</span>
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
     </main>
   );
