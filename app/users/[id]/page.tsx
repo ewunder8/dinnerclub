@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import UserAvatar from "@/components/UserAvatar";
 import NavUser from "@/components/NavUser";
 import { scoreToStars } from "@/lib/countdown";
+import { extractCuisineFromTypes, formatPriceLevel } from "@/lib/places";
 
 const DIETARY_EMOJI: Record<string, string> = {
   "Vegetarian": "🌱",
@@ -45,6 +46,8 @@ export default async function UserProfilePage({
     { data: profileClubs },
     { data: viewerClubs },
     { data: rawTopRatings },
+    { data: rawVotes },
+    { data: rawSuggestions },
   ] = await Promise.all([
     admin.from("rsvps").select("dinner_id").eq("user_id", params.id).eq("status", "going"),
     isOwnProfile
@@ -58,6 +61,17 @@ export default async function UserProfilePage({
       .not("overall_score", "is", null)
       .order("overall_score", { ascending: false })
       .limit(10),
+    // Votes → restaurant types for taste profile
+    admin.from("votes")
+      .select("poll_options ( place_id, restaurant_cache ( types, price_level ) )")
+      .eq("user_id", params.id)
+      .limit(50),
+    // Suggestions → restaurant types for taste profile
+    admin.from("poll_options")
+      .select("place_id, restaurant_cache ( types, price_level )")
+      .eq("suggested_by", params.id)
+      .is("removed_at", null)
+      .limit(50),
   ]);
 
   // Dinners attended (completed only)
@@ -105,6 +119,37 @@ export default async function UserProfilePage({
     if (topRatings.length >= 4) break;
   }
 
+  // Taste profile — combine votes + suggestions, count cuisines + price levels
+  const cuisineCount: Record<string, number> = {};
+  const priceLevels: number[] = [];
+
+  const collectRestaurant = (types: string[] | null, priceLevel: number | null) => {
+    const cuisine = extractCuisineFromTypes(types);
+    if (cuisine) cuisineCount[cuisine] = (cuisineCount[cuisine] ?? 0) + 1;
+    if (priceLevel) priceLevels.push(priceLevel);
+  };
+
+  for (const v of rawVotes ?? []) {
+    const opt = v.poll_options as any;
+    const rc = opt?.restaurant_cache;
+    collectRestaurant(rc?.types ?? null, rc?.price_level ?? null);
+  }
+  for (const s of rawSuggestions ?? []) {
+    const rc = (s as any).restaurant_cache;
+    collectRestaurant(rc?.types ?? null, rc?.price_level ?? null);
+  }
+
+  const topCuisines = Object.entries(cuisineCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([cuisine]) => cuisine);
+
+  const avgPriceLevel = priceLevels.length > 0
+    ? Math.round(priceLevels.reduce((a, b) => a + b, 0) / priceLevels.length)
+    : null;
+
+  const hasTasteProfile = topCuisines.length > 0 || avgPriceLevel !== null;
+
   const displayName = profile.name || profile.email?.split("@")[0] || "Member";
 
   return (
@@ -141,27 +186,54 @@ export default async function UserProfilePage({
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
             <p className="font-sans text-2xl font-bold text-ink">{dinnersAttended}</p>
-            <p className="text-xs text-ink-muted mt-1">Dinners</p>
+            <p className="text-xs text-ink-muted mt-1">Dinners attended</p>
           </div>
           <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
             <p className="font-sans text-2xl font-bold text-ink">{(profileClubs ?? []).length}</p>
             <p className="text-xs text-ink-muted mt-1">Clubs</p>
           </div>
-          {!isOwnProfile ? (
-            <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
-              <p className="font-sans text-2xl font-bold text-ink">{eatenTogether}</p>
-              <p className="text-xs text-ink-muted mt-1">Together</p>
-            </div>
-          ) : (
-            <div className="bg-white border border-black/8 rounded-2xl p-4 text-center">
-              <p className="font-sans text-2xl font-bold text-ink">{topRatings.length}</p>
-              <p className="text-xs text-ink-muted mt-1">Reviews</p>
-            </div>
-          )}
         </div>
+
+        {/* Eaten together callout */}
+        {!isOwnProfile && eatenTogether > 0 && (
+          <div className="bg-citrus/10 border border-citrus/20 rounded-2xl px-5 py-4 flex items-center gap-3">
+            <span className="text-2xl">🍽️</span>
+            <p className="text-sm font-semibold text-ink">
+              You&apos;ve eaten together{" "}
+              <span className="text-citrus-dark">{eatenTogether} {eatenTogether === 1 ? "time" : "times"}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Taste profile */}
+        {(hasTasteProfile || isOwnProfile) && (
+          <section className="bg-white border border-black/8 rounded-2xl p-5">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">
+              {isOwnProfile ? "Your taste profile" : "Taste profile"}
+            </h3>
+            {hasTasteProfile ? (
+              <div className="flex flex-wrap gap-2">
+                {topCuisines.map((cuisine) => (
+                  <span key={cuisine} className="px-3 py-1.5 bg-slate/8 text-slate text-sm font-semibold rounded-full">
+                    {cuisine}
+                  </span>
+                ))}
+                {avgPriceLevel && (
+                  <span className="px-3 py-1.5 bg-citrus/10 text-citrus-dark text-sm font-semibold rounded-full">
+                    {formatPriceLevel(avgPriceLevel)} typical
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-ink-muted">
+                Your taste profile will appear here as you attend dinners, vote on restaurants, and suggest places. Get your crew together and start exploring!
+              </p>
+            )}
+          </section>
+        )}
 
         {/* Clubs in common — only when viewing another user */}
         {!isOwnProfile && clubsInCommon.length > 0 && (

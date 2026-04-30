@@ -425,7 +425,7 @@ export default async function DashboardPage() {
                 Create your first club →
               </Link>
               <p className="text-xs text-ink-muted pt-1">
-                Already invited? Ask your friend to share their invite link and you&apos;ll show up here automatically.
+                Already invited? Ask your friend to send you their invite link and open it to join their club.
               </p>
             </div>
           </div>
