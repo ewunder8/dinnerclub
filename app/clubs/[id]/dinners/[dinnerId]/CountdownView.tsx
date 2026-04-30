@@ -20,6 +20,7 @@ import {
   generateGoogleCalendarURL,
 } from "@/lib/calendar";
 import { removeRsvp } from "./actions";
+import UserAvatar from "@/components/UserAvatar";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 
 type RsvpWithUser = RSVP & { users: User };
@@ -310,9 +311,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   key={r.id}
                   className="flex items-center gap-3"
                 >
-                  <div className="w-8 h-8 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-sm font-bold shrink-0">
-                    {(r.users.name || r.users.email).slice(0, 1).toUpperCase()}
-                  </div>
+                  <UserAvatar name={r.users.name} email={r.users.email} avatarUrl={(r.users as any).avatar_url} size="sm" />
                   <span className="text-sm font-medium text-ink">
                     {r.users.name || r.users.email.split("@")[0]}
                   </span>

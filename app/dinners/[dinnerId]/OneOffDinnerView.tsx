@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 import { rsvpDinner, lockRsvps, cancelOneOffDinner, removeRsvp } from "@/app/clubs/[id]/dinners/[dinnerId]/actions";
+import UserAvatar from "@/components/UserAvatar";
 import { toast } from "sonner";
 import ShareActions from "@/components/ShareActions";
 import DinnerComments from "@/app/clubs/[id]/dinners/[dinnerId]/DinnerComments";
@@ -206,9 +207,7 @@ export default function OneOffDinnerView({
             <div className="flex flex-col gap-2">
               {goingRsvps.map((r) => (
                 <div key={r.user_id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-sm font-bold shrink-0">
-                    {((r.users as any)?.name || (r.users as any)?.email || "G").slice(0, 1).toUpperCase()}
-                  </div>
+                  <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
                   <span className="text-sm font-medium text-ink">
                     {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
                     {r.user_id === userId && <span className="text-ink-muted font-normal"> (you)</span>}
@@ -228,9 +227,7 @@ export default function OneOffDinnerView({
               ))}
               {notGoingRsvps.map((r) => (
                 <div key={r.user_id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-black/8 flex items-center justify-center text-ink-muted text-sm font-bold shrink-0">
-                    {((r.users as any)?.name || (r.users as any)?.email || "G").slice(0, 1).toUpperCase()}
-                  </div>
+                  <UserAvatar name={(r.users as any)?.name} email={(r.users as any)?.email} avatarUrl={(r.users as any)?.avatar_url} size="sm" />
                   <span className="text-sm font-medium text-ink-muted">
                     {(r.users as any)?.name || (r.users as any)?.email?.split("@")[0] || "Guest"}
                     {r.user_id === userId && <span className="font-normal"> (you)</span>}

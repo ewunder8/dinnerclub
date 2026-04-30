@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { rsvpDinner } from "./actions";
 import ReservationAttempts from "./ReservationAttempts";
+import UserAvatar from "@/components/UserAvatar";
 import type { ReservationAttempt, User } from "@/lib/supabase/database.types";
 
 type RsvpMember = {
@@ -92,13 +93,7 @@ export default function RsvpPanel({
           {members.map((m) => (
             <div key={m.userId} className="px-5 py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                {m.avatarUrl ? (
-                  <img src={m.avatarUrl} alt={m.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-citrus/20 flex items-center justify-center text-citrus-dark text-xs font-bold shrink-0">
-                    {m.name.slice(0, 1).toUpperCase()}
-                  </div>
-                )}
+                <UserAvatar name={m.name} avatarUrl={m.avatarUrl} size="sm" />
                 <span className="text-sm font-semibold text-ink truncate">{m.name}</span>
                 {m.userId === userId && <span className="text-xs text-ink-muted shrink-0">you</span>}
               </div>
