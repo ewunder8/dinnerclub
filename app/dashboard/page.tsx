@@ -54,6 +54,8 @@ export default async function DashboardPage() {
   const nowDate = new Date();
 
   // One-off dinners: created by user OR user has an RSVP
+  // Use admin client for RSVP+dinners join — RLS on the dinners join can silently drop
+  // rows for guests who joined via invite link (circular RLS dependency on one-off dinners)
   const [{ data: rawOneOffCreated }, { data: rawOneOffRsvps }] = await Promise.all([
     supabase
       .from("dinners")
@@ -62,7 +64,7 @@ export default async function DashboardPage() {
       .eq("created_by", user.id)
       .in("status", ["polling", "seeking_reservation", "waitlisted", "confirmed"])
       .order("target_date", { ascending: true }),
-    supabase
+    adminClient
       .from("rsvps")
       .select("dinner_id, dinners ( id, title, emoji, status, target_date, planning_stage, winning_restaurant_place_id, created_by, club_id )")
       .eq("user_id", user.id)
