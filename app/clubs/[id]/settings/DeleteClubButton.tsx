@@ -1,19 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { deleteClub } from "./actions";
 
 export default function DeleteClubButton({ clubId, clubName }: { clubId: string; clubName: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm(`Delete "${clubName}"? This will permanently remove the club and all its dinners. This can't be undone.`)) return;
     setLoading(true);
-    const supabase = createClient();
-    await supabase.from("clubs").delete().eq("id", clubId);
-    router.push("/dashboard");
+    await deleteClub(clubId);
   };
 
   return (

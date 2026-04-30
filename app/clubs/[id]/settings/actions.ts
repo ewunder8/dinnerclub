@@ -2,6 +2,29 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { redirect } from "next/navigation";
+
+export async function deleteClub(clubId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Verify caller is the owner
+  const { data: membership } = await supabase
+    .from("club_members")
+    .select("role")
+    .eq("club_id", clubId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (membership?.role !== "owner") throw new Error("Not authorized");
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("clubs").delete().eq("id", clubId);
+  if (error) throw new Error("Failed to delete club");
+
+  redirect("/dashboard");
+}
 
 export async function transferOwnership(clubId: string, newOwnerUserId: string) {
   const supabase = await createClient();
