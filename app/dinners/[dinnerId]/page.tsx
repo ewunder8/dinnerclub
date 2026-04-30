@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound, redirect } from "next/navigation";
 import NavUser from "@/components/NavUser";
 import Link from "next/link";
@@ -155,7 +156,7 @@ export default async function OneOffDinnerPage({
         ? supabase.from("restaurant_cache").select("*").eq("place_id", placeId).single()
         : Promise.resolve({ data: null }),
       supabase.from("rsvps").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId),
-      supabase.from("dinner_comments")
+      createAdminClient().from("dinner_comments")
         .select("id, user_id, body, created_at, users ( name, email )")
         .eq("dinner_id", params.dinnerId)
         .order("created_at", { ascending: true }),
@@ -230,7 +231,7 @@ export default async function OneOffDinnerPage({
     { data: restaurant },
   ] = await Promise.all([
     supabase.from("rsvps").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId),
-    supabase.from("dinner_comments")
+    createAdminClient().from("dinner_comments")
       .select("id, user_id, body, created_at, users ( name, email )")
       .eq("dinner_id", params.dinnerId)
       .order("created_at", { ascending: true }),
