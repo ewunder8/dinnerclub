@@ -69,7 +69,9 @@ export default async function OneOffDinnerPage({
     .single();
 
   // Fetch the one-off dinner (club_id IS NULL)
-  const { data: dinner } = await supabase
+  // Use admin client so guests with an RSVP aren't blocked by RLS before the access check runs
+  const adminClient = createAdminClient();
+  const { data: dinner } = await adminClient
     .from("dinners")
     .select("*")
     .eq("id", params.dinnerId)
@@ -89,7 +91,7 @@ export default async function OneOffDinnerPage({
   const isCreator = isOriginalCreator || !!cohostRow;
 
   if (!isCreator) {
-    const { data: rsvp } = await supabase
+    const { data: rsvp } = await adminClient
       .from("rsvps")
       .select("user_id")
       .eq("dinner_id", params.dinnerId)
@@ -97,7 +99,7 @@ export default async function OneOffDinnerPage({
       .maybeSingle();
 
     if (!rsvp) {
-      const { data: inviteLink } = await supabase
+      const { data: inviteLink } = await adminClient
         .from("invite_links")
         .select("token")
         .eq("dinner_id", params.dinnerId)
