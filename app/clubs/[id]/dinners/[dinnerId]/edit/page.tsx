@@ -80,6 +80,8 @@ export default async function EditClubDinnerPage({
           initial={{ title: dinner.title ?? null, targetDate: dinner.target_date ?? null }}
           cohosts={isOriginalCreator ? cohosts : undefined}
           eligibleCohostMembers={isOriginalCreator ? eligibleCohostMembers : undefined}
+          initialPlusOnesEnabled={(dinner as any).plus_ones_enabled ?? false}
+          initialPlusOnesMax={(dinner as any).plus_ones_max ?? null}
           standalone
           backUrl={backUrl}
         />

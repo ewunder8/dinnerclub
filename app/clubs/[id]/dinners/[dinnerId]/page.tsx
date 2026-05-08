@@ -346,6 +346,8 @@ export default async function DinnerPage({
             reservedByName={booker ? (booker.name || booker.email?.split("@")[0]) : null}
             hosts={confirmedHosts}
             isCreator={isCreator}
+            plusOnesEnabled={(dinner as any).plus_ones_enabled ?? false}
+            plusOnesMax={(dinner as any).plus_ones_max ?? null}
           />
           <DinnerComments dinnerId={params.dinnerId} userId={user.id} comments={comments} />
           {isOwner && (

@@ -69,6 +69,8 @@ export default async function EditOneOffDinnerPage({
           initialRestaurant={restaurant ? { place_id: restaurant.place_id, name: restaurant.name } : null}
           initialBeliUrl={restaurant?.beli_url ?? null}
           userCity={profile?.city ?? null}
+          initialPlusOnesEnabled={(dinner as any).plus_ones_enabled ?? false}
+          initialPlusOnesMax={(dinner as any).plus_ones_max ?? null}
           standalone
           backUrl={backUrl}
         />

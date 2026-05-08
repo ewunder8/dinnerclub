@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ type RsvpMember = {
   name: string;
   avatarUrl?: string | null;
   status: "going" | "not_going" | null;
+  plus_ones: number;
 };
 
 type AttemptWithUser = ReservationAttempt & { users: User };
@@ -29,6 +30,8 @@ type Props = {
   attempts: AttemptWithUser[];
   topOptions: TopOption[];
   dinnerStatus: string;
+  plusOnesEnabled: boolean;
+  plusOnesMax: number | null;
 };
 
 export default function RsvpPanel({
@@ -40,12 +43,24 @@ export default function RsvpPanel({
   attempts,
   topOptions,
   dinnerStatus,
+  plusOnesEnabled,
+  plusOnesMax,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<"going" | "not_going" | null>(null);
+  const [plusOnes, setPlusOnes] = useState(0);
+  const [savingPlusOnes, setSavingPlusOnes] = useState(false);
 
-  const myStatus = members.find((m) => m.userId === userId)?.status ?? null;
-  const goingCount = members.filter((m) => m.status === "going").length;
+  const myMember = members.find((m) => m.userId === userId);
+  const myStatus = myMember?.status ?? null;
+  const goingMembers = members.filter((m) => m.status === "going");
+  const goingCount = goingMembers.length;
+  const totalAttending = goingMembers.reduce((sum, m) => sum + 1 + m.plus_ones, 0);
+
+  // Sync plus_ones stepper from RSVP data
+  useEffect(() => {
+    setPlusOnes(myMember?.plus_ones ?? 0);
+  }, [myMember?.plus_ones]);
 
   const handleRsvp = async (status: "going" | "not_going") => {
     setLoading(status);
@@ -54,6 +69,16 @@ export default function RsvpPanel({
     router.refresh();
     setLoading(null);
   };
+
+  const handleSavePlusOnes = async () => {
+    setSavingPlusOnes(true);
+    const result = await rsvpDinner({ dinnerId, status: "going", plus_ones: plusOnes });
+    if (result.error) toast.error(result.error);
+    router.refresh();
+    setSavingPlusOnes(false);
+  };
+
+  const maxAllowed = plusOnesMax ?? 10;
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,6 +112,9 @@ export default function RsvpPanel({
         <div className="px-5 py-4 border-b border-black/5">
           <p className="text-xs font-bold text-ink-muted uppercase tracking-widest">
             Who's in · {goingCount} going
+            {plusOnesEnabled && totalAttending > goingCount && (
+              <span className="ml-1 font-normal normal-case">({totalAttending} attending)</span>
+            )}
           </p>
         </div>
 
@@ -97,6 +125,9 @@ export default function RsvpPanel({
                 <UserAvatar name={m.name} avatarUrl={m.avatarUrl} size="sm" />
                 <span className="text-sm font-semibold text-ink truncate">{m.name}</span>
                 {m.userId === userId && <span className="text-xs text-ink-muted shrink-0">you</span>}
+                {plusOnesEnabled && m.status === "going" && m.plus_ones > 0 && (
+                  <span className="text-xs text-ink-muted shrink-0">+{m.plus_ones}</span>
+                )}
               </Link>
               <span
                 className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
@@ -141,6 +172,42 @@ export default function RsvpPanel({
             </button>
           </div>
         )}
+
+        {/* Plus ones stepper — only when going and feature is enabled */}
+        {plusOnesEnabled && myStatus === "going" && (
+          <div className="px-5 py-3 border-t border-black/5 flex items-center gap-3">
+            <span className="text-xs text-ink-muted shrink-0">Bringing guests?</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPlusOnes((n) => Math.max(0, n - 1))}
+                disabled={plusOnes === 0}
+                className="w-7 h-7 rounded-lg border border-black/15 text-ink-muted hover:bg-black/5 transition-colors disabled:opacity-30 text-base leading-none flex items-center justify-center"
+              >
+                −
+              </button>
+              <span className="text-sm font-semibold text-ink w-4 text-center">{plusOnes}</span>
+              <button
+                type="button"
+                onClick={() => setPlusOnes((n) => Math.min(maxAllowed, n + 1))}
+                disabled={plusOnes >= maxAllowed}
+                className="w-7 h-7 rounded-lg border border-black/15 text-ink-muted hover:bg-black/5 transition-colors disabled:opacity-30 text-base leading-none flex items-center justify-center"
+              >
+                +
+              </button>
+            </div>
+            {plusOnes !== (myMember?.plus_ones ?? 0) && (
+              <button
+                type="button"
+                onClick={handleSavePlusOnes}
+                disabled={savingPlusOnes}
+                className="ml-auto text-xs font-semibold text-white bg-slate px-3 py-1.5 rounded-lg hover:bg-slate-light transition-colors disabled:opacity-40"
+              >
+                {savingPlusOnes ? "…" : "Save"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reservation claiming — show for both seeking and waitlisted */}
@@ -151,8 +218,10 @@ export default function RsvpPanel({
               <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Next step</p>
               <p className="font-semibold text-white text-sm">
                 Someone needs to book a table.
-                {goingCount > 0 && (
-                  <> Book for <strong>{goingCount} {goingCount === 1 ? "person" : "people"}</strong> going so far.</>
+                {totalAttending > 0 && (
+                  <> Book for <strong>{totalAttending} {totalAttending === 1 ? "person" : "people"}</strong>
+                  {plusOnesEnabled && totalAttending > goingCount && ` (${goingCount} members + ${totalAttending - goingCount} guests)`}
+                  .</>
                 )}
               </p>
             </div>

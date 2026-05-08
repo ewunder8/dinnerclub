@@ -27,6 +27,8 @@ export async function updateDinnerDetails({
   pollClosesAt,
   emoji,
   winningRestaurantPlaceId,
+  plusOnesEnabled,
+  plusOnesMax,
 }: {
   dinnerId: string;
   title?: string | null;
@@ -38,6 +40,8 @@ export async function updateDinnerDetails({
   pollClosesAt: string | null;
   emoji?: string | null;
   winningRestaurantPlaceId?: string | null;
+  plusOnesEnabled?: boolean;
+  plusOnesMax?: number | null;
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -55,6 +59,8 @@ export async function updateDinnerDetails({
       poll_closes_at: pollClosesAt ? new Date(pollClosesAt).toISOString() : null,
       ...(emoji !== undefined ? { emoji: emoji || null } : {}),
       ...(winningRestaurantPlaceId !== undefined ? { winning_restaurant_place_id: winningRestaurantPlaceId } : {}),
+      ...(plusOnesEnabled !== undefined ? { plus_ones_enabled: plusOnesEnabled } : {}),
+      ...(plusOnesMax !== undefined ? { plus_ones_max: plusOnesMax } : {}),
     })
     .eq("id", dinnerId);
 
@@ -858,9 +864,11 @@ export async function removeRsvp({ dinnerId, targetUserId }: { dinnerId: string;
 export async function rsvpDinner({
   dinnerId,
   status,
+  plus_ones,
 }: {
   dinnerId: string;
   status: "going" | "not_going";
+  plus_ones?: number;
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -869,7 +877,12 @@ export async function rsvpDinner({
   const { error } = await supabase
     .from("rsvps")
     .upsert(
-      { dinner_id: dinnerId, user_id: user.id, status },
+      {
+        dinner_id: dinnerId,
+        user_id: user.id,
+        status,
+        ...(plus_ones !== undefined ? { plus_ones } : {}),
+      },
       { onConflict: "dinner_id,user_id" }
     );
   if (error) return { error: "Failed to save RSVP." };

@@ -253,10 +253,13 @@ export type Database = {
           created_at: string;
           // one-off dinner
           emoji: string | null;
+          // 025
+          plus_ones_enabled: boolean;
+          plus_ones_max: number | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["dinners"]["Row"],
-          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode" | "planning_stage" | "emoji"
+          "id" | "created_at" | "status" | "voting_open" | "poll_min_options" | "suggestion_mode" | "planning_stage" | "emoji" | "plus_ones_enabled" | "plus_ones_max"
         > & {
           // Fields with DB defaults — optional on insert
           status?: "polling" | "seeking_reservation" | "waitlisted" | "confirmed" | "completed" | "cancelled";
@@ -265,6 +268,8 @@ export type Database = {
           suggestion_mode?: "owner_only" | "members" | "hybrid";
           planning_stage?: "date_voting" | "restaurant_voting" | "winner";
           emoji?: string | null;
+          plus_ones_enabled?: boolean;
+          plus_ones_max?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["dinners"]["Insert"]>;
         Relationships: [
@@ -391,10 +396,14 @@ export type Database = {
           dinner_id: string;
           user_id: string;
           status: "going" | "not_going" | "maybe";
+          // 025
+          plus_ones: number;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["rsvps"]["Row"], "id" | "created_at" | "updated_at">;
+        Insert: Omit<Database["public"]["Tables"]["rsvps"]["Row"], "id" | "created_at" | "updated_at" | "plus_ones"> & {
+          plus_ones?: number;
+        };
         Update: Partial<Database["public"]["Tables"]["rsvps"]["Insert"]>;
         Relationships: [
           {

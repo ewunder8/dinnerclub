@@ -207,10 +207,12 @@ export default function DinnerPlanningView({
 
   // ── Stage 3: RSVP data ─────────────────────────────────────
   const rsvpByUser = new Map<string, "going" | "not_going">();
+  const rsvpPlusOnesMap = new Map<string, number>();
   for (const r of rawRsvps) {
     if (r.status === "going" || r.status === "not_going") {
       rsvpByUser.set(r.user_id, r.status);
     }
+    rsvpPlusOnesMap.set(r.user_id, (r as any).plus_ones ?? 0);
   }
 
   const rsvpMembers = clubMembers.map((m) => ({
@@ -218,6 +220,7 @@ export default function DinnerPlanningView({
     name: m.users?.name || m.users?.email?.split("@")[0] || "Member",
     avatarUrl: m.users?.avatar_url ?? null,
     status: rsvpByUser.get(m.user_id) ?? null,
+    plus_ones: rsvpPlusOnesMap.get(m.user_id) ?? 0,
   }));
 
   const topWinnerOption = winnerRestaurant
@@ -418,6 +421,8 @@ export default function DinnerPlanningView({
             attempts={rawAttempts}
             topOptions={topWinnerOption}
             dinnerStatus={dinner.status}
+            plusOnesEnabled={(dinner as any).plus_ones_enabled ?? false}
+            plusOnesMax={(dinner as any).plus_ones_max ?? null}
           />
         </>
       )}

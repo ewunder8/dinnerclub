@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ import {
   downloadICSFile,
   generateGoogleCalendarURL,
 } from "@/lib/calendar";
-import { removeRsvp } from "./actions";
+import { removeRsvp, rsvpDinner } from "./actions";
 import UserAvatar from "@/components/UserAvatar";
 import type { Dinner, RestaurantCache, RSVP, User } from "@/lib/supabase/database.types";
 
@@ -35,6 +35,8 @@ type Props = {
   reservedByName?: string | null;
   hosts?: { name: string }[];
   isCreator?: boolean;
+  plusOnesEnabled?: boolean;
+  plusOnesMax?: number | null;
 };
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; sublabel: string }> = {
@@ -46,10 +48,12 @@ const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; subl
 
 const PRICE_LABELS: Record<number, string> = { 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
 
-export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, shareUrl, reservedByName, hosts, isCreator }: Props) {
+export default function CountdownView({ dinner, restaurant, rsvps, userId, clubName, shareUrl, reservedByName, hosts, isCreator, plusOnesEnabled = false, plusOnesMax = null }: Props) {
   const router = useRouter();
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
+  const [plusOnes, setPlusOnes] = useState(0);
+  const [savingPlusOnes, setSavingPlusOnes] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [currentBeliUrl, setCurrentBeliUrl] = useState(restaurant.beli_url ?? "");
   const [editingBeli, setEditingBeli] = useState(false);
@@ -87,20 +91,31 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
   const myRsvp = rsvps.find((r) => r.user_id === userId);
   const goingRsvps = rsvps.filter((r) => r.status === "going");
+  const totalAttending = goingRsvps.reduce((sum, r) => sum + 1 + ((r as any).plus_ones ?? 0), 0);
+  const maxAllowed = plusOnesMax ?? 10;
+
+  // Sync plus_ones stepper
+  useEffect(() => {
+    setPlusOnes((myRsvp as any)?.plus_ones ?? 0);
+  }, [myRsvp?.id]);
 
   const handleRsvp = async (status: RSVP["status"]) => {
     if (rsvpLoading) return;
     setRsvpLoading(true);
     setRsvpError(null);
-    const supabase = createClient();
-    const { error } = await supabase.from("rsvps").upsert(
-      { dinner_id: dinner.id, user_id: userId, status },
-      { onConflict: "dinner_id,user_id" }
-    );
-    if (error) { setRsvpError("Failed to save RSVP. Try again."); setRsvpLoading(false); return; }
+    const result = await rsvpDinner({ dinnerId: dinner.id, status: status as "going" | "not_going" });
+    if (result.error) { setRsvpError("Failed to save RSVP. Try again."); setRsvpLoading(false); return; }
     router.refresh();
     setRsvpLoading(false);
   };
+
+  const handleSavePlusOnes = useCallback(async () => {
+    setSavingPlusOnes(true);
+    const result = await rsvpDinner({ dinnerId: dinner.id, status: "going", plus_ones: plusOnes });
+    if (result.error) setRsvpError(result.error);
+    router.refresh();
+    setSavingPlusOnes(false);
+  }, [dinner.id, plusOnes, router]);
 
   const shareMessage = dinner.reservation_datetime
     ? `We're going to ${restaurant.name} on ${formatReservationTime(dinner.reservation_datetime)}! 🎉`
@@ -275,7 +290,10 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
       <section className="bg-white border border-black/8 rounded-2xl overflow-hidden">
         <div className="px-5 py-3 border-b border-black/5 flex items-center justify-between">
           <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
-            Who&apos;s coming · {goingRsvps.length}
+            Who&apos;s coming · {goingRsvps.length} going
+            {plusOnesEnabled && totalAttending > goingRsvps.length && (
+              <span className="ml-1 font-normal normal-case">({totalAttending} attending)</span>
+            )}
           </h3>
         </div>
         <div className="p-5">
@@ -302,6 +320,42 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
           {rsvpError && <p className="text-red-500 text-xs mb-3">{rsvpError}</p>}
 
+          {/* Plus ones stepper */}
+          {plusOnesEnabled && myRsvp?.status === "going" && (
+            <div className="flex items-center gap-3 mb-5 pb-5 border-b border-black/5">
+              <span className="text-xs text-ink-muted shrink-0">Bringing guests?</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPlusOnes((n) => Math.max(0, n - 1))}
+                  disabled={plusOnes === 0}
+                  className="w-7 h-7 rounded-lg border border-black/15 text-ink-muted hover:bg-black/5 transition-colors disabled:opacity-30 text-base leading-none flex items-center justify-center"
+                >
+                  −
+                </button>
+                <span className="text-sm font-semibold text-ink w-4 text-center">{plusOnes}</span>
+                <button
+                  type="button"
+                  onClick={() => setPlusOnes((n) => Math.min(maxAllowed, n + 1))}
+                  disabled={plusOnes >= maxAllowed}
+                  className="w-7 h-7 rounded-lg border border-black/15 text-ink-muted hover:bg-black/5 transition-colors disabled:opacity-30 text-base leading-none flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
+              {plusOnes !== ((myRsvp as any)?.plus_ones ?? 0) && (
+                <button
+                  type="button"
+                  onClick={handleSavePlusOnes}
+                  disabled={savingPlusOnes}
+                  className="ml-auto text-xs font-semibold text-white bg-slate px-3 py-1.5 rounded-lg hover:bg-slate-light transition-colors disabled:opacity-40"
+                >
+                  {savingPlusOnes ? "…" : "Save"}
+                </button>
+              )}
+            </div>
+          )}
+
           {goingRsvps.length === 0 ? (
             <p className="text-sm text-ink-muted">No RSVPs yet — be the first!</p>
           ) : (
@@ -316,6 +370,9 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                     <span className="text-sm font-medium text-ink">
                       {r.users.name || r.users.email.split("@")[0]}
                     </span>
+                    {plusOnesEnabled && (r as any).plus_ones > 0 && (
+                      <span className="text-xs text-ink-muted">+{(r as any).plus_ones}</span>
+                    )}
                   </a>
                   {r.user_id === userId && (
                     <span className="text-xs text-ink-muted bg-black/5 px-2 py-0.5 rounded-full">you</span>

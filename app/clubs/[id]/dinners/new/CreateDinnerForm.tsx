@@ -253,6 +253,8 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
   const [confirmedDates, setConfirmedDates] = useState<string[]>([]);
   const [confirmedRestaurants, setConfirmedRestaurants] = useState<SeededRestaurant[]>([]);
   const [coHostIds, setCoHostIds] = useState<string[]>([]);
+  const [plusOnesEnabled, setPlusOnesEnabled] = useState(false);
+  const [plusOnesMax, setPlusOnesMax] = useState<number | null>(null);
 
   // ── Load suggestions when entering Step 2 ──────────────────────
 
@@ -428,6 +430,8 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
         theme_price: null,
         theme_vibe: null,
         theme_neighborhood: null,
+        plus_ones_enabled: plusOnesEnabled,
+        plus_ones_max: plusOnesEnabled ? (plusOnesMax ?? null) : null,
       })
       .select()
       .single();
@@ -789,6 +793,45 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
                 </div>
               </div>
             )}
+
+            {/* Plus ones setting */}
+            <div className="bg-white border border-black/8 rounded-2xl p-5 mb-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Allow plus ones</p>
+                  <p className="text-xs text-ink-muted mt-0.5">Guests can bring additional people</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPlusOnesEnabled((e) => !e)}
+                  className={cn(
+                    "relative w-11 h-6 rounded-full transition-colors shrink-0",
+                    plusOnesEnabled ? "bg-slate" : "bg-black/20"
+                  )}
+                >
+                  <span className={cn(
+                    "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
+                    plusOnesEnabled ? "translate-x-5" : "translate-x-0"
+                  )} />
+                </button>
+              </div>
+              {plusOnesEnabled && (
+                <div className="mt-4 pt-4 border-t border-black/5">
+                  <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                    Max per person <span className="font-normal">(optional — leave blank for unlimited)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    placeholder="Unlimited"
+                    value={plusOnesMax ?? ""}
+                    onChange={(e) => setPlusOnesMax(e.target.value ? Math.max(1, parseInt(e.target.value)) : null)}
+                    className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
+                  />
+                </div>
+              )}
+            </div>
 
             {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 

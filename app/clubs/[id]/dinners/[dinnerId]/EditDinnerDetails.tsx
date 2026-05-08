@@ -34,6 +34,9 @@ type Props = {
   initialRestaurant?: { place_id: string; name: string } | null;
   initialBeliUrl?: string | null;
   userCity?: string | null;
+  // Plus ones
+  initialPlusOnesEnabled?: boolean;
+  initialPlusOnesMax?: number | null;
   // Page-based editing
   editUrl?: string;   // if set, button links to this URL instead of expanding inline
   standalone?: boolean; // render form directly (for edit pages)
@@ -56,6 +59,8 @@ export default function EditDinnerDetails({
   initialRestaurant = null,
   initialBeliUrl = null,
   userCity = null,
+  initialPlusOnesEnabled = false,
+  initialPlusOnesMax = null,
   editUrl,
   standalone = false,
   backUrl = "/",
@@ -66,6 +71,8 @@ export default function EditDinnerDetails({
   const [title, setTitle] = useState(initial.title ?? "");
   const [targetDate, setTargetDate] = useState(toDatetimeLocal(initial.targetDate));
   const [emoji, setEmoji] = useState(initialEmoji ?? "🍽️");
+  const [plusOnesEnabled, setPlusOnesEnabled] = useState(initialPlusOnesEnabled);
+  const [plusOnesMax, setPlusOnesMax] = useState<number | null>(initialPlusOnesMax);
   const [restaurant, setRestaurant] = useState<{ place_id: string; name: string } | null>(initialRestaurant ?? null);
   const [beliUrl, setBeliUrl] = useState(initialBeliUrl ?? "");
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,6 +128,8 @@ export default function EditDinnerDetails({
       pollClosesAt: null,
       ...(isOneOff ? { emoji: emoji || null } : {}),
       ...(isOneOff && restaurant ? { winningRestaurantPlaceId: restaurant.place_id } : {}),
+      plusOnesEnabled,
+      plusOnesMax: plusOnesEnabled ? (plusOnesMax ?? null) : null,
     });
     if (result.error) {
       setError(result.error);
@@ -353,6 +362,45 @@ export default function EditDinnerDetails({
           </div>
         </div>
       )}
+
+      {/* Plus ones */}
+      <div>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-0.5">Allow plus ones</label>
+            <p className="text-xs text-ink-faint">Guests can bring additional people</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPlusOnesEnabled((e) => !e)}
+            className={cn(
+              "relative w-11 h-6 rounded-full transition-colors shrink-0",
+              plusOnesEnabled ? "bg-slate" : "bg-black/20"
+            )}
+          >
+            <span className={cn(
+              "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
+              plusOnesEnabled ? "translate-x-5" : "translate-x-0"
+            )} />
+          </button>
+        </div>
+        {plusOnesEnabled && (
+          <div className="mt-3">
+            <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+              Max per person <span className="font-normal">(optional)</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              placeholder="Unlimited"
+              value={plusOnesMax ?? ""}
+              onChange={(e) => setPlusOnesMax(e.target.value ? Math.max(1, parseInt(e.target.value)) : null)}
+              className="w-full bg-surface border border-slate/20 rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-slate transition-colors text-sm"
+            />
+          </div>
+        )}
+      </div>
 
       {error && <p className="text-red-500 text-xs">{error}</p>}
 

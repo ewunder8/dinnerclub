@@ -200,6 +200,8 @@ export default async function OneOffDinnerPage({
             shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/dinners/${dinner.id}`}
             hosts={hosts}
             isCreator={isCreator}
+            plusOnesEnabled={(dinner as any).plus_ones_enabled ?? false}
+            plusOnesMax={(dinner as any).plus_ones_max ?? null}
           />
           <DinnerComments dinnerId={dinner.id} userId={user.id} comments={comments} />
           {isCreator && <OneOffDinnerActions dinnerId={dinner.id} />}
