@@ -201,7 +201,7 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 text-center text-xs font-semibold text-white px-3 py-2.5 rounded-xl transition-colors hover:opacity-90"
-                  style={{ backgroundColor: "#4B6FFF" }}
+                  style={{ backgroundColor: "#265B5B" }}
                 >
                   Beli
                 </a>

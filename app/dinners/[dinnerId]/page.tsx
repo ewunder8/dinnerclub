@@ -165,13 +165,13 @@ export default async function OneOffDinnerPage({
     ]);
 
     const { data: creatorProfile } = dinner.created_by
-      ? await supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+      ? await supabase.from("users").select("name, email, avatar_url").eq("id", dinner.created_by).single()
       : { data: null };
 
     const creatorName = creatorProfile
-      ? (creatorProfile.name || creatorProfile.email?.split("@")[0] || "Host")
+      ? (creatorProfile.name || (creatorProfile as any).email?.split("@")[0] || "Host")
       : null;
-    const hosts = creatorName ? [{ name: creatorName }] : [];
+    const hosts = creatorName ? [{ name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
 
     const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
       id: c.id,
@@ -241,7 +241,7 @@ export default async function OneOffDinnerPage({
       .eq("dinner_id", params.dinnerId)
       .order("created_at", { ascending: true }),
     dinner.created_by
-      ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+      ? supabase.from("users").select("name, email, avatar_url").eq("id", dinner.created_by).single()
       : Promise.resolve({ data: null }),
     supabase.from("invite_links")
       .select("token")
@@ -260,9 +260,9 @@ export default async function OneOffDinnerPage({
   const inviteUrl = inviteToken ? `${appUrl}/dinners/join/${inviteToken}` : null;
 
   const creatorName = creatorProfile
-    ? (creatorProfile.name || creatorProfile.email?.split("@")[0] || "Host")
+    ? (creatorProfile.name || (creatorProfile as any).email?.split("@")[0] || "Host")
     : null;
-  const hosts = creatorName ? [{ name: creatorName }] : [];
+  const hosts = creatorName ? [{ name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
 
   const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
     id: c.id,
