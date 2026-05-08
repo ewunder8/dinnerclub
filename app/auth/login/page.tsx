@@ -12,6 +12,8 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(searchParams.get("signup") === "1");
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
   const next = searchParams.get("next") ?? "/dashboard";
@@ -38,6 +40,19 @@ function LoginForm() {
       options: { redirectTo: `${appUrl}/auth/callback` },
     });
     if (error) setError(error.message);
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+    });
+    if (error) setError(error.message);
+    else setResetSent(true);
     setLoading(false);
   };
 
@@ -108,6 +123,38 @@ function LoginForm() {
           >
             Continue with Email
           </button>
+        ) : forgotPassword ? (
+          resetSent ? (
+            <div className="text-center">
+              <p className="text-ink font-semibold mb-1">Check your inbox</p>
+              <p className="text-ink-muted text-sm">We sent a password reset link to <span className="font-semibold text-ink">{email}</span>.</p>
+              <button onClick={() => { setForgotPassword(false); setResetSent(false); }} className="text-citrus-dark font-semibold text-sm mt-4">
+                Back to log in
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotPassword} className="flex flex-col gap-3">
+              <p className="text-sm text-ink-muted">Enter your email and we&apos;ll send you a reset link.</p>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full py-3 px-4 border border-slate/20 rounded-xl text-ink placeholder-ink-faint focus:outline-none focus:border-slate bg-surface"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-slate text-white font-bold rounded-xl hover:bg-slate-light transition-colors disabled:opacity-50"
+              >
+                {loading ? "..." : "Send reset link →"}
+              </button>
+              <button type="button" onClick={() => setForgotPassword(false)} className="text-ink-muted text-sm text-center hover:text-ink transition-colors">
+                Back to log in
+              </button>
+            </form>
+          )
         ) : (
           <form onSubmit={handleEmailAuth} className="flex flex-col gap-3">
             <input
@@ -133,6 +180,15 @@ function LoginForm() {
             >
               {loading ? "..." : isSignUp ? "Create Account →" : "Log In →"}
             </button>
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={() => { setForgotPassword(true); setError(null); }}
+                className="text-ink-muted text-sm text-center hover:text-ink transition-colors"
+              >
+                Forgot password?
+              </button>
+            )}
           </form>
         )}
 
@@ -142,15 +198,17 @@ function LoginForm() {
         )}
 
         {/* Switch mode */}
-        <p className="text-center text-ink-muted text-sm mt-6">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-citrus-dark font-semibold"
-          >
-            {isSignUp ? "Log in" : "Sign up free"}
-          </button>
-        </p>
+        {!forgotPassword && (
+          <p className="text-center text-ink-muted text-sm mt-6">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-citrus-dark font-semibold"
+            >
+              {isSignUp ? "Log in" : "Sign up free"}
+            </button>
+          </p>
+        )}
 
         {/* Terms */}
         <p className="text-center text-ink-faint text-xs mt-4 leading-relaxed">
