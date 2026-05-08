@@ -45,9 +45,9 @@ export function getCountdown(reservationDatetime: string): CountdownResult {
     const hours = Math.floor(diffHours);
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     let label = "Today";
-    if (hours > 0 && minutes > 0) label += ` in ${hours}h ${minutes}m`;
-    else if (hours > 0) label += ` in ${hours}h`;
-    else if (minutes > 0) label += ` in ${minutes}m`;
+    if (hours > 0 && minutes > 0) label += ` · ${hours}h ${minutes}m`;
+    else if (hours > 0) label += ` · ${hours}h`;
+    else if (minutes > 0) label += ` · ${minutes}m`;
     return { label, urgency: "imminent", daysUntil: 0 };
   }
 

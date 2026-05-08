@@ -81,10 +81,12 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     router.refresh();
   };
 
-  // Compute countdown client-side only to avoid server/browser timezone mismatch (hydration error)
+  // Compute countdown + formatted time client-side only — server is UTC, browser is local
   const [countdown, setCountdown] = useState<ReturnType<typeof getCountdown> | null>(null);
+  const [formattedTime, setFormattedTime] = useState<string | null>(null);
   useEffect(() => {
     setCountdown(getCountdown(dinner.reservation_datetime!));
+    setFormattedTime(formatReservationTime(dinner.reservation_datetime!));
   }, [dinner.reservation_datetime]);
 
   const styles = countdown ? URGENCY_STYLES[countdown.urgency] : URGENCY_STYLES.far;
@@ -117,8 +119,8 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     setSavingPlusOnes(false);
   }, [dinner.id, plusOnes, router]);
 
-  const shareMessage = dinner.reservation_datetime
-    ? `We're going to ${restaurant.name} on ${formatReservationTime(dinner.reservation_datetime)}! 🎉`
+  const shareMessage = formattedTime
+    ? `We're going to ${restaurant.name} on ${formattedTime}! 🎉`
     : `We're going to ${restaurant.name}! 🎉`;
 
   const reservationUrl =
@@ -143,9 +145,11 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
       <div className={cn("rounded-2xl px-6 py-8 text-center overflow-hidden", styles.banner)}>
         {countdown ? (
           <>
-            <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
-              {countdown.urgency === "past" ? "Dinner was" : countdown.daysUntil === 0 ? "🔥 Today!" : "Dinner in"}
-            </p>
+            {countdown.daysUntil !== 0 && countdown.daysUntil !== 1 && (
+              <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
+                {countdown.urgency === "past" ? "Dinner was" : "Dinner in"}
+              </p>
+            )}
             <p className={cn("font-sans text-[clamp(2.25rem,13vw,3.75rem)] font-bold leading-none mb-3", styles.label)}>
               {countdown.label}
             </p>
@@ -153,9 +157,11 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
         ) : (
           <div className="h-20" />
         )}
-        <p className={cn("text-sm font-medium", styles.sublabel)} suppressHydrationWarning>
-          {formatReservationTime(dinner.reservation_datetime!)}
-        </p>
+        {formattedTime && (
+          <p className={cn("text-sm font-medium", styles.sublabel)}>
+            {formattedTime}
+          </p>
+        )}
       </div>
 
       {/* Restaurant info */}
@@ -188,20 +194,36 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
             >
               📍 Google Maps
             </a>
-            {currentBeliUrl && (
-              <a
-                href={currentBeliUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 text-center text-xs font-semibold bg-slate text-white px-3 py-2.5 rounded-xl hover:bg-slate-light transition-colors"
+            {currentBeliUrl ? (
+              <div className="flex-1 flex gap-1">
+                <a
+                  href={currentBeliUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center text-xs font-semibold bg-slate text-white px-3 py-2.5 rounded-xl hover:bg-slate-light transition-colors"
+                >
+                  🍴 Beli
+                </a>
+                <button
+                  onClick={() => setEditingBeli(true)}
+                  className="text-xs text-ink-muted border border-black/10 px-2.5 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
+                  title="Edit Beli link"
+                >
+                  ✎
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setEditingBeli(true)}
+                className="flex-1 text-center text-xs font-semibold text-ink-muted border border-black/10 border-dashed px-3 py-2.5 rounded-xl hover:bg-black/5 transition-colors"
               >
-                🍴 Beli
-              </a>
+                + Add Beli
+              </button>
             )}
           </div>
 
-          {/* Beli URL inline edit — open to anyone */}
-          {editingBeli ? (
+          {/* Beli URL inline edit */}
+          {editingBeli && (
             <div className="mt-3 flex flex-col gap-2">
               <input
                 type="url"
@@ -228,13 +250,6 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                 </button>
               </div>
             </div>
-          ) : (
-            <button
-              onClick={() => setEditingBeli(true)}
-              className="mt-2 text-xs text-ink-muted hover:text-ink transition-colors"
-            >
-              {currentBeliUrl ? "Edit Beli link" : "+ Add Beli link"}
-            </button>
           )}
 
           {/* Hosts */}
