@@ -41,8 +41,8 @@ type Props = {
 
 const URGENCY_STYLES: Record<UrgencyLevel, { banner: string; label: string; sublabel: string }> = {
   far:      { banner: "bg-slate text-white",                   label: "text-white",        sublabel: "text-white/60" },
-  soon:     { banner: "bg-citrus-dark text-white",             label: "text-white",        sublabel: "text-white/70" },
-  imminent: { banner: "bg-citrus text-slate",                   label: "text-slate",        sublabel: "text-slate/60" },
+  soon:     { banner: "bg-slate-light text-white",             label: "text-white",        sublabel: "text-white/70" },
+  imminent: { banner: "bg-citrus-dark text-white",              label: "text-white",        sublabel: "text-white/80" },
   past:     { banner: "bg-black/5 border border-black/10",     label: "text-ink",          sublabel: "text-ink-muted" },
 };
 
