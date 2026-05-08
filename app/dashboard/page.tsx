@@ -321,7 +321,7 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                     <span className={`text-xs font-semibold shrink-0 ${isConfirmed ? "text-green-700" : "text-ink-muted"}`}>
-                      {isConfirmed ? "Locked in 🎉" : "Awaiting RSVPs"}
+                      {isConfirmed ? "All set" : "RSVPs open"}
                     </span>
                   </Link>
                 );
