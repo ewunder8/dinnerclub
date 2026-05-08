@@ -21,7 +21,14 @@ export function getCountdown(reservationDatetime: string): CountdownResult {
   const then = new Date(reservationDatetime);
   const diffMs = then.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
-  const diffDays = Math.floor(diffHours / 24);
+
+  // Use calendar-day difference so "Tomorrow" means the next calendar day,
+  // not "within 24–48 hours" (which could be 2 days away by date).
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thenMidnight = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  const calendarDays = Math.round(
+    (thenMidnight.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   if (diffMs < 0) {
     // Past
@@ -33,26 +40,26 @@ export function getCountdown(reservationDatetime: string): CountdownResult {
     };
   }
 
-  if (diffHours < 24) {
+  if (calendarDays === 0) {
     // Today — imminent
     const hours = Math.floor(diffHours);
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    let label = "Tonight";
+    let label = "Today";
     if (hours > 0 && minutes > 0) label += ` in ${hours}h ${minutes}m`;
     else if (hours > 0) label += ` in ${hours}h`;
     else if (minutes > 0) label += ` in ${minutes}m`;
     return { label, urgency: "imminent", daysUntil: 0 };
   }
 
-  if (diffDays === 1) {
+  if (calendarDays === 1) {
     return { label: "Tomorrow", urgency: "imminent", daysUntil: 1 };
   }
 
-  if (diffDays <= 7) {
-    return { label: `${diffDays} days`, urgency: "soon", daysUntil: diffDays };
+  if (calendarDays <= 7) {
+    return { label: `${calendarDays} days`, urgency: "soon", daysUntil: calendarDays };
   }
 
-  return { label: `${diffDays} days`, urgency: "far", daysUntil: diffDays };
+  return { label: `${calendarDays} days`, urgency: "far", daysUntil: calendarDays };
 }
 
 /**

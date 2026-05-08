@@ -125,13 +125,13 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
     <div className="flex flex-col gap-5">
 
       {/* Countdown banner */}
-      <div className={cn("rounded-2xl px-6 py-8 text-center", styles.banner)}>
+      <div className={cn("rounded-2xl px-6 py-8 text-center overflow-hidden", styles.banner)}>
         {countdown ? (
           <>
             <p className={cn("text-xs font-bold uppercase tracking-widest mb-3", styles.sublabel)}>
-              {countdown.urgency === "past" ? "Dinner was" : countdown.urgency === "imminent" ? "🔥 Tonight!" : "Dinner in"}
+              {countdown.urgency === "past" ? "Dinner was" : countdown.daysUntil === 0 ? "🔥 Today!" : "Dinner in"}
             </p>
-            <p className={cn("font-sans text-6xl font-bold leading-none mb-3", styles.label)}>
+            <p className={cn("font-sans text-[clamp(2.25rem,13vw,3.75rem)] font-bold leading-none mb-3", styles.label)}>
               {countdown.label}
             </p>
           </>
