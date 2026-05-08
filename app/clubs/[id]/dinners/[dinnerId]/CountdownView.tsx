@@ -200,9 +200,10 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
                   href={currentBeliUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 text-center text-xs font-semibold bg-slate text-white px-3 py-2.5 rounded-xl hover:bg-slate-light transition-colors"
+                  className="flex-1 text-center text-xs font-semibold text-white px-3 py-2.5 rounded-xl transition-colors hover:opacity-90"
+                  style={{ backgroundColor: "#4B6FFF" }}
                 >
-                  🍴 Beli
+                  Beli
                 </a>
                 <button
                   onClick={() => setEditingBeli(true)}
