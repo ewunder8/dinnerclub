@@ -28,6 +28,7 @@ import RefreshButton from "./RefreshButton";
 import EditDinnerDetails from "./EditDinnerDetails";
 import DinnerPlanningView from "./DinnerPlanningView";
 import CoHostManager from "./CoHostManager";
+import LocalDate from "@/components/LocalDate";
 
 // ─── Shared nav ──────────────────────────────────────────────
 function Nav({
@@ -787,25 +788,6 @@ export default async function DinnerPage({
   const showSuggest = canSuggest(dinner, isOwner, activeOptionCount);
   const showRemove = canRemoveSuggestion(dinner, isOwner);
 
-  const pollCloseLabel =
-    dinner.poll_closes_at && pollState === "voting_open"
-      ? new Date(dinner.poll_closes_at).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : null;
-
-  const targetDateLabel = dinner.target_date
-    ? new Date(dinner.target_date).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : null;
 
   return (
     <main className="min-h-screen bg-snow">
@@ -822,11 +804,11 @@ export default async function DinnerPage({
           {themeSummary && (
             <p className="text-ink-muted text-sm mt-2">{themeSummary}</p>
           )}
-          {targetDateLabel && (
-            <p className="text-sm text-ink mt-2">🗓️ Aiming for {targetDateLabel}</p>
+          {dinner.target_date && (
+            <p className="text-sm text-ink mt-2">🗓️ Aiming for <LocalDate iso={dinner.target_date} options={{ weekday: "long", month: "long", day: "numeric" }} /></p>
           )}
-          {pollCloseLabel && (
-            <p className="text-xs text-ink-muted mt-1">Poll closes {pollCloseLabel}</p>
+          {dinner.poll_closes_at && pollState === "voting_open" && (
+            <p className="text-xs text-ink-muted mt-1">Poll closes <LocalDate iso={dinner.poll_closes_at} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} /></p>
           )}
           {isOwner && (
             <EditDinnerDetails
