@@ -33,7 +33,7 @@ type Props = {
   clubName: string;
   shareUrl: string;
   reservedByName?: string | null;
-  hosts?: { name: string }[];
+  hosts?: { name: string; email?: string | null; avatarUrl?: string | null }[];
   isCreator?: boolean;
   plusOnesEnabled?: boolean;
   plusOnesMax?: number | null;
@@ -254,11 +254,16 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
 
           {/* Hosts */}
           {hosts && hosts.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-black/5 flex items-center gap-2">
-              <span className="text-base">🍽️</span>
-              <p className="text-sm text-ink-muted">
-                Hosted by <span className="font-semibold text-ink">{hosts.map((h) => h.name).join(" & ")}</span>
-              </p>
+            <div className="mt-4 pt-4 border-t border-black/5">
+              <p className="text-xs text-ink-muted uppercase tracking-wide font-semibold mb-2">Hosted by</p>
+              <div className="flex flex-wrap gap-3">
+                {hosts.map((h) => (
+                  <div key={h.name} className="flex items-center gap-2">
+                    <UserAvatar name={h.name} email={h.email ?? undefined} avatarUrl={h.avatarUrl ?? undefined} size="sm" />
+                    <span className="text-sm font-semibold text-ink">{h.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

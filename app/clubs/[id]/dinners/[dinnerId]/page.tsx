@@ -155,9 +155,9 @@ export default async function DinnerPage({
         supabase.from("reservation_attempts").select("*, users ( id, name, email, avatar_url )").eq("dinner_id", params.dinnerId).in("status", ["attempting", "waitlisted", "succeeded"]).order("created_at", { ascending: true }),
         supabase.from("clubs").select("city").eq("id", params.id).single(),
         supabase.from("club_wishlist").select("place_id").eq("club_id", params.id),
-        supabase.from("dinner_cohosts").select("user_id, users ( name, email )").eq("dinner_id", params.dinnerId),
+        supabase.from("dinner_cohosts").select("user_id, users ( name, email, avatar_url )").eq("dinner_id", params.dinnerId),
         dinner.created_by
-          ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+          ? supabase.from("users").select("name, email, avatar_url").eq("id", dinner.created_by).single()
           : Promise.resolve({ data: null }),
         supabase.from("dinner_comments").select("id, user_id, body, created_at, users ( name, email )").eq("dinner_id", params.dinnerId).order("created_at", { ascending: true }),
       ]);
@@ -227,8 +227,8 @@ export default async function DinnerPage({
         name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string,
       }));
       const hosts = [
-        ...(creatorName ? [{ name: creatorName as string }] : []),
-        ...cohostList.map((c: { name: string }) => ({ name: c.name })),
+        ...(creatorName ? [{ name: creatorName as string, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : []),
+        ...((rawCohosts ?? []) as any[]).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
       ];
 
       const planningComments = (rawComments ?? []).map((c: any) => ({
@@ -309,9 +309,9 @@ export default async function DinnerPage({
         .select("id, user_id, body, created_at, users ( name, email )")
         .eq("dinner_id", params.dinnerId)
         .order("created_at", { ascending: true }),
-      supabase.from("dinner_cohosts").select("user_id, users ( name, email )").eq("dinner_id", params.dinnerId),
+      supabase.from("dinner_cohosts").select("user_id, users ( name, email, avatar_url )").eq("dinner_id", params.dinnerId),
       dinner.created_by
-        ? supabase.from("users").select("name, email").eq("id", dinner.created_by).single()
+        ? supabase.from("users").select("name, email, avatar_url").eq("id", dinner.created_by).single()
         : Promise.resolve({ data: null }),
     ]);
 
@@ -329,8 +329,8 @@ export default async function DinnerPage({
 
     const confirmedCreatorName = (confirmedCreator as any)?.name || (confirmedCreator as any)?.email?.split("@")[0] || null;
     const confirmedHosts = [
-      ...(confirmedCreatorName ? [{ name: confirmedCreatorName as string }] : []),
-      ...(confirmedCohosts ?? []).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string })),
+      ...(confirmedCreatorName ? [{ name: confirmedCreatorName as string, email: (confirmedCreator as any)?.email ?? null, avatarUrl: (confirmedCreator as any)?.avatar_url ?? null }] : []),
+      ...((confirmedCohosts ?? []) as any[]).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
     ];
 
     return (
