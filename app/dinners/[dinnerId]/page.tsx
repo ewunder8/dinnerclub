@@ -27,11 +27,9 @@ function Nav({
 }) {
   const label = [emoji, title].filter(Boolean).join(" ") || "Dinner";
   return (
-    <nav className="bg-slate px-4 py-4 grid grid-cols-[auto_1fr_auto] items-center gap-3">
-      <div>
-        <Link href="/dashboard" className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none">←</Link>
-      </div>
-      <h1 className="font-sans text-base font-bold text-white text-center leading-tight">{label}</h1>
+    <nav className="bg-slate px-4 py-4 flex items-center gap-3">
+      <Link href="/dashboard" className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none shrink-0">←</Link>
+      <h1 className="flex-1 min-w-0 font-sans text-base font-bold text-white text-center leading-tight">{label}</h1>
       <div className="flex justify-end shrink-0">
         <NavUser name={name} email={email} avatarUrl={avatarUrl} />
       </div>
