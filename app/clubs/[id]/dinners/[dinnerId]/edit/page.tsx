@@ -64,12 +64,10 @@ export default async function EditClubDinnerPage({
 
   return (
     <main className="min-h-screen bg-snow">
-      <nav className="bg-slate px-6 py-4 flex items-center">
-        <div className="flex-1">
-          <Link href={backUrl} className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none">←</Link>
-        </div>
-        <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{clubName}</h1>
-        <div className="flex-1 flex justify-end">
+      <nav className="bg-slate px-4 py-4 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+        <Link href={backUrl} className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none shrink-0">←</Link>
+        <h1 className="font-sans text-base font-bold text-white text-center leading-tight">{clubName}</h1>
+        <div className="flex justify-end shrink-0">
           <NavUser name={profile?.name} email={user.email} avatarUrl={profile?.avatar_url} />
         </div>
       </nav>

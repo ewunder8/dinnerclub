@@ -469,7 +469,7 @@ export default async function DashboardPage() {
           style={{ backgroundColor: "#c8952a" }}
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">✦</span>
+            <span className="text-2xl">✨</span>
             <div>
               <p className="font-semibold text-white text-sm">Start a one-off dinner</p>
               <p className="text-xs text-white/80 mt-0.5">Birthday, special occasion, one-time plans</p>
