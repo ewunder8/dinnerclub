@@ -171,7 +171,7 @@ export default async function OneOffDinnerPage({
     const creatorName = creatorProfile
       ? (creatorProfile.name || (creatorProfile as any).email?.split("@")[0] || "Host")
       : null;
-    const hosts = creatorName ? [{ name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
+    const hosts = creatorName ? [{ userId: dinner.created_by as string, name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
 
     const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
       id: c.id,
@@ -262,7 +262,7 @@ export default async function OneOffDinnerPage({
   const creatorName = creatorProfile
     ? (creatorProfile.name || (creatorProfile as any).email?.split("@")[0] || "Host")
     : null;
-  const hosts = creatorName ? [{ name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
+  const hosts = creatorName ? [{ userId: dinner.created_by as string, name: creatorName, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : [];
 
   const comments: DinnerComment[] = (rawComments ?? []).map((c: any) => ({
     id: c.id,

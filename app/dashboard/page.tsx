@@ -482,7 +482,7 @@ export default async function DashboardPage() {
           className="flex items-center justify-between px-5 py-4 bg-white border border-black/8 rounded-2xl hover:border-slate/30 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🍽️</span>
+            <span className="text-2xl">⭐</span>
             <div>
               <p className="font-semibold text-ink text-sm">Past dinners & ratings</p>
               <p className="text-xs text-ink-muted mt-0.5">See where you've been and how you rated it</p>

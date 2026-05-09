@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ type Props = {
   clubName: string;
   shareUrl: string;
   reservedByName?: string | null;
-  hosts?: { name: string; email?: string | null; avatarUrl?: string | null }[];
+  hosts?: { userId: string; name: string; email?: string | null; avatarUrl?: string | null }[];
   isCreator?: boolean;
   plusOnesEnabled?: boolean;
   plusOnesMax?: number | null;
@@ -259,10 +260,10 @@ export default function CountdownView({ dinner, restaurant, rsvps, userId, clubN
               <p className="text-xs text-ink-muted uppercase tracking-wide font-semibold mb-2">Hosted by</p>
               <div className="flex flex-wrap gap-3">
                 {hosts.map((h) => (
-                  <div key={h.name} className="flex items-center gap-2">
+                  <Link key={h.userId} href={`/users/${h.userId}`} className="flex items-center gap-2 hover:opacity-75 transition-opacity">
                     <UserAvatar name={h.name} email={h.email ?? undefined} avatarUrl={h.avatarUrl ?? undefined} size="sm" />
                     <span className="text-sm font-semibold text-ink">{h.name}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

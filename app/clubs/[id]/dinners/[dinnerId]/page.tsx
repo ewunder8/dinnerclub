@@ -49,7 +49,7 @@ function Nav({
       <div className="flex-1">
         <a href={`/clubs/${clubId}`} className="inline-flex items-center justify-center border border-white/20 hover:bg-white/10 transition-colors text-white w-9 h-9 rounded-full text-lg leading-none">←</a>
       </div>
-      <h1 className="font-sans text-base font-bold text-white truncate max-w-[180px] text-center">{title ?? "Dinner"}</h1>
+      <h1 className="font-sans text-base font-bold text-white text-center leading-tight px-2">{title ?? "Dinner"}</h1>
       <div className="flex-1 flex justify-end">
         <NavUser name={name} email={email} avatarUrl={avatarUrl} />
       </div>
@@ -227,8 +227,8 @@ export default async function DinnerPage({
         name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string,
       }));
       const hosts = [
-        ...(creatorName ? [{ name: creatorName as string, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : []),
-        ...((rawCohosts ?? []) as any[]).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
+        ...(creatorName ? [{ userId: dinner.created_by as string, name: creatorName as string, email: (creatorProfile as any)?.email ?? null, avatarUrl: (creatorProfile as any)?.avatar_url ?? null }] : []),
+        ...((rawCohosts ?? []) as any[]).map((c: any) => ({ userId: c.user_id as string, name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
       ];
 
       const planningComments = (rawComments ?? []).map((c: any) => ({
@@ -329,8 +329,8 @@ export default async function DinnerPage({
 
     const confirmedCreatorName = (confirmedCreator as any)?.name || (confirmedCreator as any)?.email?.split("@")[0] || null;
     const confirmedHosts = [
-      ...(confirmedCreatorName ? [{ name: confirmedCreatorName as string, email: (confirmedCreator as any)?.email ?? null, avatarUrl: (confirmedCreator as any)?.avatar_url ?? null }] : []),
-      ...((confirmedCohosts ?? []) as any[]).map((c: any) => ({ name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
+      ...(confirmedCreatorName ? [{ userId: dinner.created_by as string, name: confirmedCreatorName as string, email: (confirmedCreator as any)?.email ?? null, avatarUrl: (confirmedCreator as any)?.avatar_url ?? null }] : []),
+      ...((confirmedCohosts ?? []) as any[]).map((c: any) => ({ userId: c.user_id as string, name: (c.users?.name || c.users?.email?.split("@")[0] || "Member") as string, email: c.users?.email ?? null, avatarUrl: c.users?.avatar_url ?? null })),
     ];
 
     return (
