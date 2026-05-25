@@ -39,35 +39,58 @@ export async function GET(request: Request) {
     dinners.map(async (dinner) => {
       if (!dinner.winning_restaurant_place_id) return;
 
-      const [{ data: members }, { data: restaurant }] = await Promise.all([
-        supabase.from("club_members").select("users ( id, email, email_notifications )").eq("club_id", dinner.club_id!),
-        supabase.from("restaurant_cache").select("name, address").eq("place_id", dinner.winning_restaurant_place_id).single(),
-      ]);
+      const { data: restaurant } = await supabase
+        .from("restaurant_cache")
+        .select("name, address")
+        .eq("place_id", dinner.winning_restaurant_place_id)
+        .single();
 
-      if (!members || !restaurant) return;
+      if (!restaurant) return;
 
       const dt = new Date(dinner.reservation_datetime!);
       const dinnerTime = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-      const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${dinner.club_id}/dinners/${dinner.id}`;
 
-      type MemberRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
-      const eligibleMembers = (members as MemberRow[])
-        .filter((m) => m.users?.email_notifications?.dinner_reminder !== false);
+      type RecipientRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+      let recipients: RecipientRow[] = [];
+      let dinnerUrl: string;
+
+      if (dinner.club_id) {
+        // Club dinner — notify all club members
+        dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${dinner.club_id}/dinners/${dinner.id}`;
+        const { data: members } = await supabase
+          .from("club_members")
+          .select("users ( id, email, email_notifications )")
+          .eq("club_id", dinner.club_id);
+        recipients = (members ?? []) as RecipientRow[];
+      } else {
+        // One-off dinner — notify RSVPed guests
+        dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dinners/${dinner.id}`;
+        const { data: rsvps } = await supabase
+          .from("rsvps")
+          .select("users ( id, email, email_notifications )")
+          .eq("dinner_id", dinner.id)
+          .eq("status", "going");
+        recipients = (rsvps ?? []) as RecipientRow[];
+      }
+
+      const eligible = recipients.filter(
+        (r) => r.users?.email_notifications?.dinner_reminder !== false
+      );
 
       await Promise.allSettled(
-        eligibleMembers.map((m) =>
+        eligible.map((r) =>
           sendDinnerReminder({
-            to: m.users.email,
+            to: r.users.email,
             restaurantName: restaurant.name,
             dinnerTime,
             restaurantAddress: restaurant.address ?? "",
             dinnerUrl,
-            unsubscribeUrl: generateUnsubscribeUrl(m.users.id, "dinner_reminder"),
+            unsubscribeUrl: generateUnsubscribeUrl(r.users.id, "dinner_reminder"),
           })
         )
       );
 
-      sent += eligibleMembers.length;
+      sent += eligible.length;
     })
   );
 

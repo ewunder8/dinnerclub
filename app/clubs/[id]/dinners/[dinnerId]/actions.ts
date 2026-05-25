@@ -75,7 +75,7 @@ export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ e
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("created_by, club_id, status, target_date")
+    .select("created_by, club_id, status, target_date, title, winning_restaurant_place_id")
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
@@ -93,7 +93,7 @@ export async function lockRsvps({ dinnerId }: { dinnerId: string }): Promise<{ e
 
   if (error) return { error: "Failed to lock RSVPs." };
 
-  // TODO: email — notify RSVPed guests that the dinner is confirmed
+  sendOneOffConfirmedEmails({ dinnerId, dinner });
   return {};
 }
 
@@ -104,7 +104,7 @@ export async function cancelOneOffDinner({ dinnerId }: { dinnerId: string }): Pr
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("created_by, club_id")
+    .select("created_by, club_id, title")
     .eq("id", dinnerId)
     .single();
   if (!dinner) return { error: "Dinner not found." };
@@ -117,7 +117,7 @@ export async function cancelOneOffDinner({ dinnerId }: { dinnerId: string }): Pr
     .eq("id", dinnerId);
 
   if (error) return { error: "Failed to cancel dinner." };
-  // TODO: email — notify RSVPed guests of cancellation
+  sendOneOffCancellationEmails({ dinnerId, dinner });
   return {};
 }
 
@@ -197,6 +197,102 @@ async function sendOneOffRatingPromptEmails({
         dinnerDate,
         ratingUrl,
         unsubscribeUrl: generateUnsubscribeUrl(r.users.id, "rating_prompt"),
+      })
+    )
+  );
+}
+
+async function sendOneOffConfirmedEmails({
+  dinnerId,
+  dinner,
+}: {
+  dinnerId: string;
+  dinner: {
+    title: string | null;
+    winning_restaurant_place_id: string | null;
+    target_date: string | null;
+  };
+}) {
+  const supabase = await createClient();
+
+  const [{ data: rsvps }, { data: restaurant }] = await Promise.all([
+    supabase
+      .from("rsvps")
+      .select("users ( id, email, email_notifications )")
+      .eq("dinner_id", dinnerId)
+      .eq("status", "going"),
+    dinner.winning_restaurant_place_id
+      ? supabase.from("restaurant_cache").select("name, address").eq("place_id", dinner.winning_restaurant_place_id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  if (!rsvps?.length) return;
+
+  const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dinners/${dinnerId}`;
+  const restaurantName = restaurant?.name ?? "your dinner";
+  const restaurantAddress = restaurant?.address ?? "";
+  const dateIso = dinner.target_date;
+  const dinnerDate = dateIso
+    ? new Date(dateIso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "TBD";
+  const dinnerTime = dateIso
+    ? new Date(dateIso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : "TBD";
+
+  type RsvpRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+  const eligible = (rsvps as RsvpRow[]).filter(
+    (r) => r.users?.email && r.users.email_notifications?.reservation_confirmed !== false
+  );
+
+  await Promise.allSettled(
+    eligible.map((r) =>
+      sendReservationConfirmed({
+        to: r.users.email,
+        restaurantName,
+        restaurantAddress,
+        dinnerDate,
+        dinnerTime,
+        partySize: eligible.length,
+        dinnerUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(r.users.id, "reservation_confirmed"),
+      })
+    )
+  );
+}
+
+async function sendOneOffCancellationEmails({
+  dinnerId,
+  dinner,
+}: {
+  dinnerId: string;
+  dinner: { title: string | null };
+}) {
+  const supabase = await createClient();
+
+  const { data: rsvps } = await supabase
+    .from("rsvps")
+    .select("users ( id, email, email_notifications )")
+    .eq("dinner_id", dinnerId)
+    .in("status", ["going", "maybe"]);
+
+  if (!rsvps?.length) return;
+
+  const dinnerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dinners/${dinnerId}`;
+  const dinnerName = dinner.title ?? "Dinner";
+
+  type RsvpRow = { users: { id: string; email: string; email_notifications: Record<string, boolean> | null } };
+  const eligible = (rsvps as RsvpRow[]).filter(
+    (r) => r.users?.email && r.users.email_notifications?.dinner_cancelled !== false
+  );
+
+  await Promise.allSettled(
+    eligible.map((r) =>
+      sendDinnerCancelled({
+        to: r.users.email,
+        clubName: "your group",
+        dinnerName,
+        clubUrl: dinnerUrl,
+        unsubscribeUrl: generateUnsubscribeUrl(r.users.id, "dinner_cancelled"),
       })
     )
   );

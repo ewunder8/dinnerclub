@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Search, Check, X } from "lucide-react";
 import ShareActions from "@/components/ShareActions";
+import { notifyDinnerPollCreated } from "./actions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -529,7 +530,7 @@ export default function CreateDinnerForm({ clubId, clubName, clubEmoji, clubCity
       );
     }
 
-    // TODO: send email — notify club members that a dinner poll is open
+    if (clubId) notifyDinnerPollCreated({ dinnerId: dinner.id, clubId }); // no await — fire and forget
 
     setCreatedDinnerId(dinner.id);
     setLoading(false);

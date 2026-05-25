@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isInviteExpired } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
+import { sendMemberJoined } from "@/lib/email";
 
 export async function acceptInvite(inviteId: string) {
   const supabase = await createClient();
@@ -38,8 +39,40 @@ export async function acceptInvite(inviteId: string) {
       .from("invite_links")
       .update({ used_count: invite.used_count + 1 })
       .eq("id", invite.id);
+
+    sendMemberJoinedNotification({ clubId: invite.club_id, newUserId: user.id });
   }
 
   revalidatePath("/dashboard");
   return { clubId: invite.club_id };
+}
+
+async function sendMemberJoinedNotification({ clubId, newUserId }: { clubId: string; newUserId: string }) {
+  const supabase = await createClient();
+
+  const [{ data: club }, { data: newMember }] = await Promise.all([
+    supabase.from("clubs").select("name, owner_id").eq("id", clubId).single(),
+    supabase.from("users").select("name").eq("id", newUserId).single(),
+  ]);
+
+  if (!club || !newMember) return;
+
+  // Don't notify if the owner joined their own club
+  if (club.owner_id === newUserId) return;
+
+  const { data: owner } = await supabase
+    .from("users")
+    .select("email")
+    .eq("id", club.owner_id)
+    .single();
+
+  if (!owner?.email) return;
+
+  const clubUrl = `${process.env.NEXT_PUBLIC_APP_URL}/clubs/${clubId}`;
+  sendMemberJoined({
+    to: owner.email,
+    memberName: newMember.name ?? "Someone",
+    clubName: club.name,
+    clubUrl,
+  });
 }
