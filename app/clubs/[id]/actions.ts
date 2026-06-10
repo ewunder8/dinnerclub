@@ -4,29 +4,59 @@ import { sendInviteToClub } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function emailInvite({
-  to,
-  token,
-  clubName,
-  inviterName,
-}: {
-  to: string;
-  token: string;
-  clubName: string;
-  inviterName: string;
-}) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function emailInvite({ to, token }: { to: string; token: string }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Validate the recipient address
+  const email = to.toLowerCase().trim();
+  if (email.length > 254 || !EMAIL_REGEX.test(email)) throw new Error("Invalid email address");
+
+  // The token must be an active, unexpired club invite link
+  const { data: invite } = await supabase
+    .from("invite_links")
+    .select("club_id, expires_at, status")
+    .eq("token", token)
+    .maybeSingle();
+  if (!invite || !invite.club_id || invite.status !== "active" || new Date(invite.expires_at) < new Date()) {
+    throw new Error("Invalid invite link");
+  }
+
+  // Caller must be a member of the club the link belongs to
+  const { data: membership } = await supabase
+    .from("club_members")
+    .select("role")
+    .eq("club_id", invite.club_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) throw new Error("Not authorized");
+
+  // Derive club + inviter names server-side (never trust client-supplied values)
+  const [{ data: club }, { data: inviter }] = await Promise.all([
+    supabase.from("clubs").select("name").eq("id", invite.club_id).single<{ name: string }>(),
+    supabase.from("users").select("name").eq("id", user.id).single<{ name: string | null }>(),
+  ]);
+  if (!club) throw new Error("Club not found");
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dinnerclub.app";
   const inviteUrl = `${baseUrl}/join/${token}`;
 
   // Store the invited email so it appears on their dashboard
-  const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase.from("invite_links") as any)
-    .update({ invited_email: to.toLowerCase().trim() })
+    .update({ invited_email: email })
     .eq("token", token);
 
   // TODO: in-app notification — notify the invitee inside the app when they next log in
-  await sendInviteToClub({ to, inviterName, clubName, inviteUrl });
+  await sendInviteToClub({
+    to: email,
+    inviterName: inviter?.name ?? "A friend",
+    clubName: club.name,
+    inviteUrl,
+  });
 }
 
 export async function refreshInviteLink(clubId: string): Promise<{ token: string; expires_at: string }> {

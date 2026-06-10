@@ -5,11 +5,9 @@ import { emailInvite } from "./actions";
 
 type Props = {
   token: string;
-  clubName: string;
-  inviterName: string;
 };
 
-export default function EmailInviteForm({ token, clubName, inviterName }: Props) {
+export default function EmailInviteForm({ token }: Props) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
 
@@ -18,7 +16,7 @@ export default function EmailInviteForm({ token, clubName, inviterName }: Props)
     if (!email) return;
     setStatus("loading");
     try {
-      await emailInvite({ to: email, token, clubName, inviterName });
+      await emailInvite({ to: email, token });
       setStatus("sent");
       setEmail("");
     } catch {

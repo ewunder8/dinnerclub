@@ -259,11 +259,7 @@ export default async function ClubPage({
                     Anyone with this link can join.
                   </p>
                   <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
-                  <EmailInviteForm
-                    token={invite.token}
-                    clubName={club.name}
-                    inviterName={displayName}
-                  />
+                  <EmailInviteForm token={invite.token} />
                 </div>
               </section>
             )}
@@ -366,11 +362,7 @@ export default async function ClubPage({
                     Anyone with this link can join.
                   </p>
                   <InviteButton token={invite.token} expiresAt={invite.expires_at} clubId={params.id} />
-                  <EmailInviteForm
-                    token={invite.token}
-                    clubName={club.name}
-                    inviterName={displayName}
-                  />
+                  <EmailInviteForm token={invite.token} />
                 </div>
               </section>
             )}
