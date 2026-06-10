@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 const SECRET = process.env.UNSUBSCRIBE_SECRET ?? "dev-secret-change-me";
 
@@ -12,5 +12,8 @@ export function generateUnsubscribeUrl(userId: string, key: string): string {
 }
 
 export function verifyUnsubscribeToken(userId: string, key: string, sig: string): boolean {
-  return generateToken(userId, key) === sig;
+  const expected = Buffer.from(generateToken(userId, key));
+  const received = Buffer.from(sig);
+  if (received.length !== expected.length) return false;
+  return timingSafeEqual(received, expected);
 }

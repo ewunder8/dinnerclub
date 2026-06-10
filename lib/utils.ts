@@ -6,12 +6,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Generate a random invite token
+// Generate a random invite token — crypto-strong, ~82 bits of entropy.
+// Uses Web Crypto so it works in both browser and server runtimes.
 export function generateInviteToken(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length: 8 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
+  const out: string[] = [];
+  const buf = new Uint8Array(32);
+  while (out.length < 16) {
+    crypto.getRandomValues(buf);
+    for (let i = 0; i < buf.length; i++) {
+      const byte = buf[i];
+      // Rejection sampling to avoid modulo bias (252 = 36 * 7)
+      if (byte < 252 && out.length < 16) out.push(chars[byte % 36]);
+    }
+  }
+  return out.join("");
 }
 
 // Calculate invite link expiry (30 days from now)

@@ -1,6 +1,17 @@
 const FROM = "dinnerclub <noreply@dinnerclub.app>";
 const API_URL = "https://api.resend.com/emails";
 
+// Escape user-controlled values before interpolating into email HTML.
+// Names, club names, restaurant names, and notes all come from user input.
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function send(to: string, subject: string, html: string) {
   const res = await fetch(API_URL, {
     method: "POST",
@@ -391,13 +402,13 @@ export async function sendReservationConfirmed({
   unsubscribeUrl?: string;
 }) {
   const html = RESERVATION_CONFIRMED_TEMPLATE
-    .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
-    .replace(/{{DINNER_DATE}}/g, dinnerDate)
-    .replace(/{{DINNER_TIME}}/g, dinnerTime)
+    .replace(/{{RESTAURANT_NAME}}/g, () => esc(restaurantName))
+    .replace(/{{DINNER_DATE}}/g, () => esc(dinnerDate))
+    .replace(/{{DINNER_TIME}}/g, () => esc(dinnerTime))
     .replace(/{{PARTY_SIZE}}/g, String(partySize))
-    .replace(/{{RESTAURANT_ADDRESS}}/g, restaurantAddress)
-    .replace(/{{DINNER_URL}}/g, dinnerUrl)
-    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
+    .replace(/{{RESTAURANT_ADDRESS}}/g, () => esc(restaurantAddress))
+    .replace(/{{DINNER_URL}}/g, () => dinnerUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, () => unsubscribeUrl ?? "#");
 
   return send(to, `You're booked at ${restaurantName} 🎉`, html);
 }
@@ -418,11 +429,11 @@ export async function sendDinnerReminder({
   unsubscribeUrl?: string;
 }) {
   const html = DINNER_REMINDER_TEMPLATE
-    .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
-    .replace(/{{DINNER_TIME}}/g, dinnerTime)
-    .replace(/{{RESTAURANT_ADDRESS}}/g, restaurantAddress)
-    .replace(/{{DINNER_URL}}/g, dinnerUrl)
-    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
+    .replace(/{{RESTAURANT_NAME}}/g, () => esc(restaurantName))
+    .replace(/{{DINNER_TIME}}/g, () => esc(dinnerTime))
+    .replace(/{{RESTAURANT_ADDRESS}}/g, () => esc(restaurantAddress))
+    .replace(/{{DINNER_URL}}/g, () => dinnerUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, () => unsubscribeUrl ?? "#");
 
   return send(to, `Tonight at ${restaurantName} 🍽️`, html);
 }
@@ -445,12 +456,12 @@ export async function sendVotingOpen({
   unsubscribeUrl?: string;
 }) {
   const html = VOTING_OPEN_TEMPLATE
-    .replace(/{{CLUB_NAME}}/g, clubName)
-    .replace(/{{DINNER_NAME}}/g, dinnerName)
-    .replace(/{{DINNER_THEME}}/g, dinnerTheme)
+    .replace(/{{CLUB_NAME}}/g, () => esc(clubName))
+    .replace(/{{DINNER_NAME}}/g, () => esc(dinnerName))
+    .replace(/{{DINNER_THEME}}/g, () => esc(dinnerTheme))
     .replace(/{{RESTAURANT_COUNT}}/g, String(restaurantCount))
-    .replace(/{{POLL_URL}}/g, pollUrl)
-    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
+    .replace(/{{POLL_URL}}/g, () => pollUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, () => unsubscribeUrl ?? "#");
 
   return send(to, `Vote on where ${clubName} is eating 🗳️`, html);
 }
@@ -471,11 +482,11 @@ export async function sendRatingPrompt({
   unsubscribeUrl?: string;
 }) {
   const html = RATING_PROMPT_TEMPLATE
-    .replace(/{{RESTAURANT_NAME}}/g, restaurantName)
-    .replace(/{{DINNER_NAME}}/g, dinnerName)
-    .replace(/{{DINNER_DATE}}/g, dinnerDate)
-    .replace(/{{RATING_URL}}/g, ratingUrl)
-    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl ?? "#");
+    .replace(/{{RESTAURANT_NAME}}/g, () => esc(restaurantName))
+    .replace(/{{DINNER_NAME}}/g, () => esc(dinnerName))
+    .replace(/{{DINNER_DATE}}/g, () => esc(dinnerDate))
+    .replace(/{{RATING_URL}}/g, () => ratingUrl)
+    .replace(/{{UNSUBSCRIBE_URL}}/g, () => unsubscribeUrl ?? "#");
 
   return send(to, `How was ${restaurantName}? Leave a rating ⭐`, html);
 }
@@ -510,7 +521,7 @@ export async function sendOpenSeatPosted({
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Open Seat</p>
           <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Spare seat available.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${posterName}</strong> has a spare seat at <strong style="color:#ffffff;">${restaurantName}</strong> on ${dateTime}.${note ? ` &ldquo;${note}&rdquo;` : ""}</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${esc(posterName)}</strong> has a spare seat at <strong style="color:#ffffff;">${esc(restaurantName)}</strong> on ${esc(dateTime)}.${note ? ` &ldquo;${esc(note)}&rdquo;` : ""}</p>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">Request a seat →</a>
           </td></tr></table>
@@ -555,8 +566,8 @@ export async function sendSeatRequestReceived({
         </td></tr>
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">New Request</p>
-          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">${requesterName} wants in.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${requesterName}</strong> has requested your spare seat at <strong style="color:#ffffff;">${restaurantName}</strong> on ${dateTime}.</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">${esc(requesterName)} wants in.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${esc(requesterName)}</strong> has requested your spare seat at <strong style="color:#ffffff;">${esc(restaurantName)}</strong> on ${esc(dateTime)}.</p>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">Confirm or decline →</a>
           </td></tr></table>
@@ -603,8 +614,8 @@ export async function sendSeatRequestResponse({
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">${confirmed ? "Confirmed" : "Not this time"}</p>
           <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">${confirmed ? "You're in! 🎉" : "Seat not available."}</p>
           <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">${confirmed
-    ? `Your request for a seat at <strong style="color:#ffffff;">${restaurantName}</strong> on ${dateTime} was confirmed. See you there.`
-    : `Your request for a seat at <strong style="color:#ffffff;">${restaurantName}</strong> on ${dateTime} wasn't available this time.`
+    ? `Your request for a seat at <strong style="color:#ffffff;">${esc(restaurantName)}</strong> on ${esc(dateTime)} was confirmed. See you there.`
+    : `Your request for a seat at <strong style="color:#ffffff;">${esc(restaurantName)}</strong> on ${esc(dateTime)} wasn't available this time.`
   }</p>
           ${confirmed ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">View details →</a>
@@ -649,7 +660,7 @@ export async function sendDinnerCancelled({
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Cancelled</p>
           <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Dinner's off.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">The upcoming <strong style="color:#ffffff;">${dinnerName}</strong> dinner for <strong style="color:#ffffff;">${clubName}</strong> has been cancelled. Check the club for updates.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">The upcoming <strong style="color:#ffffff;">${esc(dinnerName)}</strong> dinner for <strong style="color:#ffffff;">${esc(clubName)}</strong> has been cancelled. Check the club for updates.</p>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">View club →</a>
           </td></tr></table>
@@ -679,9 +690,9 @@ export async function sendInviteToClub({
   inviteUrl: string;
 }) {
   const html = INVITE_TO_CLUB_TEMPLATE
-    .replace(/{{INVITER_NAME}}/g, inviterName)
-    .replace(/{{CLUB_NAME}}/g, clubName)
-    .replace(/{{INVITE_URL}}/g, inviteUrl);
+    .replace(/{{INVITER_NAME}}/g, () => esc(inviterName))
+    .replace(/{{CLUB_NAME}}/g, () => esc(clubName))
+    .replace(/{{INVITE_URL}}/g, () => inviteUrl);
 
   return send(to, `${inviterName} invited you to join ${clubName} on dinnerclub`, html);
 }
@@ -709,8 +720,8 @@ export async function sendMemberJoined({
         </td></tr>
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">New Member</p>
-          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">${memberName} joined the club.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${memberName}</strong> just accepted your invite and joined <strong style="color:#ffffff;">${clubName}</strong>.</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">${esc(memberName)} joined the club.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${esc(memberName)}</strong> just accepted your invite and joined <strong style="color:#ffffff;">${esc(clubName)}</strong>.</p>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${clubUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">View club →</a>
           </td></tr></table>
@@ -754,13 +765,13 @@ export async function sendDinnerPollCreated({
         </td></tr>
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">New Poll</p>
-          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Where's ${clubName} eating?</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Where's ${esc(clubName)} eating?</p>
           <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;">A new dinner poll is open. Suggest a restaurant or wait for voting to open.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;"><tr><td style="padding:24px 28px;">
             <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Dinner</p>
-            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${dinnerName}</p>
+            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${esc(dinnerName)}</p>
             <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Theme</p>
-            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${dinnerTheme}</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${esc(dinnerTheme)}</p>
           </td></tr></table>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${pollUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">Suggest a restaurant →</a>
@@ -807,12 +818,12 @@ export async function sendDateLocked({
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Date Locked</p>
           <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">Now pick a restaurant.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${clubName}</strong> is eating on <strong style="color:#ffffff;">${lockedDate}</strong>. Suggest a restaurant or vote on what's already there.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${esc(clubName)}</strong> is eating on <strong style="color:#ffffff;">${esc(lockedDate)}</strong>. Suggest a restaurant or vote on what's already there.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;"><tr><td style="padding:24px 28px;">
             <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Dinner</p>
-            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${dinnerName}</p>
+            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${esc(dinnerName)}</p>
             <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Date</p>
-            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${lockedDate}</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${esc(lockedDate)}</p>
           </td></tr></table>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${dinnerUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">Suggest or vote →</a>
@@ -860,15 +871,15 @@ export async function sendRestaurantPicked({
         </td></tr>
         <tr><td style="background-color:#3a4460;border-radius:18px;padding:48px 40px;">
           <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#c49a00;letter-spacing:2px;text-transform:uppercase;">Restaurant Picked</p>
-          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">We're going to ${restaurantName}.</p>
-          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${clubName}</strong> is eating at <strong style="color:#ffffff;">${restaurantName}</strong> on <strong style="color:#ffffff;">${lockedDate}</strong>. RSVP so whoever's booking knows the party size.</p>
+          <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.2;">We're going to ${esc(restaurantName)}.</p>
+          <p style="margin:0 0 28px 0;font-family:Arial,sans-serif;font-size:15px;color:#94a3b8;line-height:1.6;"><strong style="color:#ffffff;">${esc(clubName)}</strong> is eating at <strong style="color:#ffffff;">${esc(restaurantName)}</strong> on <strong style="color:#ffffff;">${esc(lockedDate)}</strong>. RSVP so whoever's booking knows the party size.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#2b3245;border-radius:14px;margin-bottom:32px;"><tr><td style="padding:24px 28px;">
             <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Restaurant</p>
-            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${restaurantName}</p>
+            <p style="margin:4px 0 0 0;font-family:Georgia,serif;font-size:17px;font-weight:700;color:#ffffff;">${esc(restaurantName)}</p>
             <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Date</p>
-            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${lockedDate}</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${esc(lockedDate)}</p>
             <p style="margin:12px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Dinner</p>
-            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${dinnerName}</p>
+            <p style="margin:4px 0 0 0;font-family:Arial,sans-serif;font-size:16px;color:#ffffff;">${esc(dinnerName)}</p>
           </td></tr></table>
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:36px;">
             <a href="${dinnerUrl}" style="display:inline-block;background-color:#c49a00;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:14px;">RSVP now →</a>

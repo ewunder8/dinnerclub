@@ -11,7 +11,10 @@ export async function GET(request: Request) {
   const cookieHeader = request.headers.get("cookie") ?? "";
   const cookieMatch = cookieHeader.split(";").find((c) => c.trim().startsWith("dc_return_to="));
   const cookieNext = cookieMatch ? decodeURIComponent(cookieMatch.trim().slice("dc_return_to=".length)) : null;
-  const next = searchParams.get("next") ?? cookieNext ?? "/dashboard";
+  const rawNext = searchParams.get("next") ?? cookieNext ?? "/dashboard";
+  // Open-redirect guard: only allow same-origin relative paths
+  // (rejects "//evil.com", "/\evil.com", "https://evil.com", "@evil.com", etc.)
+  const next = /^\/(?![/\\])/.test(rawNext) ? rawNext : "/dashboard";
 
   if (code) {
     const supabase = await createClient();
