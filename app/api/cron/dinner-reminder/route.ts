@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { sendDinnerReminder } from "@/lib/email";
 import { generateUnsubscribeUrl } from "@/lib/unsubscribe";
+
+// Constant-time comparison to prevent timing attacks on the cron secret
+function isAuthorized(authHeader: string | null): boolean {
+  if (!authHeader || !process.env.CRON_SECRET) return false;
+  const expected = Buffer.from(`Bearer ${process.env.CRON_SECRET}`);
+  const received = Buffer.from(authHeader);
+  if (received.length !== expected.length) return false;
+  return timingSafeEqual(received, expected);
+}
 
 // TODO: cron — this route must be registered in vercel.json under "crons" to run automatically.
 // Schedule suggestion: {"path": "/api/cron/dinner-reminder", "schedule": "0 12 * * *"} (noon UTC daily)
 export async function GET(request: Request) {
   // Verify the request is from Vercel Cron
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorized(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

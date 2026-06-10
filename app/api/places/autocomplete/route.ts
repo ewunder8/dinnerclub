@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ suggestions });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ suggestions: [], error: message }, { status: 500 });
+    console.error("places/autocomplete error:", e);
+    return NextResponse.json({ suggestions: [], error: "Search failed" }, { status: 500 });
   }
 }

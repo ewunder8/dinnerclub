@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const place = await getPlaceDetails(id);
     return NextResponse.json({ place });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ place: null, error: message }, { status: 500 });
+    console.error("places/details error:", e);
+    return NextResponse.json({ place: null, error: "Lookup failed" }, { status: 500 });
   }
 }

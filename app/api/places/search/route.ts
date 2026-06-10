@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ places });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ places: [], error: message }, { status: 500 });
+    console.error("places/search error:", e);
+    return NextResponse.json({ places: [], error: "Search failed" }, { status: 500 });
   }
 }
