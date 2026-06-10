@@ -12,7 +12,7 @@ export default function MarkCompletedButton({ dinnerId, clubId }: { dinnerId: st
     if (!confirm("Mark this dinner as completed? This will open the ratings window for 7 days.")) return;
     setLoading(true);
     try {
-      await markCompleted({ dinnerId, clubId });
+      await markCompleted({ dinnerId });
       router.refresh();
     } catch {
       setLoading(false);

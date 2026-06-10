@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { openVoting } from "./actions";
+import { openVoting, cancelDinner } from "./actions";
 import type { PollState } from "@/lib/supabase/database.types";
 
 type Props = {
@@ -21,7 +21,7 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
     setLoading(true);
     setError(null);
     try {
-      await openVoting({ dinnerId, clubId });
+      await openVoting({ dinnerId });
       router.refresh();
     } catch {
       setError("Failed to open voting. Try again.");
@@ -44,8 +44,12 @@ export default function OwnerControls({ dinnerId, clubId, pollState }: Props) {
   const handleCancel = async () => {
     if (!confirm("Cancel this dinner? This can't be undone.")) return;
     setLoading(true);
-    const supabase = createClient();
-    await supabase.from("dinners").update({ status: "cancelled" }).eq("id", dinnerId);
+    const result = await cancelDinner({ dinnerId });
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+      return;
+    }
     router.push(`/clubs/${clubId}`);
   };
 

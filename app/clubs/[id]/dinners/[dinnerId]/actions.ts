@@ -47,6 +47,16 @@ export async function updateDinnerDetails({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner) return { error: "Dinner not found." };
+  if (dinner.created_by !== user.id && !(await getIsCohost(dinnerId, user.id, supabase))) {
+    return { error: "Only the dinner host can edit details." };
+  }
+
   const { error } = await supabase
     .from("dinners")
     .update({
@@ -394,8 +404,6 @@ export async function deleteDinnerComment({ commentId }: { commentId: string }):
 
 export async function confirmReservation({
   dinnerId,
-  clubId,
-  userId,
   reservationDatetime,
   partySize,
   platform,
@@ -403,8 +411,6 @@ export async function confirmReservation({
   winningPlaceId,
 }: {
   dinnerId: string;
-  clubId: string;
-  userId: string;
   reservationDatetime: string;
   partySize: number;
   platform: Platform | null;
@@ -412,6 +418,24 @@ export async function confirmReservation({
   winningPlaceId: string | null;
 }) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated.");
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("club_id")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner?.club_id) throw new Error("Dinner not found.");
+
+  // Any club member can report the booking they made
+  const { data: membership } = await supabase
+    .from("club_members")
+    .select("id")
+    .eq("club_id", dinner.club_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) throw new Error("Only club members can confirm a reservation.");
 
   const { error: updateError } = await supabase
     .from("dinners")
@@ -421,7 +445,7 @@ export async function confirmReservation({
       party_size: partySize,
       reservation_platform: platform,
       confirmation_number: confirmationNumber || null,
-      reserved_by: userId,
+      reserved_by: user.id,
       ...(winningPlaceId ? { winning_restaurant_place_id: winningPlaceId } : {}),
     })
     .eq("id", dinnerId);
@@ -429,7 +453,7 @@ export async function confirmReservation({
   if (updateError) throw new Error(updateError.message);
 
   // Fire emails in the background — don't block the response
-  sendConfirmationEmails({ dinnerId, clubId, reservationDatetime, partySize, winningPlaceId });
+  sendConfirmationEmails({ dinnerId, clubId: dinner.club_id, reservationDatetime, partySize, winningPlaceId });
 }
 
 async function sendConfirmationEmails({
@@ -497,8 +521,20 @@ async function sendConfirmationEmails({
 
 // ─── Open voting ──────────────────────────────────────────────
 
-export async function openVoting({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
+export async function openVoting({ dinnerId }: { dinnerId: string }) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated.");
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, club_id")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner?.club_id) throw new Error("Dinner not found.");
+  if (dinner.created_by !== user.id && !(await getIsCohost(dinnerId, user.id, supabase))) {
+    throw new Error("Only the dinner host can open voting.");
+  }
 
   const { error: updateError } = await supabase
     .from("dinners")
@@ -507,7 +543,7 @@ export async function openVoting({ dinnerId, clubId }: { dinnerId: string; clubI
 
   if (updateError) throw new Error(updateError.message);
 
-  sendVotingOpenEmails({ dinnerId, clubId });
+  sendVotingOpenEmails({ dinnerId, clubId: dinner.club_id });
 }
 
 async function sendVotingOpenEmails({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
@@ -546,8 +582,20 @@ async function sendVotingOpenEmails({ dinnerId, clubId }: { dinnerId: string; cl
 
 // ─── Mark completed ───────────────────────────────────────────
 
-export async function markCompleted({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
+export async function markCompleted({ dinnerId }: { dinnerId: string }) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated.");
+
+  const { data: dinner } = await supabase
+    .from("dinners")
+    .select("created_by, club_id")
+    .eq("id", dinnerId)
+    .single();
+  if (!dinner?.club_id) throw new Error("Dinner not found.");
+  if (dinner.created_by !== user.id && !(await getIsCohost(dinnerId, user.id, supabase))) {
+    throw new Error("Only the dinner host can mark this dinner completed.");
+  }
 
   const ratingsOpenUntil = new Date();
   ratingsOpenUntil.setDate(ratingsOpenUntil.getDate() + 7);
@@ -560,7 +608,7 @@ export async function markCompleted({ dinnerId, clubId }: { dinnerId: string; cl
   if (updateError) throw new Error(updateError.message);
 
   // TODO: cron — ideally fire rating prompt email 2 hours after dinner, not at mark-completed time
-  sendRatingPromptEmails({ dinnerId, clubId });
+  sendRatingPromptEmails({ dinnerId, clubId: dinner.club_id });
 }
 
 async function sendRatingPromptEmails({ dinnerId, clubId }: { dinnerId: string; clubId: string }) {
@@ -987,18 +1035,31 @@ export async function rsvpDinner({
 
 // ─── Cancel dinner ────────────────────────────────────────────
 
-export async function cancelDinner({ dinnerId, clubId }: { dinnerId: string; clubId: string }): Promise<{ error?: string }> {
+export async function cancelDinner({ dinnerId }: { dinnerId: string }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
   const { data: dinner } = await supabase
     .from("dinners")
-    .select("title, theme_cuisine, theme_neighborhood, theme_vibe")
+    .select("club_id, created_by, title, theme_cuisine, theme_neighborhood, theme_vibe")
     .eq("id", dinnerId)
     .single();
 
-  if (!dinner) return { error: "Dinner not found." };
+  if (!dinner?.club_id) return { error: "Dinner not found." };
+
+  // Club owners and the dinner creator can cancel
+  if (dinner.created_by !== user.id) {
+    const { data: membership } = await supabase
+      .from("club_members")
+      .select("role")
+      .eq("club_id", dinner.club_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (membership?.role !== "owner") {
+      return { error: "Only club owners or the dinner creator can cancel a dinner." };
+    }
+  }
 
   const { error: updateError } = await supabase
     .from("dinners")
@@ -1007,7 +1068,7 @@ export async function cancelDinner({ dinnerId, clubId }: { dinnerId: string; clu
 
   if (updateError) return { error: updateError.message };
 
-  sendCancellationEmails({ dinnerId, clubId, dinner });
+  sendCancellationEmails({ dinnerId, clubId: dinner.club_id, dinner });
   return {};
 }
 

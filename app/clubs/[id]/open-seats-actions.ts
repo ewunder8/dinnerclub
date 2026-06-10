@@ -168,6 +168,16 @@ export async function respondToSeatRequest({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
+  // Only the seat poster may respond to requests
+  const { data: request } = await supabase
+    .from("open_seat_requests")
+    .select("open_seat_id, open_seats ( created_by )")
+    .eq("id", requestId)
+    .single();
+  if (!request) return { error: "Request not found." };
+  const seatOwner = (request.open_seats as unknown as { created_by: string })?.created_by;
+  if (seatOwner !== user.id) return { error: "Only the seat poster can respond to requests." };
+
   const { error: updateError } = await supabase
     .from("open_seat_requests")
     .update({ status: newStatus })
@@ -177,14 +187,7 @@ export async function respondToSeatRequest({
 
   // When confirming, close the listing so it no longer appears as open
   if (newStatus === "confirmed") {
-    const { data: req } = await supabase
-      .from("open_seat_requests")
-      .select("open_seat_id")
-      .eq("id", requestId)
-      .single();
-    if (req) {
-      await supabase.from("open_seats").update({ status: "closed" }).eq("id", req.open_seat_id);
-    }
+    await supabase.from("open_seats").update({ status: "closed" }).eq("id", request.open_seat_id);
   }
 
   // Notify requester (fire-and-forget)

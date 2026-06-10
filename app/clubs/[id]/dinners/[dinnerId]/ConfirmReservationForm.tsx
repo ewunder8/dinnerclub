@@ -18,11 +18,10 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 type Props = {
   dinnerId: string;
   clubId: string;
-  userId: string;
   topOptions?: { place_id: string; name: string }[];
 };
 
-export default function ConfirmReservationForm({ dinnerId, clubId, userId, topOptions }: Props) {
+export default function ConfirmReservationForm({ dinnerId, topOptions }: Props) {
   const router = useRouter();
 
   const [selectedPlaceId, setSelectedPlaceId] = useState(topOptions?.[0]?.place_id ?? "");
@@ -47,8 +46,6 @@ export default function ConfirmReservationForm({ dinnerId, clubId, userId, topOp
     try {
       await confirmReservation({
         dinnerId,
-        clubId,
-        userId,
         // Convert in the browser so the local timezone is used, not the server's UTC
         reservationDatetime: new Date(datetime).toISOString(),
         partySize,

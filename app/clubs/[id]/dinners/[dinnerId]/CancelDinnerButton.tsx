@@ -12,7 +12,7 @@ export default function CancelDinnerButton({ dinnerId, clubId }: { dinnerId: str
   const handleCancel = async () => {
     if (!confirm("Cancel this dinner? This can't be undone.")) return;
     setLoading(true);
-    const result = await cancelDinner({ dinnerId, clubId });
+    const result = await cancelDinner({ dinnerId });
     if (result.error) {
       toast.error(result.error);
       setLoading(false);

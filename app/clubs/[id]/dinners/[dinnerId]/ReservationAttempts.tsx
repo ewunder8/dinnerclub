@@ -253,7 +253,7 @@ export default function ReservationAttempts({ dinnerId, clubId, userId, attempts
               ? "Nice work! Fill in the details to confirm for the group."
               : "Got a table? Fill in the details below."}
           </p>
-          <ConfirmReservationForm dinnerId={dinnerId} clubId={clubId} userId={userId} topOptions={topOptions} />
+          <ConfirmReservationForm dinnerId={dinnerId} clubId={clubId} topOptions={topOptions} />
         </div>
       )}
 
