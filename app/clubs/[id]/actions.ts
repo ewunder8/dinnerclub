@@ -34,6 +34,25 @@ export async function refreshInviteLink(clubId: string): Promise<{ token: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  // Caller must be a member of the club; non-owners also need members_can_invite enabled
+  const { data: membership } = await supabase
+    .from("club_members")
+    .select("role")
+    .eq("club_id", clubId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) throw new Error("Not authorized");
+
+  if (membership.role !== "owner") {
+    const { data: club } = await supabase
+      .from("clubs")
+      .select("*")
+      .eq("id", clubId)
+      .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!club || (club as any).members_can_invite === false) throw new Error("Not authorized");
+  }
+
   const { generateInviteToken, getInviteExpiry } = await import("@/lib/utils");
 
   // Revoke all existing active links for this club
