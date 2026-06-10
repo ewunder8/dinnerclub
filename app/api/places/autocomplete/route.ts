@@ -1,6 +1,7 @@
 import { autocompleteRestaurants } from "@/lib/places";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export type AutocompleteResult = {
   place_id: string;
@@ -12,6 +13,11 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ suggestions: [], error: "Unauthorized" }, { status: 401 });
+
+  // Higher limit — fires per keystroke
+  if (!rateLimit(`places-autocomplete:${user.id}`, 60)) {
+    return NextResponse.json({ suggestions: [], error: "Too many requests" }, { status: 429 });
+  }
 
   const q = req.nextUrl.searchParams.get("q") ?? "";
   if (q.trim().length < 2) return NextResponse.json({ suggestions: [] });

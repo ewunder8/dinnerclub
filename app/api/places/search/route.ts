@@ -1,6 +1,7 @@
 import { searchRestaurantsByText } from "@/lib/places";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const PRICE_MAP: Record<string, number> = {
   PRICE_LEVEL_INEXPENSIVE:   1,
@@ -46,6 +47,10 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ places: [], error: "Unauthorized" }, { status: 401 });
+
+  if (!rateLimit(`places-search:${user.id}`, 20)) {
+    return NextResponse.json({ places: [], error: "Too many requests" }, { status: 429 });
+  }
 
   const q = req.nextUrl.searchParams.get("q") ?? "";
   const city = req.nextUrl.searchParams.get("city") ?? "";
