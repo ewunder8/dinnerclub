@@ -53,6 +53,22 @@ export default async function DashboardPage() {
   const now = new Date().toISOString();
   const nowDate = new Date();
 
+  // Confirmed open seat requests — guest sees these as upcoming
+  const { data: rawConfirmedSeats } = await supabase
+    .from("open_seat_requests")
+    .select("id, open_seats ( id, restaurant_name, reservation_datetime, club_id, created_by )")
+    .eq("user_id", user.id)
+    .eq("status", "confirmed");
+
+  type ConfirmedSeat = { id: string; restaurant_name: string; reservation_datetime: string; club_id: string };
+  const confirmedSeats: ConfirmedSeat[] = (rawConfirmedSeats ?? [])
+    .map((r) => r.open_seats as unknown as ConfirmedSeat | null)
+    .filter((s): s is ConfirmedSeat =>
+      s !== null &&
+      (s as ConfirmedSeat & { created_by: string }).created_by !== user.id &&
+      new Date(s.reservation_datetime) > nowDate
+    );
+
   // One-off dinners: created by user OR user has an RSVP
   // Use admin client for RSVP+dinners join — RLS on the dinners join can silently drop
   // rows for guests who joined via invite link (circular RLS dependency on one-off dinners)
@@ -275,7 +291,7 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Upcoming reservations ── */}
-        {(upcoming.length > 0 || upcomingOneOffs.length > 0) && (
+        {(upcoming.length > 0 || upcomingOneOffs.length > 0 || confirmedSeats.length > 0) && (
           <section className="bg-white border border-black/8 rounded-2xl overflow-hidden isolate">
             <div className="px-5 py-3 border-b border-black/5">
               <h2 className="text-xs font-bold text-ink-muted uppercase tracking-widest">Upcoming</h2>
@@ -323,6 +339,28 @@ export default async function DashboardPage() {
                     <span className={`text-xs font-semibold shrink-0 ${isConfirmed ? "text-green-700" : "text-ink-muted"}`}>
                       {isConfirmed ? "All set" : "RSVPs open"}
                     </span>
+                  </Link>
+                );
+              })}
+              {confirmedSeats.map((seat) => {
+                const countdown = getCountdown(seat.reservation_datetime);
+                return (
+                  <Link key={seat.id} href={`/clubs/${seat.club_id}`}
+                    className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-snow transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🪑</span>
+                      <div>
+                        <p className="font-semibold text-ink text-sm">{seat.restaurant_name}</p>
+                        <p className="text-xs text-ink-muted mt-0.5">Open seat · confirmed</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-bold text-citrus-dark">{countdown.label}</p>
+                      <p className="text-xs text-ink-muted mt-0.5">
+                        <LocalDate iso={seat.reservation_datetime} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
+                      </p>
+                    </div>
                   </Link>
                 );
               })}
@@ -381,7 +419,7 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Nothing active nudge ── */}
-        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && upcomingOneOffs.length === 0 && unratedDinners.length === 0 && (
+        {clubs.length > 0 && polls.length === 0 && upcoming.length === 0 && upcomingOneOffs.length === 0 && confirmedSeats.length === 0 && unratedDinners.length === 0 && (
           <div className="bg-citrus/8 border border-citrus/20 rounded-2xl px-6 py-8 text-center">
             <p className="text-3xl mb-3">🍽️</p>
             <p className="font-semibold text-ink mb-1">Nothing cooking right now</p>
